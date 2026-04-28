@@ -28,21 +28,6 @@ CREATE TABLE pedidos (
     estado VARCHAR(20) DEFAULT 'Pendiente'
 );
 
-CREATE TABLE pedidos (
-    id SERIAL PRIMARY KEY,
-    cliente_id INTEGER REFERENCES clientes(id),
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total DECIMAL(10,2),
-    estado VARCHAR(20) DEFAULT 'Pendiente'
-);
-
-CREATE TABLE pedidos (
-    id SERIAL PRIMARY KEY,
-    cliente_id INTEGER REFERENCES clientes(id),
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total DECIMAL(10,2),
-    estado VARCHAR(20) DEFAULT 'Pendiente'
-);
 
 
 

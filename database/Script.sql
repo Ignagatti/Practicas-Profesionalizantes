@@ -28,11 +28,4 @@ CREATE TABLE pedidos (
     estado VARCHAR(20) DEFAULT 'Pendiente'
 );
 
--- 3. INSERTAR DATOS DE PRUEBA
-INSERT INTO clientes (nombre, direccion, telefono) VALUES 
-('Juan Perez', 'Calle Falsa 123', '3496-123456'),
-('Maria Garcia', 'Av. Colon 500', '3496-987654');
 
-INSERT INTO productos (descripcion, precio_unitario, stock_actual) VALUES 
-('Bidon 20L', 1500.00, 50),
-('Dispenser Frio/Calor', 45000.00, 5);

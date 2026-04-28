@@ -1,0 +1,18 @@
+# Dependencias de Node (LO MÁS IMPORTANTE)
+node_modules/
+npm-debug.log*
+
+# Archivos de configuración de IDEs (VS Code, etc)
+.vscode/
+.idea/
+
+# Archivos del Sistema Operativo
+thumbs.db
+.DS_Store
+
+# Datos sensibles / Variables de entorno
+.env
+
+# Build / Salida de compilación (cuando crees el .exe)
+dist/
+build/

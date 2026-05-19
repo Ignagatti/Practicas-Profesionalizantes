@@ -1,8 +1,8 @@
-# Dependencias de Node (LO MÁS IMPORTANTE)
+# Dependencias de Node 
 node_modules/
 npm-debug.log*
 
-# Archivos de configuración de IDEs (VS Code, etc)
+# Archivos de configuración de IDEs 
 .vscode/
 .idea/
 
@@ -13,6 +13,6 @@ thumbs.db
 # Datos sensibles / Variables de entorno
 .env
 
-# Build / Salida de compilación (cuando crees el .exe)
+# Build / Salida de compilación 
 dist/
 build/

@@ -6,6 +6,7 @@ require('dotenv').config();
 const pool = require('./config/db');
 const clientesRoutes = require('./routes/clientesRoutes'); // <-- Traemos tus rutas de clientes
 const insumosRoutes = require('./routes/insumosRoutes');
+const productosRoutes = require('./routes/productosRoutes');
 
 
 // 2. CONFIGURACIÓN E INICIALIZACIÓN
@@ -19,6 +20,7 @@ app.use(express.json());
 // Esto hace que todas las rutas dentro de clientesRoutes comiencen con /api/clientes
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/insumos', insumosRoutes);
+app.use('/api/productos', productosRoutes);
 
 // 4. PRUEBA DE CONEXIÓN AUTOMÁTICA A POSTGRES
 pool.query('SELECT NOW()')

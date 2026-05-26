@@ -204,3 +204,6 @@ CREATE TABLE Detalle_Pago_Compra (
     Id_Pago_Insumo INT REFERENCES Pago_Insumo(Id_Pago_Insumo),
     Id_Factura_Proveedor INT REFERENCES Factura_Proveedor(Id_Factura_Proveedor)
 );
+
+ALTER TABLE Cliente
+ADD CONSTRAINT unique_cliente_cuit UNIQUE (CUIT_CUIL);

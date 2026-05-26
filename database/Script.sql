@@ -75,13 +75,18 @@ CREATE TABLE Cliente (
     Id_Cliente SERIAL PRIMARY KEY,
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
-    Telefono VARCHAR(20),
+    Telefono VARCHAR(20) NOT NULL,
     Estado estado_cliente DEFAULT 'activo',
     Saldo DECIMAL(15,2) DEFAULT 0,
-    CUIT_CUIL VARCHAR(20),
-    Email VARCHAR(150),
+    CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
+    Email VARCHAR(150) NOT NULL,
     Razon_Social VARCHAR(100),
-    CONSTRAINT chk_saldo_rango CHECK (Saldo BETWEEN -1000000000 AND 1000000000)
+
+    CONSTRAINT chk_saldo_rango 
+        CHECK (Saldo BETWEEN -1000000000 AND 1000000000),
+
+    CONSTRAINT chk_email_cliente
+        CHECK (Email LIKE '%@%.%')
 );
 
 CREATE TABLE Proveedor (
@@ -204,6 +209,3 @@ CREATE TABLE Detalle_Pago_Compra (
     Id_Pago_Insumo INT REFERENCES Pago_Insumo(Id_Pago_Insumo),
     Id_Factura_Proveedor INT REFERENCES Factura_Proveedor(Id_Factura_Proveedor)
 );
-
-ALTER TABLE Cliente
-ADD CONSTRAINT unique_cliente_cuit UNIQUE (CUIT_CUIL);

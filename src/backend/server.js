@@ -9,11 +9,15 @@ const insumosRoutes = require('./routes/insumosRoutes');
 const productosRoutes = require('./routes/productosRoutes');
 
 
+
 // 2. CONFIGURACIÓN E INICIALIZACIÓN
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware obligatorio para que Express pueda leer datos enviados en formato JSON
+const cors = require('cors');
+
+app.use(cors());
 app.use(express.json());
 
 // 3. VINCULAR LAS RUTAS

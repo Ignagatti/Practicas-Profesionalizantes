@@ -1,64 +1,75 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  X,
-  Lock,
-  Unlock,
-  Users,
-  Truck,
+  Search, Plus, Edit, Trash2, Eye, X, Lock, Unlock, Users, Truck,
 } from "lucide-react";
 
-// ── URL base de tu backend ────────────────────────────────────────────────────
-const API_URL = "http://localhost:3001";
+const API_URL = "http://localhost:4000/api";
 
-// ── Validaciones locales (igual que en el backend, para feedback inmediato) ───
-function validarEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validarCampos({ nombre, apellido, cuit, email }) {
-  if (!nombre || !apellido || !cuit) {
-    return "Nombre, apellido y CUIT son obligatorios.";
-  }
-  if (email && !validarEmail(email)) {
-    return "El email no tiene un formato válido.";
-  }
-  return null;
-}
-
-// ── Estado inicial del formulario ─────────────────────────────────────────────
 const FORM_VACIO = {
+  id: 0,
   nombre: "",
   apellido: "",
   razonSocial: "",
   cuit: "",
-  provincia: "",
-  direccion: "",
   telefono: "",
   email: "",
   estado: "activo",
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-export function ClientesProveedores() {
-  const [tipoVista, setTipoVista]           = useState("cliente");
-  const [entidades, setEntidades]           = useState([]);
-  const [cargando, setCargando]             = useState(false);
-  const [error, setError]                   = useState(null);
-  const [searchTerm, setSearchTerm]         = useState("");
-  const [showAddModal, setShowAddModal]     = useState(false);
-  const [showViewModal, setShowViewModal]   = useState(false);
-  const [selectedEntidad, setSelectedEntidad] = useState(null);
-  const [isEditando, setIsEditando]         = useState(false);
-  const [newEntidad, setNewEntidad]         = useState(FORM_VACIO);
-  const [errorForm, setErrorForm]           = useState(null);
-  const [mensajeExito, setMensajeExito]     = useState(null);
+function mapClienteDesdeBackend(cliente) {
+  return {
+    id: cliente.id_cliente,
+    nombre: cliente.nombre || "",
+    apellido: cliente.apellido || "",
+    razonSocial: cliente.razon_social || "",
+    cuit: cliente.cuit_cuil || "",
+    telefono: cliente.telefono || "",
+    email: cliente.email || "",
+    estado: cliente.estado || "activo",
+  };
+}
 
-  // ── Cargar datos del backend al montar y al cambiar de vista ────────────────
+function mapClienteParaBackend(cliente) {
+  return {
+    Nombre: cliente.nombre,
+    Apellido: cliente.apellido,
+    Telefono: cliente.telefono,
+    CUIT_CUIL: cliente.cuit,
+    Email: cliente.email,
+    Razon_Social: cliente.razonSocial,
+  };
+}
+
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validarCampos(entidad) {
+  if (!entidad.nombre || !entidad.apellido || !entidad.cuit || !entidad.telefono || !entidad.email) {
+    return "Nombre, apellido, CUIT/CUIL, teléfono y email son obligatorios.";
+  }
+
+  if (!validarEmail(entidad.email)) {
+    return "El email no tiene un formato válido.";
+  }
+
+  return null;
+}
+
+export function ClientesProveedores() {
+  const [tipoVista, setTipoVista] = useState("cliente");
+  const [entidades, setEntidades] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedEntidad, setSelectedEntidad] = useState(null);
+  const [isEditando, setIsEditando] = useState(false);
+  const [newEntidad, setNewEntidad] = useState(FORM_VACIO);
+  const [errorForm, setErrorForm] = useState(null);
+  const [mensajeExito, setMensajeExito] = useState(null);
+
   useEffect(() => {
     cargarEntidades();
   }, [tipoVista]);
@@ -66,13 +77,21 @@ export function ClientesProveedores() {
   async function cargarEntidades() {
     setCargando(true);
     setError(null);
+
     try {
-      // Cada tipo tiene su propia ruta
-      const ruta = tipoVista === "cliente" ? "/clientes" : "/proveedores";
-      const res  = await fetch(`${API_URL}${ruta}`);
-      if (!res.ok) throw new Error("Error al cargar los datos.");
+      if (tipoVista === "proveedor") {
+        setEntidades([]);
+        return;
+      }
+
+      const res = await fetch(`${API_URL}/clientes`);
       const data = await res.json();
-      setEntidades(data);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al cargar clientes.");
+      }
+
+      setEntidades(data.map(mapClienteDesdeBackend));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -80,24 +99,22 @@ export function ClientesProveedores() {
     }
   }
 
-  // ── Filtro local de búsqueda ─────────────────────────────────────────────────
-  const filtradas = entidades.filter((e) => {
+  const filtradas = entidades.filter((entidad) => {
     const termino = searchTerm.toLowerCase();
+
     return (
-      (e.razon_social || "").toLowerCase().includes(termino) ||
-      (e.nombre      || "").toLowerCase().includes(termino) ||
-      (e.apellido    || "").toLowerCase().includes(termino) ||
-      (e.cuit        || "").includes(termino)
+      entidad.nombre.toLowerCase().includes(termino) ||
+      entidad.apellido.toLowerCase().includes(termino) ||
+      entidad.razonSocial.toLowerCase().includes(termino) ||
+      entidad.cuit.toLowerCase().includes(termino)
     );
   });
 
-  // ── Mostrar mensaje de éxito por 3 segundos ──────────────────────────────────
   function mostrarExito(msg) {
     setMensajeExito(msg);
     setTimeout(() => setMensajeExito(null), 3000);
   }
 
-  // ── Ver detalle ──────────────────────────────────────────────────────────────
   function handleView(entidad) {
     setSelectedEntidad({ ...entidad });
     setIsEditando(false);
@@ -105,146 +122,161 @@ export function ClientesProveedores() {
     setShowViewModal(true);
   }
 
-  // ── Cambiar estado (activo / bloqueado) ──────────────────────────────────────
-  async function handleToggleEstado(entidad) {
-    const nuevoEstado = entidad.estado === "activo" ? "bloqueado" : "activo";
-    const ruta = tipoVista === "cliente" ? "/clientes" : "/proveedores";
-    try {
-      const res = await fetch(`${API_URL}${ruta}/${entidad.id}`, {
-        method:  "PUT",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ ...entidad, estado: nuevoEstado }),
-      });
-      if (!res.ok) throw new Error("No se pudo cambiar el estado.");
-      const actualizado = await res.json();
-      setEntidades((prev) =>
-        prev.map((e) => (e.id === entidad.id ? actualizado : e))
-      );
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  // ── Eliminar ─────────────────────────────────────────────────────────────────
-  async function handleDelete(id) {
-    const label = tipoVista === "cliente" ? "cliente" : "proveedor";
-    if (!confirm(`¿Está seguro que desea eliminar este ${label}?`)) return;
-
-    const ruta = tipoVista === "cliente" ? "/clientes" : "/proveedores";
-    try {
-      const res = await fetch(`${API_URL}${ruta}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("No se pudo eliminar.");
-      setEntidades((prev) => prev.filter((e) => e.id !== id));
-      setShowViewModal(false);
-      setSelectedEntidad(null);
-      mostrarExito(`${label.charAt(0).toUpperCase() + label.slice(1)} eliminado correctamente.`);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  // ── Guardar edición ──────────────────────────────────────────────────────────
-  async function handleSaveChanges() {
-    if (!selectedEntidad) return;
-
-    const errorValidacion = validarCampos(selectedEntidad);
-    if (errorValidacion) {
-      setErrorForm(errorValidacion);
-      return;
-    }
-
-    const ruta = tipoVista === "cliente" ? "/clientes" : "/proveedores";
-    try {
-      const res = await fetch(`${API_URL}${ruta}/${selectedEntidad.id}`, {
-        method:  "PUT",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(selectedEntidad),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErrorForm(data.error || "Error al guardar.");
-        return;
-      }
-      setEntidades((prev) =>
-        prev.map((e) => (e.id === selectedEntidad.id ? data : e))
-      );
-      setIsEditando(false);
-      mostrarExito("Datos actualizados correctamente.");
-    } catch (err) {
-      setErrorForm(err.message);
-    }
-  }
-
-  // ── Agregar nuevo ────────────────────────────────────────────────────────────
   async function handleAddEntidad(e) {
     e.preventDefault();
     setErrorForm(null);
 
     const errorValidacion = validarCampos(newEntidad);
+
     if (errorValidacion) {
       setErrorForm(errorValidacion);
       return;
     }
 
-    const ruta = tipoVista === "cliente" ? "/clientes" : "/proveedores";
     try {
-      const res = await fetch(`${API_URL}${ruta}`, {
-        method:  "POST",
+      const res = await fetch(`${API_URL}/clientes`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(newEntidad),
+        body: JSON.stringify(mapClienteParaBackend(newEntidad)),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
-        setErrorForm(data.error || "Error al agregar.");
+        setErrorForm(data.error || "Error al agregar cliente.");
         return;
       }
-      setEntidades((prev) => [...prev, data]);
+
+      setEntidades((prev) => [...prev, mapClienteDesdeBackend(data)]);
       setShowAddModal(false);
       setNewEntidad(FORM_VACIO);
-      mostrarExito(
-        `${tipoVista === "cliente" ? "Cliente" : "Proveedor"} agregado correctamente.`
-      );
+      mostrarExito("Cliente agregado correctamente.");
     } catch (err) {
       setErrorForm(err.message);
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  async function handleSaveChanges() {
+    if (!selectedEntidad) return;
+
+    const errorValidacion = validarCampos(selectedEntidad);
+
+    if (errorValidacion) {
+      setErrorForm(errorValidacion);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/clientes/${selectedEntidad.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mapClienteParaBackend(selectedEntidad)),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorForm(data.error || "Error al guardar cambios.");
+        return;
+      }
+
+      const actualizado = mapClienteDesdeBackend(data);
+
+      setEntidades((prev) =>
+        prev.map((entidad) =>
+          entidad.id === actualizado.id ? actualizado : entidad
+        )
+      );
+
+      setSelectedEntidad(actualizado);
+      setIsEditando(false);
+      mostrarExito("Cliente actualizado correctamente.");
+    } catch (err) {
+      setErrorForm(err.message);
+    }
+  }
+
+  async function handleToggleEstado(entidad) {
+    try {
+      const endpoint =
+        entidad.estado === "activo"
+          ? `${API_URL}/clientes/${entidad.id}`
+          : `${API_URL}/clientes/${entidad.id}/desbloquear`;
+
+      const metodo = entidad.estado === "activo" ? "DELETE" : "PUT";
+
+      const res = await fetch(endpoint, { method: metodo });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo cambiar el estado.");
+      }
+
+      const clienteActualizado = mapClienteDesdeBackend(data.cliente || data);
+
+      setEntidades((prev) =>
+        prev.map((item) =>
+          item.id === clienteActualizado.id ? clienteActualizado : item
+        )
+      );
+
+      if (selectedEntidad?.id === clienteActualizado.id) {
+        setSelectedEntidad(clienteActualizado);
+      }
+
+      mostrarExito(
+        clienteActualizado.estado === "activo"
+          ? "Cliente desbloqueado correctamente."
+          : "Cliente bloqueado correctamente."
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDelete() {
+    if (!selectedEntidad) return;
+    if (!confirm("¿Está seguro que desea bloquear este cliente?")) return;
+
+    await handleToggleEstado(selectedEntidad);
+    setShowViewModal(false);
+    setSelectedEntidad(null);
+  }
+
   return (
     <div className="space-y-6">
-
-      {/* Mensaje de éxito */}
       {mensajeExito && (
         <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
           {mensajeExito}
         </div>
       )}
 
-      {/* Mensaje de error global */}
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={() => setError(null)}><X size={16} /></button>
+          <button onClick={() => setError(null)}>
+            <X size={16} />
+          </button>
         </div>
       )}
 
-      {/* Header con Toggle */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl text-gray-800">
             {tipoVista === "cliente" ? "Clientes" : "Proveedores"}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            {filtradas.length}{" "}
-            {tipoVista === "cliente" ? "clientes" : "proveedores"} registrados
+            {filtradas.length} {tipoVista === "cliente" ? "clientes" : "proveedores"} registrados
           </p>
         </div>
 
         <div className="flex gap-2">
-          {/* Toggle Clientes / Proveedores */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => { setTipoVista("cliente"); setSearchTerm(""); }}
+              onClick={() => {
+                setTipoVista("cliente");
+                setSearchTerm("");
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                 tipoVista === "cliente"
                   ? "bg-white text-red-700 shadow-sm"
@@ -254,8 +286,12 @@ export function ClientesProveedores() {
               <Users size={18} />
               Clientes
             </button>
+
             <button
-              onClick={() => { setTipoVista("proveedor"); setSearchTerm(""); }}
+              onClick={() => {
+                setTipoVista("proveedor");
+                setSearchTerm("");
+              }}
               className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                 tipoVista === "proveedor"
                   ? "bg-white text-red-700 shadow-sm"
@@ -267,24 +303,25 @@ export function ClientesProveedores() {
             </button>
           </div>
 
-          {/* Botón agregar */}
-          <button
-            onClick={() => { setNewEntidad(FORM_VACIO); setErrorForm(null); setShowAddModal(true); }}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
-          >
-            <Plus size={20} />
-            Agregar {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
-          </button>
+          {tipoVista === "cliente" && (
+            <button
+              onClick={() => {
+                setNewEntidad(FORM_VACIO);
+                setErrorForm(null);
+                setShowAddModal(true);
+              }}
+              className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
+            >
+              <Plus size={20} />
+              Agregar Cliente
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Buscador */}
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
         <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            size={20}
-          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             placeholder={`Buscar ${tipoVista === "cliente" ? "clientes" : "proveedores"}...`}
@@ -295,34 +332,34 @@ export function ClientesProveedores() {
         </div>
       </div>
 
-      {/* Tabla */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           {cargando ? (
             <div className="p-8 text-center text-gray-500">Cargando...</div>
-          ) : filtradas.length === 0 ? (
+          ) : tipoVista === "proveedor" ? (
             <div className="p-8 text-center text-gray-400">
-              No hay {tipoVista === "cliente" ? "clientes" : "proveedores"} para mostrar.
+              El módulo Proveedores todavía no está conectado al backend.
             </div>
+          ) : filtradas.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">No hay clientes para mostrar.</div>
           ) : (
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Razón Social</th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Contacto</th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">CUIT</th>
+                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">CUIT/CUIL</th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Teléfono</th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">Estado</th>
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase"></th>
+                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-200">
                 {filtradas.map((entidad) => (
                   <tr key={entidad.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-800">{entidad.razon_social}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {entidad.nombre} {entidad.apellido}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-800">{entidad.razonSocial || "—"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{entidad.nombre} {entidad.apellido}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{entidad.cuit}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{entidad.telefono}</td>
                     <td className="px-4 py-3 text-sm">
@@ -335,9 +372,13 @@ export function ClientesProveedores() {
                         }`}
                       >
                         {entidad.estado === "activo" ? (
-                          <><Unlock size={12} /> Activo</>
+                          <>
+                            <Unlock size={12} /> Activo
+                          </>
                         ) : (
-                          <><Lock size={12} /> Bloqueado</>
+                          <>
+                            <Lock size={12} /> Bloqueado
+                          </>
                         )}
                       </button>
                     </td>
@@ -358,229 +399,35 @@ export function ClientesProveedores() {
         </div>
       </div>
 
-      {/* ── Modal Ver / Editar ────────────────────────────────────────────────── */}
       {showViewModal && selectedEntidad && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">{selectedEntidad.razon_social}</h3>
-              <button
-                onClick={() => { setShowViewModal(false); setIsEditando(false); setErrorForm(null); }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Error dentro del modal */}
-              {errorForm && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
-                  {errorForm}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {/* Nombre */}
-                <Campo label="Nombre" editando={isEditando}
-                  value={selectedEntidad.nombre}
-                  onChange={(v) => setSelectedEntidad({ ...selectedEntidad, nombre: v })}
-                />
-                {/* Apellido */}
-                <Campo label="Apellido" editando={isEditando}
-                  value={selectedEntidad.apellido}
-                  onChange={(v) => setSelectedEntidad({ ...selectedEntidad, apellido: v })}
-                />
-                {/* Razón Social */}
-                <div className="col-span-2">
-                  <Campo label="Razón Social" editando={isEditando}
-                    value={selectedEntidad.razon_social}
-                    onChange={(v) => setSelectedEntidad({ ...selectedEntidad, razon_social: v })}
-                  />
-                </div>
-                {/* CUIT */}
-                <Campo label="CUIT" editando={isEditando}
-                  value={selectedEntidad.cuit}
-                  onChange={(v) => setSelectedEntidad({ ...selectedEntidad, cuit: v })}
-                />
-                {/* Provincia (solo clientes) */}
-                {tipoVista === "cliente" && (
-                  <Campo label="Provincia" editando={isEditando}
-                    value={selectedEntidad.provincia || ""}
-                    onChange={(v) => setSelectedEntidad({ ...selectedEntidad, provincia: v })}
-                  />
-                )}
-                {/* Dirección */}
-                <div className={tipoVista === "proveedor" ? "col-span-2" : ""}>
-                  <Campo label="Dirección" editando={isEditando}
-                    value={selectedEntidad.direccion}
-                    onChange={(v) => setSelectedEntidad({ ...selectedEntidad, direccion: v })}
-                  />
-                </div>
-                {/* Teléfono */}
-                <Campo label="Teléfono" editando={isEditando}
-                  value={selectedEntidad.telefono}
-                  onChange={(v) => setSelectedEntidad({ ...selectedEntidad, telefono: v })}
-                />
-                {/* Email */}
-                <Campo label="Email" editando={isEditando} type="email"
-                  value={selectedEntidad.email}
-                  onChange={(v) => setSelectedEntidad({ ...selectedEntidad, email: v })}
-                />
-              </div>
-
-              {/* Botones */}
-              <div className="flex gap-4 pt-4 border-t border-gray-200">
-                {isEditando ? (
-                  <>
-                    <button
-                      onClick={() => { setIsEditando(false); setErrorForm(null); }}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleSaveChanges}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Guardar Cambios
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsEditando(true)}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
-                    >
-                      <Edit size={16} /> Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(selectedEntidad.id)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
-                    >
-                      <Trash2 size={16} /> Eliminar
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal Agregar ─────────────────────────────────────────────────────── */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">
-                Agregar {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
-              </h3>
-              <button
-                onClick={() => { setShowAddModal(false); setErrorForm(null); }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddEntidad} className="p-6 space-y-4">
-              {/* Error dentro del form */}
-              {errorForm && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
-                  {errorForm}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <InputForm label="Nombre *" value={newEntidad.nombre} required
-                  onChange={(v) => setNewEntidad({ ...newEntidad, nombre: v })}
-                />
-                <InputForm label="Apellido *" value={newEntidad.apellido} required
-                  onChange={(v) => setNewEntidad({ ...newEntidad, apellido: v })}
-                />
-                <div className="col-span-2">
-                  <InputForm label="Razón Social *" value={newEntidad.razonSocial} required
-                    onChange={(v) => setNewEntidad({ ...newEntidad, razonSocial: v })}
-                  />
-                </div>
-                <InputForm label="CUIT *" value={newEntidad.cuit} required
-                  onChange={(v) => setNewEntidad({ ...newEntidad, cuit: v })}
-                />
-                {tipoVista === "cliente" && (
-                  <InputForm label="Provincia" value={newEntidad.provincia}
-                    onChange={(v) => setNewEntidad({ ...newEntidad, provincia: v })}
-                  />
-                )}
-                <div className={tipoVista === "proveedor" ? "col-span-2" : ""}>
-                  <InputForm label="Dirección *" value={newEntidad.direccion} required
-                    onChange={(v) => setNewEntidad({ ...newEntidad, direccion: v })}
-                  />
-                </div>
-                <InputForm label="Teléfono *" value={newEntidad.telefono} required
-                  onChange={(v) => setNewEntidad({ ...newEntidad, telefono: v })}
-                />
-                <InputForm label="Email *" type="email" value={newEntidad.email} required
-                  onChange={(v) => setNewEntidad({ ...newEntidad, email: v })}
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => { setShowAddModal(false); setErrorForm(null); }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Agregar {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Componentes auxiliares ────────────────────────────────────────────────────
-
-// Campo en modo ver / editar
-function Campo({ label, value, editando, onChange, type = "text" }) {
-  return (
-    <div>
-      <label className="block text-sm mb-2 text-gray-500">{label}</label>
-      {editando ? (
-        <input
-          type={type}
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+        <ClienteModal
+          entidad={selectedEntidad}
+          setEntidad={setSelectedEntidad}
+          isEditando={isEditando}
+          setIsEditando={setIsEditando}
+          cerrar={() => {
+            setShowViewModal(false);
+            setIsEditando(false);
+            setErrorForm(null);
+          }}
+          errorForm={errorForm}
+          guardar={handleSaveChanges}
+          bloquear={handleDelete}
         />
-      ) : (
-        <p className="text-base text-gray-800">{value || "—"}</p>
       )}
-    </div>
-  );
-}
 
-// Input para el formulario de agregar
-function InputForm({ label, value, onChange, type = "text", required = false }) {
-  return (
-    <div>
-      <label className="block text-sm mb-2 text-gray-700">{label}</label>
-      <input
-        type={type}
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-        required={required}
-      />
+      {showAddModal && (
+        <AgregarClienteModal
+          entidad={newEntidad}
+          setEntidad={setNewEntidad}
+          cerrar={() => {
+            setShowAddModal(false);
+            setErrorForm(null);
+          }}
+          errorForm={errorForm}
+          guardar={handleAddEntidad}
+        />
+      )}
     </div>
   );
 }

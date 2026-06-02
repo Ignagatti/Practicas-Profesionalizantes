@@ -1,0 +1,62 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+.contenedor {
+    padding: 30px;
+}
+
+.formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 12px;
+    margin: 3px;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #222;
+    color: white;
+}
+
+.mensaje-exito {
+    color: green;
+    font-weight: bold;
+}
+
+.mensaje-error {
+    color: red;
+    font-weight: bold;
+}
+
+.buscador {
+    margin-bottom: 15px;
+}

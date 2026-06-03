@@ -244,7 +244,7 @@ export function ClientesProveedores() {
   }
 
   return (
-    <div className="space-y-6">
+      <div className="space-y-8 px-8 py-6">
       {mensajeExito && (
         <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
           {mensajeExito}
@@ -363,12 +363,11 @@ export function ClientesProveedores() {
                     <td className="px-4 py-3 text-sm text-gray-600">{entidad.cuit}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{entidad.telefono}</td>
                     <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => handleToggleEstado(entidad)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                           entidad.estado === "activo"
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-red-100 text-red-700 hover:bg-red-200"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
                         }`}
                       >
                         {entidad.estado === "activo" ? (
@@ -380,7 +379,16 @@ export function ClientesProveedores() {
                             <Lock size={12} /> Bloqueado
                           </>
                         )}
-                      </button>
+                      </span>
+                        {entidad.estado === "activo" ? (
+                          <>
+                            <Unlock size={12} /> Activo
+                          </>
+                        ) : (
+                          <>
+                            <Lock size={12} /> Bloqueado
+                          </>
+                        )}
                     </td>
                     <td className="px-4 py-3 text-right text-sm">
                       <button
@@ -428,6 +436,69 @@ export function ClientesProveedores() {
           guardar={handleAddEntidad}
         />
       )}
+    </div>
+  );
+}
+
+function AgregarClienteModal({ entidad, setEntidad, cerrar, errorForm, guardar }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h3 className="text-xl text-gray-800">Agregar Cliente</h3>
+          <button onClick={cerrar} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={guardar} className="p-6 space-y-5">
+          {errorForm && (
+            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
+              {errorForm}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputForm label="Nombre *" value={entidad.nombre} required onChange={(v) => setEntidad({ ...entidad, nombre: v })} />
+            <InputForm label="Apellido *" value={entidad.apellido} required onChange={(v) => setEntidad({ ...entidad, apellido: v })} />
+
+            <div className="sm:col-span-2">
+              <InputForm label="Razón Social" value={entidad.razonSocial} onChange={(v) => setEntidad({ ...entidad, razonSocial: v })} />
+            </div>
+
+            <InputForm label="CUIT/CUIL *" value={entidad.cuit} required onChange={(v) => setEntidad({ ...entidad, cuit: v })} />
+            <InputForm label="Teléfono *" value={entidad.telefono} required onChange={(v) => setEntidad({ ...entidad, telefono: v })} />
+
+            <div className="sm:col-span-2">
+              <InputForm label="Email *" type="email" value={entidad.email} required onChange={(v) => setEntidad({ ...entidad, email: v })} />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4">
+            <button type="button" onClick={cerrar} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button type="submit" className="flex-1 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800">
+              Guardar Cliente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function InputForm({ label, value, onChange, type = "text", required = false }) {
+  return (
+    <div>
+      <label className="block text-sm mb-2 text-gray-700">{label}</label>
+      <input
+        type={type}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
+        required={required}
+      />
     </div>
   );
 }

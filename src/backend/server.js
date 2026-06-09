@@ -2,6 +2,7 @@
 
 // 1. IMPORTACIONES
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 const pool = require('./config/db');
 const clientesRoutes = require('./routes/clientesRoutes'); // <-- Traemos tus rutas de clientes
@@ -12,6 +13,9 @@ const productosRoutes = require('./routes/productosRoutes');
 // 2. CONFIGURACIÓN E INICIALIZACIÓN
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// Middleware de CORS para permitir peticiones del frontend
+app.use(cors());
 
 // Middleware obligatorio para que Express pueda leer datos enviados en formato JSON
 app.use(express.json());

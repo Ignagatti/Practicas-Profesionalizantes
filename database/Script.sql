@@ -75,13 +75,18 @@ CREATE TABLE Cliente (
     Id_Cliente SERIAL PRIMARY KEY,
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
-    Telefono VARCHAR(20),
+    Telefono VARCHAR(20) NOT NULL,
     Estado estado_cliente DEFAULT 'activo',
     Saldo DECIMAL(15,2) DEFAULT 0,
-    CUIT_CUIL VARCHAR(20),
-    Email VARCHAR(150),
+    CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
+    Email VARCHAR(150) NOT NULL,
     Razon_Social VARCHAR(100),
-    CONSTRAINT chk_saldo_rango CHECK (Saldo BETWEEN -1000000000 AND 1000000000)
+
+    CONSTRAINT chk_saldo_rango 
+        CHECK (Saldo BETWEEN -1000000000 AND 1000000000),
+
+    CONSTRAINT chk_email_cliente
+        CHECK (Email LIKE '%@%.%')
 );
 
 CREATE TABLE Proveedor (

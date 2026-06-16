@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 // ── URL base de tu backend ────────────────────────────────────────────────────
-const API_URL = "http://localhost:3001";
+const API_URL = "http://localhost:4000/api";
 
 // ── Validaciones locales (igual que en el backend, para feedback inmediato) ───
 function validarEmail(email) {

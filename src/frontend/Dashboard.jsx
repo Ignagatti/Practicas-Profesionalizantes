@@ -22,7 +22,7 @@ import {
 } from "recharts";
 
 // ── URL base de tu backend ────────────────────────────────────────────────────
-const API_URL = "http://localhost:3001";
+const API_URL = "http://localhost:4000/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function Dashboard() {
@@ -48,22 +48,22 @@ export function Dashboard() {
         const [resProductos, resInsumos, resPagos] = await Promise.all([
           fetch(`${API_URL}/productos`),
           fetch(`${API_URL}/insumos`),
-          fetch(`${API_URL}/pagos-pendientes`),
+          // fetch(`${API_URL}/pagos-pendientes`),
         ]);
 
         if (!resProductos.ok) throw new Error("Error al cargar productos.");
         if (!resInsumos.ok)   throw new Error("Error al cargar insumos.");
-        if (!resPagos.ok)     throw new Error("Error al cargar pagos pendientes.");
+        // if (!resPagos.ok)     throw new Error("Error al cargar pagos pendientes.");
 
-        const [dataProductos, dataInsumos, dataPagos] = await Promise.all([
+        const [dataProductos, dataInsumos] = await Promise.all([
           resProductos.json(),
           resInsumos.json(),
-          resPagos.json(),
+          // resPagos.json(),
         ]);
 
         setProductos(dataProductos);
         setInsumos(dataInsumos);
-        setPagosPendientes(dataPagos);
+        // setPagosPendientes(dataPagos || []);
       } catch (err) {
         setError(err.message);
       } finally {

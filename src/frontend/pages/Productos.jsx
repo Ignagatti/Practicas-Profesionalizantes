@@ -55,6 +55,7 @@ function Productos() {
                 ...newProducto,
                 color_lustre: newProducto.lustre,
                 tela: newProducto.nombre_tela,
+                observaciones: newProducto.observaciones,
                 estado: 'pendiente'
             };
             await crearProducto(payload);
@@ -77,6 +78,37 @@ function Productos() {
         }
     };
 
+    const handleEnviarAProduccion = async () => {
+        if (seleccionados.length === 0) return;
+        
+        try {
+            // Actualizamos cada producto seleccionado
+            const promesas = seleccionados.map(id => {
+                const p = productos.find(prod => (prod.id_producto || prod.Id_Producto) === id);
+                return actualizarProducto(id, { 
+                    ...p, 
+                    estado: 'en_produccion',
+                    // Aseguramos que los nombres coincidan con lo que espera el backend
+                    color_lustre: p.color_lustre || p.Color_Lustre,
+                    tela: p.tela || p.Tela,
+                    modelo: p.modelo || p.Modelo,
+                    cantidad: p.cantidad || p.Cantidad,
+                    precio: p.precio || p.Precio,
+                    fecha_pedido: p.fecha_pedido || p.Fecha_Pedido,
+                    observaciones: p.observaciones || p.Observaciones
+                });
+            });
+
+            await Promise.all(promesas);
+            alert(`¡${seleccionados.length} productos enviados a producción!`);
+            setSeleccionados([]);
+            setShowSelectionModal(false);
+            cargarProductos();
+        } catch (error) {
+            alert("Error al actualizar estados: " + error.message);
+        }
+    };
+
     const toggleSeleccionarTodo = () => {
         const pendientes = productos.filter(p => (p.estado || p.Estado) === 'pendiente');
         if (seleccionados.length === pendientes.length) {
@@ -86,18 +118,34 @@ function Productos() {
         }
     };
 
-    const filteredProductos = productos.filter(p => {
-        const modelo = p.modelo || p.Modelo || "";
-        const porNombre = modelo.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredProductos = productos.filter((p, idx) => {
+        const term = searchTerm.toLowerCase();
+        
+        // Creamos un string con toda la información del producto para buscar coincidencias
+        const idStr = `PROD-00${idx + 1}`.toLowerCase();
+        const clienteStr = (p.cliente || "Mueblería Del Sur").toLowerCase();
+        const modeloStr = (p.modelo || p.Modelo || "").toLowerCase();
+        const telaStr = (p.tela || p.Tela || "").toLowerCase();
+        const lustreStr = (p.color_lustre || p.Color_Lustre || "").toLowerCase();
+        const obsStr = (p.observaciones || p.Observaciones || "").toLowerCase();
+
+        const coincideBusqueda = 
+            idStr.includes(term) || 
+            clienteStr.includes(term) || 
+            modeloStr.includes(term) || 
+            telaStr.includes(term) || 
+            lustreStr.includes(term) || 
+            obsStr.includes(term);
+
         const estado = (p.estado || p.Estado || "").toLowerCase();
-        const porEstado = filtroEstado === "todos" || estado === filtroEstado;
+        const coincideEstado = filtroEstado === "todos" || estado === filtroEstado;
         
         const fechaProd = new Date(p.fecha_pedido || p.Fecha_Pedido || new Date());
         const desde = fechaDesde ? new Date(fechaDesde) : null;
         const hasta = fechaHasta ? new Date(fechaHasta) : null;
-        const porFecha = (!desde || fechaProd >= desde) && (!hasta || fechaProd <= hasta);
+        const coincideFecha = (!desde || fechaProd >= desde) && (!hasta || fechaProd <= hasta);
 
-        return porNombre && porEstado && porFecha;
+        return coincideBusqueda && coincideEstado && coincideFecha;
     });
 
     const pendientes = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'pendiente');
@@ -208,7 +256,9 @@ function Productos() {
                                             {estado.replace('_', ' ').toUpperCase()}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-400">-</td>
+                                    <td className="px-6 py-4 text-sm text-gray-400 truncate max-w-[150px]">
+                                        {p.observaciones || p.Observaciones || '-'}
+                                    </td>
                                     <td className="px-6 py-4 text-right">
                                         <button 
                                             onClick={() => {setSelectedProducto(p); setShowDetailModal(true);}}
@@ -398,8 +448,16 @@ function Productos() {
                             </div>
                             <div className="flex gap-4 mt-8">
                                 <button onClick={() => setShowSelectionModal(false)} className="flex-1 py-4 border border-gray-200 rounded-xl font-bold uppercase text-gray-500">Cancelar</button>
-                                <button className="flex-[2] py-4 bg-gray-200 text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2">
-                                    <Printer size={20} /> Imprimir y Enviar a Producción
+                                <button 
+                                    onClick={handleEnviarAProduccion}
+                                    disabled={seleccionados.length === 0}
+                                    className={`flex-[2] py-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${
+                                        seleccionados.length > 0 
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100' 
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    }`}
+                                >
+                                    <Printer size={20} /> Imprimir y Enviar a Producción ({seleccionados.length})
                                 </button>
                             </div>
                         </div>
@@ -464,6 +522,12 @@ function Productos() {
                                     }`}>
                                         {(selectedProducto.estado || selectedProducto.Estado || "").replace('_', ' ').toUpperCase()}
                                     </span>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-xs text-gray-400 font-medium mb-1">Observaciones</p>
+                                    <p className="text-base font-medium text-gray-800 bg-gray-50 p-4 rounded-xl min-h-[60px] whitespace-pre-wrap">
+                                        {selectedProducto.observaciones || selectedProducto.Observaciones || 'Sin observaciones registradas.'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex gap-4 pt-6 border-t border-gray-50">

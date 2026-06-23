@@ -15,8 +15,7 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
         { id: 'productos', nombre: 'Productos', icono: Package },
         { id: 'pedidos', nombre: 'Pedidos', icono: ShoppingCart },
         { id: 'pagos', nombre: 'Pagos', icono: Wallet },
-        { id: 'insumos', nombre: 'Insumos', icono: DollarSign }, // Usamos insumos aquí como ejemplo
-        { id: 'precios', nombre: 'Lista de Precios', icono: List },
+        { id: 'insumos', nombre: 'Lista de Precios', icono: List },
         { id: 'clientes', nombre: 'Clientes/Proveedores', icono: Users },
     ];
 

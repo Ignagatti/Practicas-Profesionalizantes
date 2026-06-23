@@ -6,5 +6,6 @@ router.get('/', insumosController.obtenerInsumos);
 router.post('/', insumosController.crearInsumo);
 router.put('/:id', insumosController.actualizarInsumo);
 router.delete('/:id', insumosController.eliminarInsumo);
+router.post('/ajustar-precios', insumosController.ajustarPrecios);
 
 module.exports = router;

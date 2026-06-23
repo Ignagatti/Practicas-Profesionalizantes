@@ -22,7 +22,12 @@ app.use('/api/insumos', insumosRoutes);
 app.use('/api/productos', productosRoutes);
 
 pool.query('SELECT NOW()')
-    .then(res => console.log('¡Conexión exitosa a PostgreSQL en el puerto 5433!'))
+    .then(res => {
+        console.log('---');
+        console.log('🚀 SERVIDOR ACTUALIZADO E INICIADO');
+        console.log('✅ Ruta /api/insumos/ajustar-precios LISTA');
+        console.log('---');
+    })
     .catch(err => console.error('Error al conectar a la base de datos:', err.stack));
 
 app.listen(PORT, () => {

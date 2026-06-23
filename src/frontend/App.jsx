@@ -42,9 +42,7 @@ function App() {
                 </header>
 
                 {/* Zona de renderizado de páginas */}
-                <div className="animate-in fade-in duration-500">
-                    {renderContenido()}
-                </div>
+                {renderContenido()}
             </main>
         </div>
     );

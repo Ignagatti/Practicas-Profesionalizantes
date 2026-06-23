@@ -11,10 +11,7 @@ import {
   Truck,
 } from "lucide-react";
 
-<<<<<<< HEAD
 // ── URL base de tu backend ────────────────────────────────────────────────────
-=======
->>>>>>> clientes
 const API_URL = "http://localhost:4000/api";
 
 const FORM_VACIO = {

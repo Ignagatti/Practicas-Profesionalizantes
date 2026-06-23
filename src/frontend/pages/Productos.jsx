@@ -79,7 +79,6 @@ function Productos() {
                 ...formData,
                 color_lustre: formData.lustre,
                 tela: formData.nombre_tela,
-                // Si es nuevo, estado pendiente, si es edición, mantenemos el que tenga
                 estado: isEditing ? (formData.estado || formData.Estado) : 'pendiente'
             };
 
@@ -167,78 +166,84 @@ function Productos() {
 
     const pendientes = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'pendiente');
 
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            setSeleccionados(pendientes.map(p => p.id_producto || p.Id_Producto));
+        } else {
+            setSeleccionados([]);
+        }
+    };
+
     return (
         <div className="space-y-6 text-gray-800">
-            {/* Header */}
-            <div className="flex justify-between items-start mb-4">
+            {/* Header Principal */}
+            <div className="flex justify-between items-start mb-4 px-2">
                 <div>
-                    <h3 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">Gestión de Productos</h3>
-                    <p className="text-sm text-gray-500">{productos.length} productos registrados</p>
+                    <h3 className="text-xl font-bold text-gray-800 uppercase tracking-tight">Gestión de Productos</h3>
+                    <p className="text-xs text-gray-500">{productos.length} productos registrados</p>
                 </div>
-                <button 
-                    onClick={handleOpenAdd}
-                    className="bg-[#b91c1c] text-white px-8 py-3 rounded-xl flex items-center gap-2 font-bold hover:bg-red-800 shadow-lg shadow-red-100 transition-all"
-                >
-                    <Plus size={20} /> Agregar Producto
-                </button>
-            </div>
-
-            {/* BARRA DE FILTROS */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                <div className="flex flex-col gap-4">
-                    <div className="flex gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input 
-                                type="text" placeholder="Buscar productos..." 
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none"
-                                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <select 
-                            className="bg-white border border-gray-200 rounded-xl px-6 py-3 font-medium text-gray-700 outline-none"
-                            value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
-                        >
-                            <option value="todos">Todos los Estados</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="en_produccion">En Producción</option>
-                            <option value="terminado">Terminado</option>
-                        </select>
-                        <button 
-                            onClick={() => setShowSelectionModal(true)}
-                            className="bg-white border border-gray-200 px-6 py-3 rounded-xl flex items-center gap-2 font-bold text-gray-700 hover:bg-gray-100 transition-all shadow-sm"
-                        >
-                            <Printer size={20} /> Imprimir Planilla
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-500">Desde:</span>
-                            <input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-400 outline-none" />
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-gray-500">Hasta:</span>
-                            <input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-400 outline-none" />
-                        </div>
-                    </div>
+                <div className="flex gap-3">
+                    <button 
+                        onClick={() => setShowSelectionModal(true)}
+                        className="bg-white border border-gray-200 text-gray-700 px-5 py-2.5 rounded-lg flex items-center gap-2 font-bold hover:bg-gray-50 transition-all text-sm shadow-sm"
+                    >
+                        <Printer size={18} /> Imprimir Planilla
+                    </button>
+                    <button 
+                        onClick={handleOpenAdd}
+                        className="bg-[#b91c1c] text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-bold hover:bg-red-800 shadow-lg shadow-red-100 transition-all text-sm"
+                    >
+                        <Plus size={18} /> Agregar Producto
+                    </button>
                 </div>
             </div>
 
-            {/* TABLA PRINCIPAL */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Barra de Filtros */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mx-2 space-y-4">
+                <div className="flex gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <input 
+                            type="text" placeholder="Buscar por ID, modelo, tela, cliente..." 
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none text-sm transition-all"
+                            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <select 
+                        className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-700 outline-none focus:ring-2 focus:ring-red-500"
+                        value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
+                    >
+                        <option value="todos">Todos los Estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_produccion">En Producción</option>
+                        <option value="terminado">Terminado</option>
+                    </select>
+                </div>
+                <div className="flex items-center gap-6 px-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase">Desde:</span>
+                        <input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 outline-none focus:ring-1 focus:ring-red-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase">Hasta:</span>
+                        <input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 outline-none focus:ring-1 focus:ring-red-400" />
+                    </div>
+                </div>
+            </div>
+
+            {/* TABLA PRINCIPAL DE LA PÁGINA */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mx-2">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50/50 border-b border-gray-100">
-                        <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            <th className="px-6 py-4">Nº PRODUCTO</th>
-                            <th className="px-6 py-4">CLIENTE</th>
-                            <th className="px-6 py-4">MODELO</th>
-                            <th className="px-6 py-4">CANTIDAD</th>
-                            <th className="px-6 py-4">TELA</th>
-                            <th className="px-6 py-4">LUSTRE</th>
-                            <th className="px-6 py-4">FECHA</th>
-                            <th className="px-6 py-4">ESTADO</th>
-                            <th className="px-6 py-4">OBSERVACIONES</th>
-                            <th className="px-6 py-4"></th>
+                    <thead className="bg-gray-50/50">
+                        <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                            <th className="px-5 py-4">ID</th>
+                            <th className="px-5 py-4">CLIENTE</th>
+                            <th className="px-5 py-4">MODELO</th>
+                            <th className="px-5 py-4">CANT.</th>
+                            <th className="px-5 py-4">TELA</th>
+                            <th className="px-5 py-4">LUSTRE</th>
+                            <th className="px-5 py-4">ESTADO</th>
+                            <th className="px-5 py-4"></th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -246,31 +251,27 @@ function Productos() {
                             const id = p.id_producto || p.Id_Producto;
                             const estado = (p.estado || p.Estado || "").toLowerCase();
                             return (
-                                <tr key={id} className="hover:bg-gray-50/80 transition-colors group">
-                                    <td className="px-6 py-4 text-sm font-bold text-gray-400">PROD-00{idx+1}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500 font-medium">{p.cliente || 'Mueblería Del Sur'}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold">{p.modelo || p.Modelo}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{p.cantidad || p.Cantidad}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString() : '2026-04-10'}</td>
-                                    <td className="px-6 py-4 text-sm">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                                <tr key={id} className="hover:bg-gray-50/80 transition-colors">
+                                    <td className="px-5 py-3 text-[11px] font-bold text-gray-400">#00{idx+1}</td>
+                                    <td className="px-5 py-3 text-sm text-gray-500 font-medium">{p.cliente || 'Mueblería Del Sur'}</td>
+                                    <td className="px-5 py-3 text-sm text-gray-800 font-bold">{p.modelo || p.Modelo}</td>
+                                    <td className="px-5 py-3 text-sm text-gray-700 font-medium">{p.cantidad || p.Cantidad}</td>
+                                    <td className="px-5 py-3 text-sm text-gray-400 truncate max-w-[100px]">{p.tela || p.Tela || '-'}</td>
+                                    <td className="px-5 py-3 text-sm text-gray-700">{p.color_lustre || p.Color_Lustre || '-'}</td>
+                                    <td className="px-5 py-3">
+                                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold ${
                                             estado === 'pendiente' ? 'bg-gray-100 text-gray-500' : 
                                             estado === 'en_produccion' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'
                                         }`}>
                                             {estado.replace('_', ' ').toUpperCase()}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-400 truncate max-w-[150px]">
-                                        {p.observaciones || p.Observaciones || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-5 py-3 text-right">
                                         <button 
                                             onClick={() => {setSelectedProducto(p); setShowDetailModal(true);}}
-                                            className="p-2 text-blue-500 bg-blue-50 rounded-full transition-all hover:bg-blue-100"
+                                            className="p-1.5 text-blue-500 bg-blue-50 rounded-lg hover:bg-blue-100 transition-all border border-blue-100"
                                         >
-                                            <Eye size={18} />
+                                            <Eye size={16} />
                                         </button>
                                     </td>
                                 </tr>
@@ -280,52 +281,47 @@ function Productos() {
                 </table>
             </div>
 
-            {/* MODAL FORMULARIO (MANTIENE DISEÑO PREMIUM) */}
+            {/* MODAL FORMULARIO */}
             {showFormModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-y-auto max-h-[95vh] animate-in slide-in-from-bottom-4 duration-300">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
-                            <h3 className="text-xl font-bold text-gray-800">{isEditing ? 'Editar Producto' : 'Agregar Nuevo Producto'}</h3>
-                            <button onClick={() => setShowFormModal(false)}><X size={24} className="text-gray-400" /></button>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-[92vh] animate-in zoom-in duration-200">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                            <h3 className="text-lg font-bold text-gray-800">{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+                            <button onClick={() => setShowFormModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-all"><X size={20} className="text-gray-400" /></button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                            {/* Cliente */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Cliente *</label>
-                                <select className="w-full p-4 border border-gray-200 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-red-500 transition-all">
-                                    <option>Mueblería Del Sur</option>
-                                    <option>Carpintería López</option>
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6">
-                                {/* Modelo */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Modelo * <span className="text-red-600">(Obligatorio)</span></label>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Cliente *</label>
+                                    <select className="w-full p-2.5 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-red-500">
+                                        <option>Mueblería Del Sur</option>
+                                        <option>Carpintería López</option>
+                                    </select>
+                                </div>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Modelo *</label>
                                     <select 
-                                        className="w-full p-4 border border-gray-200 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-red-500"
+                                        className="w-full p-2.5 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         required value={formData.modelo} onChange={(e) => setFormData({...formData, modelo: e.target.value})}
                                     >
-                                        <option value="">Seleccionar modelo</option>
+                                        <option value="">Seleccionar...</option>
                                         <option value="Maitena">Maitena</option>
                                         <option value="Imperial">Imperial</option>
                                         <option value="Windsor">Windsor</option>
                                     </select>
                                 </div>
-                                {/* Nombre de Tela */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Nombre de Tela</label>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Nombre Tela</label>
                                     <input 
-                                        type="text" placeholder="Ej: Cuero negro, Tela beige..."
-                                        className="w-full p-4 border border-gray-200 rounded-2xl bg-gray-50/50 outline-none"
+                                        type="text" placeholder="Ej: Pana Gris"
+                                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         value={formData.nombre_tela} onChange={(e) => setFormData({...formData, nombre_tela: e.target.value})}
                                     />
                                 </div>
-                                {/* Tipo de Tela */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Tipo de Tela (Opcional)</label>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Tipo Tela</label>
                                     <select 
-                                        className="w-full p-4 border border-gray-200 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-red-500"
+                                        className="w-full p-2.5 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         value={formData.tipo_tela} onChange={(e) => setFormData({...formData, tipo_tela: e.target.value})}
                                     >
                                         <option value="Sin tela">Sin tela</option>
@@ -333,11 +329,10 @@ function Productos() {
                                         <option value="Pana">Pana</option>
                                     </select>
                                 </div>
-                                {/* Lustre */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Lustre/Acabado (Opcional)</label>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Lustre</label>
                                     <select 
-                                        className="w-full p-4 border border-gray-200 rounded-2xl bg-white outline-none focus:ring-2 focus:ring-red-500"
+                                        className="w-full p-2.5 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         value={formData.lustre} onChange={(e) => setFormData({...formData, lustre: e.target.value})}
                                     >
                                         <option value="Sin lustre">Sin lustre</option>
@@ -345,48 +340,39 @@ function Productos() {
                                         <option value="Nogal">Nogal</option>
                                     </select>
                                 </div>
-                                {/* Cantidad */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Cantidad *</label>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Cantidad</label>
                                     <input 
-                                        type="number" required className="w-full p-4 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-red-500"
+                                        type="number" required className="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         value={formData.cantidad} onChange={(e) => setFormData({...formData, cantidad: e.target.value})}
                                     />
                                 </div>
-                                {/* Fecha */}
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Pedido *</label>
+                                <div className="col-span-1">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Fecha</label>
                                     <input 
-                                        type="date" required className="w-full p-4 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-red-500"
+                                        type="date" required className="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-red-500"
                                         value={formData.fecha_pedido} onChange={(e) => setFormData({...formData, fecha_pedido: e.target.value})}
                                     />
                                 </div>
-                            </div>
-
-                            {/* Precio Calculado */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Precio Unitario Calculado</label>
-                                <div className="flex justify-between items-center p-4 bg-green-50 border border-green-100 rounded-2xl">
-                                    <span className="text-2xl font-bold text-green-600">$ {Number(formData.precio).toLocaleString()}</span>
-                                    <span className="text-[10px] font-bold text-green-800 uppercase tracking-widest">(Modelo + Tela + Lustre)</span>
+                                <div className="col-span-2">
+                                    <div className="p-3 bg-green-50 border border-green-100 rounded-xl flex justify-between items-center text-sm">
+                                        <span className="text-[10px] font-bold text-green-600 uppercase">Precio Unitario Est.</span>
+                                        <span className="font-bold text-green-700">$ {Number(formData.precio).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-1">Observaciones</label>
+                                    <textarea 
+                                        placeholder="Notas para producción..."
+                                        className="w-full p-3 border border-gray-200 rounded-xl min-h-[60px] text-sm outline-none focus:ring-2 focus:ring-red-500"
+                                        value={formData.observaciones} onChange={(e) => setFormData({...formData, observaciones: e.target.value})}
+                                    ></textarea>
                                 </div>
                             </div>
-
-                            {/* Observaciones */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Observaciones</label>
-                                <textarea 
-                                    placeholder="Notas adicionales..."
-                                    className="w-full p-6 border border-gray-200 rounded-3xl min-h-[120px] outline-none focus:ring-2 focus:ring-red-500"
-                                    value={formData.observaciones} onChange={(e) => setFormData({...formData, observaciones: e.target.value})}
-                                ></textarea>
-                            </div>
-
-                            {/* Botones Finales */}
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-4 border border-gray-200 rounded-2xl font-bold text-gray-800 hover:bg-gray-50 transition-all">Cancelar</button>
-                                <button type="submit" className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all">
-                                    {isEditing ? 'Guardar Cambios' : 'Agregar Producto'}
+                            <div className="flex gap-3 pt-4 border-t border-gray-50">
+                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-gray-500 hover:bg-gray-50 text-sm">Cancelar</button>
+                                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg text-sm">
+                                    {isEditing ? 'Guardar Cambios' : 'Crear Producto'}
                                 </button>
                             </div>
                         </form>
@@ -394,50 +380,48 @@ function Productos() {
                 </div>
             )}
 
-            {/* MODAL DETALLE (PERFECTO) */}
+            {/* MODAL DETALLE */}
             {showDetailModal && selectedProducto && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="text-xl font-bold text-gray-800">Detalle del Producto</h3>
-                            <button onClick={() => setShowDetailModal(false)}><X className="text-gray-400" size={24} /></button>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-gray-800">Detalle del Producto</h3>
+                            <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="text-gray-400" size={20} /></button>
                         </div>
-                        <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-y-6">
+                        <div className="p-6 space-y-5">
+                            <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                                 <div>
-                                    <p className="text-xs text-gray-400 font-medium mb-1">Modelo</p>
-                                    <p className="text-base font-medium text-gray-800">{selectedProducto.modelo || selectedProducto.Modelo}</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Modelo</p>
+                                    <p className="text-sm font-bold text-gray-800">{selectedProducto.modelo || selectedProducto.Modelo}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-400 font-medium mb-1">Nombre de Tela</p>
-                                    <p className="text-base font-medium text-gray-800">{selectedProducto.tela || selectedProducto.Tela || '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-400 font-medium mb-1">Lustre/Acabado</p>
-                                    <p className="text-base font-medium text-gray-800">{selectedProducto.color_lustre || selectedProducto.Color_Lustre || '-'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-400 font-medium mb-1">Cantidad</p>
-                                    <p className="text-base font-medium text-gray-800">{selectedProducto.cantidad || selectedProducto.Cantidad} unidades</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-400 font-medium mb-1">Estado</p>
-                                    <span className="bg-blue-50 text-blue-500 px-4 py-1 rounded-full text-[10px] font-bold uppercase">
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Estado Actual</p>
+                                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold ${
+                                        (selectedProducto.estado || selectedProducto.Estado || "").toLowerCase() === 'pendiente' ? 'bg-gray-100 text-gray-500' : 'bg-blue-50 text-blue-500'
+                                    }`}>
                                         {(selectedProducto.estado || selectedProducto.Estado || "").replace('_', ' ').toUpperCase()}
                                     </span>
                                 </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Configuración de Tela</p>
+                                    <p className="text-sm text-gray-700 font-medium">{selectedProducto.tela || selectedProducto.Tela || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Lustre / Madera</p>
+                                    <p className="text-sm text-gray-700 font-medium">{selectedProducto.color_lustre || selectedProducto.Color_Lustre || '-'}</p>
+                                </div>
+                                <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-2">Notas Especiales</p>
+                                    <p className="text-xs text-gray-600 whitespace-pre-wrap italic leading-relaxed">
+                                        {selectedProducto.observaciones || selectedProducto.Observaciones || 'Sin especificaciones adicionales.'}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="pt-4 border-t border-gray-50 mt-4">
-                                <p className="text-xs text-gray-400 font-medium mb-1">Observaciones</p>
-                                <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl min-h-[60px] whitespace-pre-wrap italic">
-                                    {selectedProducto.observaciones || selectedProducto.Observaciones || 'Sin observaciones.'}
-                                </p>
-                            </div>
-                            <div className="flex gap-4 pt-6 border-t border-gray-50">
-                                <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-[3] py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100">
-                                    <Edit size={18} /> Editar Producto
+                            <div className="flex gap-3 pt-4">
+                                <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-[3] py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 text-sm shadow-md hover:bg-blue-700 transition-all">
+                                    <Edit size={16} /> Editar Producto
                                 </button>
-                                <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-bold flex items-center justify-center">
+                                <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-bold flex items-center justify-center hover:bg-red-100 transition-all">
                                     <Trash2 size={18} />
                                 </button>
                             </div>
@@ -446,47 +430,100 @@ function Productos() {
                 </div>
             )}
 
-            {/* MODAL SELECCIÓN PRODUCCIÓN */}
+            {/* MODAL SELECCIÓN PRODUCCIÓN (REPLICANDO DISEÑO IMAGEN) */}
             {showSelectionModal && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in duration-200">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-start">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden animate-in zoom-in duration-200">
+                        {/* Cabecera diseño imagen */}
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-start">
                             <div>
-                                <h3 className="text-xl font-bold text-gray-800">Enviar a Producción</h3>
-                                <p className="text-sm text-gray-500 mt-1">Solo se muestran productos pendientes</p>
+                                <h3 className="text-xl font-bold text-gray-800">Seleccionar Productos para Producción</h3>
+                                <p className="text-sm text-gray-500 mt-0.5">Solo se muestran productos con estado "Pendiente"</p>
                             </div>
-                            <button onClick={() => setShowSelectionModal(false)}><X size={24} /></button>
+                            <button onClick={() => setShowSelectionModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400"><X size={24} /></button>
                         </div>
-                        <div className="p-8">
-                            <div className="border border-gray-100 rounded-2xl overflow-hidden mb-8">
-                                <table className="w-full text-left font-bold text-gray-700">
-                                    <thead className="bg-gray-50/50 text-[10px] text-gray-400 uppercase tracking-widest border-b border-gray-100">
-                                        <tr>
-                                            <th className="px-6 py-3 w-10"></th>
-                                            <th className="px-6 py-3">MODELO</th>
-                                            <th className="px-6 py-3">CANT.</th>
+
+                        <div className="p-6">
+                            {/* Checkbox seleccionar todos */}
+                            <div className="flex items-center gap-2 mb-4 px-1">
+                                <input 
+                                    type="checkbox" 
+                                    id="selectAll"
+                                    className="w-4 h-4 rounded border-gray-300 accent-blue-600"
+                                    checked={seleccionados.length === pendientes.length && pendientes.length > 0}
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                />
+                                <label htmlFor="selectAll" className="text-sm font-medium text-blue-600 cursor-pointer">Seleccionar todos</label>
+                            </div>
+
+                            {/* Tabla diseño imagen */}
+                            <div className="border border-gray-100 rounded-xl overflow-hidden mb-6">
+                                <table className="w-full text-left">
+                                    <thead className="bg-[#f8f9fa] border-b border-gray-100">
+                                        <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
+                                            <th className="px-6 py-4 w-12 text-center"></th>
+                                            <th className="px-4 py-4">CLIENTE</th>
+                                            <th className="px-4 py-4">MODELO</th>
+                                            <th className="px-4 py-4">CANT.</th>
+                                            <th className="px-4 py-4">TELA</th>
+                                            <th className="px-4 py-4">LUSTRE</th>
+                                            <th className="px-4 py-4">OBSERVACIONES</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50 font-medium">
-                                        {pendientes.map(p => (
-                                            <tr key={p.id_producto || p.Id_Producto}>
-                                                <td className="px-6 py-4">
-                                                    <input 
-                                                        type="checkbox" className="w-5 h-5 rounded border-gray-300"
-                                                        checked={seleccionados.includes(p.id_producto || p.Id_Producto)}
-                                                        onChange={() => setSeleccionados(prev => prev.includes(p.id_producto || p.Id_Producto) ? prev.filter(id => id !== (p.id_producto || p.Id_Producto)) : [...prev, (p.id_producto || p.Id_Producto)])}
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4">{p.modelo || p.Modelo}</td>
-                                                <td className="px-6 py-4">{p.cantidad || p.Cantidad}</td>
-                                            </tr>
-                                        ))}
+                                    <tbody className="divide-y divide-gray-100">
+                                        {pendientes.length === 0 ? (
+                                            <tr><td colSpan="7" className="px-6 py-12 text-center text-gray-400 italic">No hay productos pendientes para fabricar</td></tr>
+                                        ) : pendientes.map(p => {
+                                            const id = p.id_producto || p.Id_Producto;
+                                            const isSelected = seleccionados.includes(id);
+                                            return (
+                                                <tr key={id} className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50/20' : ''}`}>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="w-4 h-4 rounded border-gray-300 accent-[#4b5563]"
+                                                            checked={isSelected}
+                                                            onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Diseño Interior SA'}</td>
+                                                    <td className="px-4 py-4 text-sm font-medium text-gray-800">{p.modelo || p.Modelo}</td>
+                                                    <td className="px-4 py-4 text-sm text-gray-600">{p.cantidad || p.Cantidad}</td>
+                                                    <td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
+                                                    <td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || '-'}</td>
+                                                    <td className="px-4 py-4 text-sm text-gray-400 italic">{p.observaciones || p.Observaciones || '-'}</td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
-                            <button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${seleccionados.length > 0 ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}>
-                                <Printer size={20} /> Generar Planilla y Enviar a Producción ({seleccionados.length})
-                            </button>
+
+                            {/* Footer diseño imagen */}
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+                                <p className="text-sm text-gray-500">
+                                    <span className="font-medium text-gray-800">{seleccionados.length}</span> producto(s) seleccionado(s) de <span className="font-medium text-gray-800">{pendientes.length}</span>
+                                </p>
+                                <div className="flex gap-4 w-full sm:w-auto">
+                                    <button 
+                                        onClick={() => setShowSelectionModal(false)}
+                                        className="flex-1 sm:px-12 py-3.5 border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={handleEnviarAProduccion}
+                                        disabled={seleccionados.length === 0}
+                                        className={`flex-1 sm:px-12 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
+                                            seleccionados.length > 0 
+                                            ? 'bg-[#d1d5db] text-gray-700 hover:bg-gray-300' 
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        <Printer size={20} /> Imprimir y Enviar a Producción
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

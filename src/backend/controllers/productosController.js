@@ -48,12 +48,25 @@ const actualizarProducto = async (req, res) => {
 const eliminarProducto = async (req, res) => {
     const { id } = req.params;
     try {
-        const resultado = await pool.query('DELETE FROM Producto WHERE Id_Producto = $1', [id]);
-        if (resultado.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+        // 1. Verificamos el estado antes de borrar
+        const producto = await pool.query('SELECT Estado FROM Producto WHERE Id_Producto = $1', [id]);
+        
+        if (producto.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+
+        const estado = (producto.rows[0].Estado || "").toLowerCase();
+
+        if (estado === 'en_produccion') {
+            return res.status(400).json({ 
+                error: 'No se puede eliminar un producto que ya está EN PRODUCCIÓN.' 
+            });
+        }
+
+        // 2. Si no está en producción, procedemos al borrado
+        await pool.query('DELETE FROM Producto WHERE Id_Producto = $1', [id]);
         res.json({ mensaje: 'Producto eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarProducto:', error.message);
-        res.status(500).json({ error: 'Error al eliminar el producto. Puede que esté vinculado a un pedido.' });
+        res.status(500).json({ error: 'Error al intentar eliminar el producto.' });
     }
 };
 

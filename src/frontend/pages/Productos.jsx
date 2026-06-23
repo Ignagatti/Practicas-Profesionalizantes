@@ -97,6 +97,14 @@ function Productos() {
     };
 
     const handleEliminar = async (id) => {
+        const p = productos.find(prod => (prod.id_producto || prod.Id_Producto) === id);
+        const estado = (p.estado || p.Estado || "").toLowerCase();
+
+        if (estado === 'en_produccion') {
+            alert("No se puede eliminar un producto que ya ha sido enviado a producción.");
+            return;
+        }
+
         if (!confirm("¿Seguro quieres eliminar este producto?")) return;
         try {
             await eliminarProducto(id);

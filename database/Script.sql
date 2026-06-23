@@ -76,7 +76,7 @@ CREATE TABLE Cliente (
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
     Telefono VARCHAR(20) NOT NULL,
-    Estado estado_cliente DEFAULT 'activo',
+    Estado estado DEFAULT 'activo',
     Saldo DECIMAL(15,2) DEFAULT 0,
     CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
     Email VARCHAR(150) NOT NULL,
@@ -90,15 +90,21 @@ CREATE TABLE Cliente (
 );
 
 CREATE TABLE Proveedor (
-    Id_Proveedor SERIAL PRIMARY KEY,
-    Nombre VARCHAR(100),
-    Apellido VARCHAR(100),
-    Telefono VARCHAR(20),
-    Estado estado_general DEFAULT 'activo',
-    Saldo DECIMAL(15,2) DEFAULT 0 CHECK (Saldo >= 0),
-    CUIT VARCHAR(20),
-    Email VARCHAR(150),
-    Razon_Social VARCHAR(100)
+   Id_Proveedor SERIAL PRIMARY KEY,
+    Nombre VARCHAR(100) NOT NULL,
+    Apellido VARCHAR(100) NOT NULL,
+    Telefono VARCHAR(20) NOT NULL,
+    Estado estado DEFAULT 'activo',
+    Saldo DECIMAL(15,2) DEFAULT 0,
+    CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
+    Email VARCHAR(150) NOT NULL,
+    Razon_Social VARCHAR(100),
+
+    CONSTRAINT chk_saldo_proveedor_rango
+        CHECK (Saldo BETWEEN 0 AND 1000000000),
+
+    CONSTRAINT chk_email_proveedor
+        CHECK (Email LIKE '%@%.%')
 );
 
 CREATE TABLE Direccion (

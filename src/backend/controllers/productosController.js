@@ -49,11 +49,11 @@ const eliminarProducto = async (req, res) => {
     const { id } = req.params;
     try {
         const resultado = await pool.query('DELETE FROM Producto WHERE Id_Producto = $1', [id]);
-        if (resultado.rowCount === 0) return res.status(404).send('Producto no encontrado');
-        res.send('Producto eliminado correctamente');
+        if (resultado.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+        res.json({ mensaje: 'Producto eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarProducto:', error.message);
-        res.status(500).send('Error al eliminar el producto');
+        res.status(500).json({ error: 'Error al eliminar el producto. Puede que esté vinculado a un pedido.' });
     }
 };
 

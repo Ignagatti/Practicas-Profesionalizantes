@@ -15,9 +15,10 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
         { id: 'productos', nombre: 'Productos', icono: Package },
         { id: 'pedidos', nombre: 'Pedidos', icono: ShoppingCart },
         { id: 'pagos', nombre: 'Pagos', icono: Wallet },
-        { id: 'insumos', nombre: 'Insumos', icono: DollarSign }, // Usamos insumos aquí como ejemplo
+        { id: 'insumos', nombre: 'Insumos', icono: DollarSign },
         { id: 'precios', nombre: 'Lista de Precios', icono: List },
-        { id: 'clientes', nombre: 'Clientes/Proveedores', icono: Users },
+        { id: 'clientes', nombre: 'Clientes', icono: Users },
+        { id: 'proveedores', nombre: 'Proveedores', icono: Users },
     ];
 
     return (

@@ -138,13 +138,26 @@ function Productos() {
 
     const filteredProductos = productos.filter((p, idx) => {
         const term = searchTerm.toLowerCase();
-        const coalesce = (val) => (val || "").toLowerCase();
-        const match = coalesce(p.modelo || p.Modelo).includes(term) || 
-                      coalesce(p.tela || p.Tela).includes(term) ||
-                      coalesce(p.cliente).includes(term);
+        const idStr = `PROD-00${idx + 1}`.toLowerCase();
+        const clienteStr = (p.cliente || "Mueblería Del Sur").toLowerCase();
+        const modeloStr = (p.modelo || p.Modelo || "").toLowerCase();
+        const telaStr = (p.tela || p.Tela || "").toLowerCase();
+        const lustreStr = (p.color_lustre || p.Color_Lustre || "").toLowerCase();
+        const obsStr = (p.observaciones || p.Observaciones || "").toLowerCase();
+
+        const coincideBusqueda = 
+            idStr.includes(term) || clienteStr.includes(term) || modeloStr.includes(term) || 
+            telaStr.includes(term) || lustreStr.includes(term) || obsStr.includes(term);
+
+        const estado = (p.estado || p.Estado || "").toLowerCase();
+        const coincideEstado = filtroEstado === "todos" || estado === filtroEstado;
         
-        const estadoMatch = filtroEstado === "todos" || coalesce(p.estado || p.Estado) === filtroEstado;
-        return match && estadoMatch;
+        const fechaProd = new Date(p.fecha_pedido || p.Fecha_Pedido || new Date());
+        const desde = fechaDesde ? new Date(fechaDesde) : null;
+        const hasta = fechaHasta ? new Date(fechaHasta) : null;
+        const coincideFecha = (!desde || fechaProd >= desde) && (!hasta || fechaProd <= hasta);
+
+        return coincideBusqueda && coincideEstado && coincideFecha;
     });
 
     const handleEnviarAProduccion = async () => {
@@ -166,72 +179,116 @@ function Productos() {
     const pendientes = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'pendiente');
 
     return (
-        <div className="space-y-8 px-8 py-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="space-y-6 text-gray-800">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
                 <div>
-                    <h2 className="text-2xl text-gray-800 font-bold">Gestión de Productos</h2>
-                    <p className="text-gray-500 text-sm mt-1">{filteredProductos.length} productos registrados</p>
+                    <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">Gestión de Productos</h2>
+                    <p className="text-sm text-gray-500">{productos.length} productos registrados</p>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setShowSelectionModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm text-sm"><Printer size={18} /> Imprimir Planilla</button>
-                    <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-red-700 text-white px-5 py-2 rounded-lg hover:bg-red-800 font-semibold shadow-md text-sm"><Plus size={20} /> Agregar Producto</button>
+                <button 
+                    onClick={handleOpenAdd}
+                    className="bg-[#b91c1c] text-white px-8 py-3 rounded-xl flex items-center gap-2 font-bold hover:bg-red-800 shadow-lg shadow-red-100 transition-all"
+                >
+                    <Plus size={20} /> Agregar Producto
+                </button>
+            </div>
+
+            {/* BARRA DE FILTROS */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                <div className="flex flex-col gap-4">
+                    <div className="flex gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <input 
+                                type="text" placeholder="Buscar productos..." 
+                                className="w-full pl-20 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none"
+                                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <select 
+                            className="bg-white border border-gray-200 rounded-xl px-6 py-3 font-medium text-gray-700 outline-none"
+                            value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}
+                        >
+                            <option value="todos">Todos los Estados</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en_produccion">En Producción</option>
+                            <option value="terminado">Terminado</option>
+                        </select>
+                        <button 
+                            onClick={() => setShowSelectionModal(true)}
+                            className="bg-white border border-gray-200 px-6 py-3 rounded-xl flex items-center gap-2 font-bold text-gray-700 hover:bg-gray-100 transition-all shadow-sm"
+                        >
+                            <Printer size={20} /> Imprimir Planilla
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-500">Desde:</span>
+                            <input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-400 outline-none" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-500">Hasta:</span>
+                            <input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-400 outline-none" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input type="text" placeholder="Buscar productos..." className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
-                <select className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 outline-none focus:ring-2 focus:ring-red-500 shadow-sm" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
-                    <option value="todos">Todos los Estados</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en_produccion">En Producción</option>
-                    <option value="terminado">Terminado</option>
-                </select>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr className="text-xs text-gray-500 uppercase tracking-tight font-bold">
-                                <th className="px-6 py-4">ID</th>
-                                <th className="px-6 py-4">CLIENTE</th>
-                                <th className="px-6 py-4">MODELO</th>
-                                <th className="px-6 py-4 text-center">CANT.</th>
-                                <th className="px-6 py-4">TELA / TIPO</th>
-                                <th className="px-6 py-4">LUSTRE</th>
-                                <th className="px-6 py-4">ESTADO</th>
-                                <th className="px-6 py-4 text-right">ACCIONES</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {filteredProductos.map((p, idx) => (
-                                <tr key={p.id_producto || p.Id_Producto} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 text-sm text-gray-400 font-medium">#00{idx+1}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Mueblería Del Sur'}</td>
+            {/* TABLA PRINCIPAL */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-left">
+                    <thead className="bg-gray-50/50 border-b border-gray-100">
+                        <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            <th className="px-6 py-4">Nº PRODUCTO</th>
+                            <th className="px-6 py-4">CLIENTE</th>
+                            <th className="px-6 py-4">MODELO</th>
+                            <th className="px-6 py-4">CANTIDAD</th>
+                            <th className="px-6 py-4">TELA</th>
+                            <th className="px-6 py-4">LUSTRE</th>
+                            <th className="px-6 py-4">FECHA</th>
+                            <th className="px-6 py-4">ESTADO</th>
+                            <th className="px-6 py-4">OBSERVACIONES</th>
+                            <th className="px-6 py-4"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {filteredProductos.map((p, idx) => {
+                            const id = p.id_producto || p.Id_Producto;
+                            const estado = (p.estado || p.Estado || "").toLowerCase();
+                            return (
+                                <tr key={id} className="hover:bg-gray-50/80 transition-colors group">
+                                    <td className="px-6 py-4 text-sm font-bold text-gray-400">PROD-00{idx+1}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 font-medium">{p.cliente || 'Mueblería Del Sur'}</td>
                                     <td className="px-6 py-4 text-sm text-gray-800 font-bold">{p.modelo || p.Modelo}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-800 font-bold">{p.tela || p.Tela || '-'}</div>
-                                        <div className="text-[10px] text-gray-400 font-bold uppercase">{p.tipo_tela || p.Tipo_Tela || '-'}</div>
+                                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{p.cantidad || p.Cantidad}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-700 font-medium">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500">{p.fecha_pedido ? new Date(p.fecha_pedido).toLocaleDateString() : '2026-04-10'}</td>
+                                    <td className="px-6 py-4 text-sm">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                                            estado === 'pendiente' ? 'bg-gray-100 text-gray-500' : 
+                                            estado === 'en_produccion' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'
+                                        }`}>
+                                            {estado.replace('_', ' ').toUpperCase()}
+                                        </span>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.color_lustre || p.Color_Lustre || '-'}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                            (p.estado || p.Estado || "").toLowerCase() === 'pendiente' ? 'bg-gray-100 text-gray-500' :
-                                            (p.estado || p.Estado || "").toLowerCase() === 'en_produccion' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                        }`}>{ (p.estado || p.Estado || "pendiente").replace('_',' ') }</span>
+                                    <td className="px-6 py-4 text-sm text-gray-400 truncate max-w-[150px]">
+                                        {p.observaciones || p.Observaciones || '-'}
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button onClick={() => {setSelectedProducto(p); setShowDetailModal(true);}} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors"><Eye size={18} /></button>
+                                        <button 
+                                            onClick={() => {setSelectedProducto(p); setShowDetailModal(true);}}
+                                            className="p-2 text-blue-500 bg-blue-50 rounded-full transition-all hover:bg-blue-100"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
                                     </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            );
+                        })}
+                    </tbody>
+                </table>
             </div>
 
             {showFormModal && (

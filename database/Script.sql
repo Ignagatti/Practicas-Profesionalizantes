@@ -15,18 +15,16 @@ DROP TABLE IF EXISTS Direccion CASCADE;
 DROP TABLE IF EXISTS Proveedor CASCADE;
 DROP TABLE IF EXISTS Cliente CASCADE;
 DROP TABLE IF EXISTS Metodo_Pago CASCADE;
-
-DROP TYPE IF EXISTS estado_cliente CASCADE;
+DROP TYPE IF EXISTS estado_entidad CASCADE;
 DROP TYPE IF EXISTS estado_producto CASCADE;
 DROP TYPE IF EXISTS estado_facturacion CASCADE;
 DROP TYPE IF EXISTS tipo_pago CASCADE;
-DROP TYPE IF EXISTS estado_general CASCADE;
 DROP TYPE IF EXISTS estado_pago CASCADE;
 
 -- =========================
 -- TIPOS ENUM
 -- =========================
-CREATE TYPE estado_cliente AS ENUM (
+CREATE TYPE estado_entidad AS ENUM (
     'activo',
     'bloqueado'
 );
@@ -51,11 +49,6 @@ CREATE TYPE tipo_pago AS ENUM (
     'cheque'
 );
 
-CREATE TYPE estado_general AS ENUM (
-    'activo',
-    'inactivo'
-);
-
 CREATE TYPE estado_pago AS ENUM (
     'pendiente',
     'parcial',
@@ -76,7 +69,7 @@ CREATE TABLE Cliente (
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
     Telefono VARCHAR(20) NOT NULL,
-    Estado estado DEFAULT 'activo',
+    Estado estado_entidad DEFAULT 'activo',
     Saldo DECIMAL(15,2) DEFAULT 0,
     CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
     Email VARCHAR(150) NOT NULL,
@@ -94,7 +87,7 @@ CREATE TABLE Proveedor (
     Nombre VARCHAR(100) NOT NULL,
     Apellido VARCHAR(100) NOT NULL,
     Telefono VARCHAR(20) NOT NULL,
-    Estado estado DEFAULT 'activo',
+    Estado estado_entidad DEFAULT 'activo',
     Saldo DECIMAL(15,2) DEFAULT 0,
     CUIT_CUIL VARCHAR(20) NOT NULL UNIQUE,
     Email VARCHAR(150) NOT NULL,

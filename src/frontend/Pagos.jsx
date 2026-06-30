@@ -245,7 +245,7 @@ function PagosContent() {
       <div className="bg-white rounded-xl border p-4">
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
             size={18}
           />
 
@@ -254,7 +254,7 @@ function PagosContent() {
             placeholder="Buscar pagos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+            className="w-full pl-20 pr-4 py-2 border rounded-lg"
           />
         </div>
       </div>

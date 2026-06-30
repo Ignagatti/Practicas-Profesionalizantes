@@ -178,11 +178,133 @@ const desbloquearProveedor = async (req, res) => {
     }
 };
 
+const obtenerDireccionesProveedor = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const proveedorExiste = await pool.query(
+            'SELECT * FROM Proveedor WHERE Id_Proveedor = $1',
+            [id]
+        );
+
+        if (proveedorExiste.rows.length === 0) {
+            return res.status(404).json({ error: 'Proveedor no encontrado' });
+        }
+
+        const resultado = await pool.query(
+            'SELECT * FROM Direccion WHERE Id_Proveedor = $1 ORDER BY Id_Direccion ASC',
+            [id]
+        );
+
+        res.json(resultado.rows);
+    } catch (error) {
+        console.error('Error en obtenerDireccionesProveedor:', error.message);
+        res.status(500).json({ error: 'Error al obtener direcciones del proveedor' });
+    }
+};
+
+const crearDireccionProveedor = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { Calle, Codigo_Postal, Provincia, Ciudad, Numero } = req.body;
+
+        if (!Calle || !Provincia || !Ciudad || !Numero) {
+            return res.status(400).json({
+                error: 'Calle, Provincia, Ciudad y Número son obligatorios'
+            });
+        }
+
+        const proveedorExiste = await pool.query(
+            'SELECT * FROM Proveedor WHERE Id_Proveedor = $1',
+            [id]
+        );
+
+        if (proveedorExiste.rows.length === 0) {
+            return res.status(404).json({ error: 'Proveedor no encontrado' });
+        }
+
+        const resultado = await pool.query(
+            `INSERT INTO Direccion
+            (Calle, Codigo_Postal, Provincia, Ciudad, Numero, Id_Cliente, Id_Proveedor)
+            VALUES ($1, $2, $3, $4, $5, NULL, $6)
+            RETURNING *`,
+            [Calle, Codigo_Postal || null, Provincia, Ciudad, Numero, id]
+        );
+
+        res.status(201).json(resultado.rows[0]);
+    } catch (error) {
+        console.error('Error en crearDireccionProveedor:', error.message);
+        res.status(500).json({ error: 'Error al crear dirección del proveedor' });
+    }
+};
+
+const actualizarDireccionProveedor = async (req, res) => {
+    try {
+        const { idDireccion } = req.params;
+        const { Calle, Codigo_Postal, Provincia, Ciudad, Numero } = req.body;
+
+        if (!Calle || !Provincia || !Ciudad || !Numero) {
+            return res.status(400).json({
+                error: 'Calle, Provincia, Ciudad y Número son obligatorios'
+            });
+        }
+
+        const resultado = await pool.query(
+            `UPDATE Direccion
+             SET Calle = $1,
+                 Codigo_Postal = $2,
+                 Provincia = $3,
+                 Ciudad = $4,
+                 Numero = $5
+             WHERE Id_Direccion = $6
+               AND Id_Proveedor IS NOT NULL
+             RETURNING *`,
+            [Calle, Codigo_Postal || null, Provincia, Ciudad, Numero, idDireccion]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: 'Dirección no encontrada' });
+        }
+
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error('Error en actualizarDireccionProveedor:', error.message);
+        res.status(500).json({ error: 'Error al actualizar dirección del proveedor' });
+    }
+};
+
+const eliminarDireccionProveedor = async (req, res) => {
+    try {
+        const { idDireccion } = req.params;
+
+        const resultado = await pool.query(
+            `DELETE FROM Direccion
+             WHERE Id_Direccion = $1
+               AND Id_Proveedor IS NOT NULL
+             RETURNING *`,
+            [idDireccion]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ error: 'Dirección no encontrada' });
+        }
+
+        res.json({ mensaje: 'Dirección eliminada correctamente' });
+    } catch (error) {
+        console.error('Error en eliminarDireccionProveedor:', error.message);
+        res.status(500).json({ error: 'Error al eliminar dirección del proveedor' });
+    }
+};
+
 module.exports = {
     obtenerProveedores,
     obtenerProveedorPorId,
     crearProveedor,
     actualizarProveedor,
     bloquearProveedor,
-    desbloquearProveedor
+    desbloquearProveedor,
+    obtenerDireccionesProveedor,
+    crearDireccionProveedor,
+    actualizarDireccionProveedor,
+    eliminarDireccionProveedor
 };

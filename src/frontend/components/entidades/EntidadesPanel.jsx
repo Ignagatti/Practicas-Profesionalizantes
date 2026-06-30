@@ -11,7 +11,6 @@ import {
   Truck,
 } from "lucide-react";
 
-// ── URL base de tu backend ────────────────────────────────────────────────────
 const API_URL = "http://localhost:4000/api";
 
 const FORM_VACIO = {
@@ -23,6 +22,15 @@ const FORM_VACIO = {
   telefono: "",
   email: "",
   estado: "activo",
+};
+
+const DIRECCION_VACIA = {
+  id: 0,
+  calle: "",
+  numero: "",
+  ciudad: "",
+  provincia: "",
+  codigoPostal: "",
 };
 
 function mapEntidadDesdeBackend(entidad, tipoVista) {
@@ -49,12 +57,37 @@ function mapEntidadParaBackend(entidad) {
   };
 }
 
+function mapDireccionDesdeBackend(direccion) {
+  return {
+    id: direccion.id_direccion,
+    calle: direccion.calle || "",
+    numero: direccion.numero || "",
+    ciudad: direccion.ciudad || "",
+    provincia: direccion.provincia || "",
+    codigoPostal: direccion.codigo_postal || "",
+  };
+}
+
+function mapDireccionParaBackend(direccion) {
+  return {
+    Calle: direccion.calle,
+    Numero: direccion.numero,
+    Ciudad: direccion.ciudad,
+    Provincia: direccion.provincia,
+    Codigo_Postal: direccion.codigoPostal,
+  };
+}
+
 function obtenerRuta(tipoVista) {
   return tipoVista === "cliente" ? "/clientes" : "/proveedores";
 }
 
 function obtenerNombreEntidad(tipoVista) {
   return tipoVista === "cliente" ? "Cliente" : "Proveedor";
+}
+
+function obtenerNombrePlural(tipoVista) {
+  return tipoVista === "cliente" ? "clientes" : "proveedores";
 }
 
 function validarEmail(email) {
@@ -79,19 +112,59 @@ function validarCampos(entidad) {
   return null;
 }
 
-export function ClientesProveedores() {
-  const [tipoVista, setTipoVista] = useState("cliente");
+function validarDireccion(direccion) {
+  if (
+    !direccion.calle ||
+    !direccion.numero ||
+    !direccion.ciudad ||
+    !direccion.provincia
+  ) {
+    return "Calle, número, ciudad y provincia son obligatorios.";
+  }
+
+  return null;
+}
+
+export function EntidadesPanel({
+  tipoInicial = "cliente",
+  mostrarSelector = false,
+}) {
+  const [tipoVista, setTipoVista] = useState(tipoInicial);
   const [entidades, setEntidades] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+
   const [selectedEntidad, setSelectedEntidad] = useState(null);
   const [isEditando, setIsEditando] = useState(false);
+
   const [newEntidad, setNewEntidad] = useState(FORM_VACIO);
+  const [direccionNuevaEntidad, setDireccionNuevaEntidad] =
+    useState(DIRECCION_VACIA);
+
+  const [direcciones, setDirecciones] = useState([]);
+  const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
+  const [nuevaDireccion, setNuevaDireccion] = useState(DIRECCION_VACIA);
+  const [direccionEditandoId, setDireccionEditandoId] = useState(null);
+
   const [errorForm, setErrorForm] = useState(null);
   const [mensajeExito, setMensajeExito] = useState(null);
+
+  useEffect(() => {
+    setTipoVista(tipoInicial);
+    setSearchTerm("");
+    setShowAddModal(false);
+    setShowViewModal(false);
+    setSelectedEntidad(null);
+    setIsEditando(false);
+    setErrorForm(null);
+    setDirecciones([]);
+    setNuevaDireccion(DIRECCION_VACIA);
+    setDireccionEditandoId(null);
+  }, [tipoInicial]);
 
   useEffect(() => {
     cargarEntidades();
@@ -103,16 +176,12 @@ export function ClientesProveedores() {
 
     try {
       const ruta = obtenerRuta(tipoVista);
-
       const res = await fetch(`${API_URL}${ruta}`);
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(
-          data.error ||
-            `Error al cargar ${
-              tipoVista === "cliente" ? "clientes" : "proveedores"
-            }.`
+          data.error || `Error al cargar ${obtenerNombrePlural(tipoVista)}.`
         );
       }
 
@@ -124,6 +193,26 @@ export function ClientesProveedores() {
     }
   }
 
+  async function cargarDirecciones(entidadId) {
+    setCargandoDirecciones(true);
+
+    try {
+      const ruta = obtenerRuta(tipoVista);
+      const res = await fetch(`${API_URL}${ruta}/${entidadId}/direcciones`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al cargar direcciones.");
+      }
+
+      setDirecciones(data.map(mapDireccionDesdeBackend));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargandoDirecciones(false);
+    }
+  }
+
   const filtradas = entidades.filter((entidad) => {
     const termino = searchTerm.toLowerCase();
 
@@ -131,7 +220,8 @@ export function ClientesProveedores() {
       entidad.nombre.toLowerCase().includes(termino) ||
       entidad.apellido.toLowerCase().includes(termino) ||
       entidad.razonSocial.toLowerCase().includes(termino) ||
-      entidad.cuit.toLowerCase().includes(termino)
+      entidad.cuit.toLowerCase().includes(termino) ||
+      entidad.email.toLowerCase().includes(termino)
     );
   });
 
@@ -144,17 +234,26 @@ export function ClientesProveedores() {
     setSelectedEntidad({ ...entidad });
     setIsEditando(false);
     setErrorForm(null);
+    setDirecciones([]);
+    setNuevaDireccion(DIRECCION_VACIA);
+    setDireccionEditandoId(null);
     setShowViewModal(true);
+    cargarDirecciones(entidad.id);
   }
 
   async function handleAddEntidad(e) {
     e.preventDefault();
     setErrorForm(null);
 
-    const errorValidacion = validarCampos(newEntidad);
+    const errorEntidad = validarCampos(newEntidad);
+    if (errorEntidad) {
+      setErrorForm(errorEntidad);
+      return;
+    }
 
-    if (errorValidacion) {
-      setErrorForm(errorValidacion);
+    const errorDireccion = validarDireccion(direccionNuevaEntidad);
+    if (errorDireccion) {
+      setErrorForm(errorDireccion);
       return;
     }
 
@@ -162,28 +261,54 @@ export function ClientesProveedores() {
       const ruta = obtenerRuta(tipoVista);
       const nombreEntidad = obtenerNombreEntidad(tipoVista);
 
-      const res = await fetch(`${API_URL}${ruta}`, {
+      const resEntidad = await fetch(`${API_URL}${ruta}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(mapEntidadParaBackend(newEntidad)),
       });
 
-      const data = await res.json();
+      const dataEntidad = await resEntidad.json();
 
-      if (!res.ok) {
+      if (!resEntidad.ok) {
         setErrorForm(
-          data.error || `Error al agregar ${nombreEntidad.toLowerCase()}.`
+          dataEntidad.error || `Error al agregar ${nombreEntidad.toLowerCase()}.`
         );
         return;
       }
 
-      setEntidades((prev) => [
-        ...prev,
-        mapEntidadDesdeBackend(data, tipoVista),
-      ]);
+      const entidadCreada = mapEntidadDesdeBackend(dataEntidad, tipoVista);
+
+      const resDireccion = await fetch(
+        `${API_URL}${ruta}/${entidadCreada.id}/direcciones`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mapDireccionParaBackend(direccionNuevaEntidad)),
+        }
+      );
+
+      const dataDireccion = await resDireccion.json();
+
+      if (!resDireccion.ok) {
+        setEntidades((prev) => [...prev, entidadCreada]);
+        setShowAddModal(false);
+        setNewEntidad(FORM_VACIO);
+        setDireccionNuevaEntidad(DIRECCION_VACIA);
+
+        setError(
+          `${nombreEntidad} creado, pero no se pudo guardar la dirección: ${
+            dataDireccion.error || "error desconocido"
+          }`
+        );
+
+        return;
+      }
+
+      setEntidades((prev) => [...prev, entidadCreada]);
 
       setShowAddModal(false);
       setNewEntidad(FORM_VACIO);
+      setDireccionNuevaEntidad(DIRECCION_VACIA);
       mostrarExito(`${nombreEntidad} agregado correctamente.`);
     } catch (err) {
       setErrorForm(err.message);
@@ -280,24 +405,110 @@ export function ClientesProveedores() {
   async function handleCambiarEstadoDesdeModal() {
     if (!selectedEntidad) return;
 
-    const accion =
-      selectedEntidad.estado === "activo" ? "bloquear" : "activar";
-
+    const accion = selectedEntidad.estado === "activo" ? "bloquear" : "activar";
     const nombreEntidad = obtenerNombreEntidad(tipoVista).toLowerCase();
 
-    if (
-      !confirm(
-        `¿Está seguro que desea ${accion} este ${nombreEntidad}?`
-      )
-    ) {
+    if (!confirm(`¿Está seguro que desea ${accion} este ${nombreEntidad}?`)) {
       return;
     }
 
     await handleToggleEstado(selectedEntidad);
   }
 
+  async function guardarDireccion(e) {
+    e.preventDefault();
+    setErrorForm(null);
+
+    if (!selectedEntidad) return;
+
+    const errorDireccion = validarDireccion(nuevaDireccion);
+    if (errorDireccion) {
+      setErrorForm(errorDireccion);
+      return;
+    }
+
+    try {
+      const ruta = obtenerRuta(tipoVista);
+
+      const url = direccionEditandoId
+        ? `${API_URL}${ruta}/direcciones/${direccionEditandoId}`
+        : `${API_URL}${ruta}/${selectedEntidad.id}/direcciones`;
+
+      const method = direccionEditandoId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mapDireccionParaBackend(nuevaDireccion)),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorForm(data.error || "Error al guardar dirección.");
+        return;
+      }
+
+      const direccionGuardada = mapDireccionDesdeBackend(data);
+
+      if (direccionEditandoId) {
+        setDirecciones((prev) =>
+          prev.map((d) =>
+            d.id === direccionGuardada.id ? direccionGuardada : d
+          )
+        );
+        mostrarExito("Dirección actualizada correctamente.");
+      } else {
+        setDirecciones((prev) => [...prev, direccionGuardada]);
+        mostrarExito("Dirección agregada correctamente.");
+      }
+
+      setNuevaDireccion(DIRECCION_VACIA);
+      setDireccionEditandoId(null);
+    } catch (err) {
+      setErrorForm(err.message);
+    }
+  }
+
+  function editarDireccion(direccion) {
+    setNuevaDireccion({ ...direccion });
+    setDireccionEditandoId(direccion.id);
+  }
+
+  function cancelarEdicionDireccion() {
+    setNuevaDireccion(DIRECCION_VACIA);
+    setDireccionEditandoId(null);
+  }
+
+  async function eliminarDireccion(idDireccion) {
+    if (!confirm("¿Está seguro que desea eliminar esta dirección?")) return;
+
+    try {
+      const ruta = obtenerRuta(tipoVista);
+
+      const res = await fetch(`${API_URL}${ruta}/direcciones/${idDireccion}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al eliminar dirección.");
+      }
+
+      setDirecciones((prev) => prev.filter((d) => d.id !== idDireccion));
+      mostrarExito("Dirección eliminada correctamente.");
+
+      if (direccionEditandoId === idDireccion) {
+        cancelarEdicionDireccion();
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
-    <div className="space-y-8 px-8 py-6">
+    <div className="space-y-8">
       {mensajeExito && (
         <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
           {mensajeExito}
@@ -316,50 +527,52 @@ export function ClientesProveedores() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl text-gray-800">
-            {tipoVista === "cliente" ? "Clientes" : "Proveedores"}
+            Gestión de {obtenerNombrePlural(tipoVista)}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            {filtradas.length}{" "}
-            {tipoVista === "cliente" ? "clientes" : "proveedores"} registrados
+            {filtradas.length} {obtenerNombrePlural(tipoVista)} registrados
           </p>
         </div>
 
         <div className="flex gap-2">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => {
-                setTipoVista("cliente");
-                setSearchTerm("");
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                tipoVista === "cliente"
-                  ? "bg-white text-red-700 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              <Users size={18} />
-              Clientes
-            </button>
+          {mostrarSelector && (
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => {
+                  setTipoVista("cliente");
+                  setSearchTerm("");
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  tipoVista === "cliente"
+                    ? "bg-white text-red-700 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <Users size={18} />
+                Clientes
+              </button>
 
-            <button
-              onClick={() => {
-                setTipoVista("proveedor");
-                setSearchTerm("");
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-                tipoVista === "proveedor"
-                  ? "bg-white text-red-700 shadow-sm"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              <Truck size={18} />
-              Proveedores
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setTipoVista("proveedor");
+                  setSearchTerm("");
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  tipoVista === "proveedor"
+                    ? "bg-white text-red-700 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                <Truck size={18} />
+                Proveedores
+              </button>
+            </div>
+          )}
 
           <button
             onClick={() => {
               setNewEntidad(FORM_VACIO);
+              setDireccionNuevaEntidad(DIRECCION_VACIA);
               setErrorForm(null);
               setShowAddModal(true);
             }}
@@ -374,17 +587,15 @@ export function ClientesProveedores() {
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
             size={20}
           />
           <input
             type="text"
-            placeholder={`Buscar ${
-              tipoVista === "cliente" ? "clientes" : "proveedores"
-            }...`}
+            placeholder={`Buscar ${obtenerNombrePlural(tipoVista)}...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-20 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -395,9 +606,7 @@ export function ClientesProveedores() {
             <div className="p-8 text-center text-gray-500">Cargando...</div>
           ) : filtradas.length === 0 ? (
             <div className="p-8 text-center text-gray-400">
-              No hay{" "}
-              {tipoVista === "cliente" ? "clientes" : "proveedores"} para
-              mostrar.
+              No hay {obtenerNombrePlural(tipoVista)} para mostrar.
             </div>
           ) : (
             <table className="w-full">
@@ -414,6 +623,9 @@ export function ClientesProveedores() {
                   </th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
                     Teléfono
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                    Email
                   </th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
                     Estado
@@ -441,6 +653,9 @@ export function ClientesProveedores() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {entidad.telefono}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {entidad.email}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
@@ -488,10 +703,22 @@ export function ClientesProveedores() {
             setShowViewModal(false);
             setIsEditando(false);
             setErrorForm(null);
+            setDirecciones([]);
+            setNuevaDireccion(DIRECCION_VACIA);
+            setDireccionEditandoId(null);
           }}
           errorForm={errorForm}
           guardar={handleSaveChanges}
           cambiarEstado={handleCambiarEstadoDesdeModal}
+          direcciones={direcciones}
+          cargandoDirecciones={cargandoDirecciones}
+          nuevaDireccion={nuevaDireccion}
+          setNuevaDireccion={setNuevaDireccion}
+          direccionEditandoId={direccionEditandoId}
+          guardarDireccion={guardarDireccion}
+          editarDireccion={editarDireccion}
+          cancelarEdicionDireccion={cancelarEdicionDireccion}
+          eliminarDireccion={eliminarDireccion}
         />
       )}
 
@@ -500,9 +727,12 @@ export function ClientesProveedores() {
           tipoVista={tipoVista}
           entidad={newEntidad}
           setEntidad={setNewEntidad}
+          direccion={direccionNuevaEntidad}
+          setDireccion={setDireccionNuevaEntidad}
           cerrar={() => {
             setShowAddModal(false);
             setErrorForm(null);
+            setDireccionNuevaEntidad(DIRECCION_VACIA);
           }}
           errorForm={errorForm}
           guardar={handleAddEntidad}
@@ -521,10 +751,19 @@ function EntidadModal({
   errorForm,
   guardar,
   cambiarEstado,
+  direcciones,
+  cargandoDirecciones,
+  nuevaDireccion,
+  setNuevaDireccion,
+  direccionEditandoId,
+  guardarDireccion,
+  editarDireccion,
+  cancelarEdicionDireccion,
+  eliminarDireccion,
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-xl text-gray-800">
             {isEditando ? "Editar registro" : "Detalle del registro"}
@@ -628,11 +867,27 @@ function EntidadModal({
             </div>
           </div>
 
+          <DireccionesPanel
+            isEditando={isEditando}
+            direcciones={direcciones}
+            cargandoDirecciones={cargandoDirecciones}
+            nuevaDireccion={nuevaDireccion}
+            setNuevaDireccion={setNuevaDireccion}
+            direccionEditandoId={direccionEditandoId}
+            guardarDireccion={guardarDireccion}
+            editarDireccion={editarDireccion}
+            cancelarEdicionDireccion={cancelarEdicionDireccion}
+            eliminarDireccion={eliminarDireccion}
+          />
+
           <div className="flex gap-4 pt-4 border-t border-gray-200">
             {isEditando ? (
               <>
                 <button
-                  onClick={() => setIsEditando(false)}
+                  onClick={() => {
+                    setIsEditando(false);
+                    cancelarEdicionDireccion();
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancelar
@@ -661,17 +916,171 @@ function EntidadModal({
   );
 }
 
+function DireccionesPanel({
+  isEditando,
+  direcciones,
+  cargandoDirecciones,
+  nuevaDireccion,
+  setNuevaDireccion,
+  direccionEditandoId,
+  guardarDireccion,
+  editarDireccion,
+  cancelarEdicionDireccion,
+  eliminarDireccion,
+}) {
+  return (
+    <div className="pt-4 border-t border-gray-200 space-y-4">
+      <div>
+        <h4 className="text-base text-gray-800">Direcciones</h4>
+        <p className="text-sm text-gray-500">
+          Direcciones asociadas a este registro.
+        </p>
+      </div>
+
+      {cargandoDirecciones ? (
+        <p className="text-sm text-gray-400">Cargando direcciones...</p>
+      ) : direcciones.length === 0 ? (
+        <p className="text-sm text-gray-400">No hay direcciones cargadas.</p>
+      ) : (
+        <div className="space-y-2">
+          {direcciones.map((direccion) => (
+            <div
+              key={direccion.id}
+              className="border border-gray-200 rounded-lg p-3 flex items-start justify-between gap-3"
+            >
+              <div>
+                <p className="text-sm text-gray-800">
+                  {direccion.calle} {direccion.numero}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {direccion.ciudad}, {direccion.provincia}
+                  {direccion.codigoPostal
+                    ? ` - CP ${direccion.codigoPostal}`
+                    : ""}
+                </p>
+              </div>
+
+              {isEditando && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editarDireccion(direccion)}
+                    className="text-blue-600 text-sm hover:underline"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => eliminarDireccion(direccion.id)}
+                    className="text-red-600 text-sm hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isEditando && (
+        <form
+          onSubmit={guardarDireccion}
+          className="bg-gray-50 rounded-lg p-4 space-y-3"
+        >
+          <h5 className="text-sm text-gray-700">
+            {direccionEditandoId ? "Editar dirección" : "Agregar dirección"}
+          </h5>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <InputForm
+              label="Calle *"
+              value={nuevaDireccion.calle}
+              required
+              onChange={(v) =>
+                setNuevaDireccion({ ...nuevaDireccion, calle: v })
+              }
+            />
+
+            <InputForm
+              label="Número *"
+              value={nuevaDireccion.numero}
+              required
+              onChange={(v) =>
+                setNuevaDireccion({ ...nuevaDireccion, numero: v })
+              }
+            />
+
+            <InputForm
+              label="Ciudad *"
+              value={nuevaDireccion.ciudad}
+              required
+              onChange={(v) =>
+                setNuevaDireccion({ ...nuevaDireccion, ciudad: v })
+              }
+            />
+
+            <InputForm
+              label="Provincia *"
+              value={nuevaDireccion.provincia}
+              required
+              onChange={(v) =>
+                setNuevaDireccion({ ...nuevaDireccion, provincia: v })
+              }
+            />
+
+            <div className="sm:col-span-2">
+              <InputForm
+                label="Código Postal"
+                value={nuevaDireccion.codigoPostal}
+                onChange={(v) =>
+                  setNuevaDireccion({
+                    ...nuevaDireccion,
+                    codigoPostal: v,
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800"
+            >
+              {direccionEditandoId ? "Guardar dirección" : "Agregar dirección"}
+            </button>
+
+            {direccionEditandoId && (
+              <button
+                type="button"
+                onClick={cancelarEdicionDireccion}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar edición
+              </button>
+            )}
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function AgregarEntidadModal({
   tipoVista,
   entidad,
   setEntidad,
+  direccion,
+  setDireccion,
   cerrar,
   errorForm,
   guardar,
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h3 className="text-xl text-gray-800">
             Agregar {obtenerNombreEntidad(tipoVista)}
@@ -707,9 +1116,7 @@ function AgregarEntidadModal({
               <InputForm
                 label="Razón Social"
                 value={entidad.razonSocial}
-                onChange={(v) =>
-                  setEntidad({ ...entidad, razonSocial: v })
-                }
+                onChange={(v) => setEntidad({ ...entidad, razonSocial: v })}
               />
             </div>
 
@@ -724,9 +1131,7 @@ function AgregarEntidadModal({
               label="Teléfono *"
               value={entidad.telefono}
               required
-              onChange={(v) =>
-                setEntidad({ ...entidad, telefono: v })
-              }
+              onChange={(v) => setEntidad({ ...entidad, telefono: v })}
             />
 
             <div className="sm:col-span-2">
@@ -737,6 +1142,52 @@ function AgregarEntidadModal({
                 required
                 onChange={(v) => setEntidad({ ...entidad, email: v })}
               />
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-200 space-y-4">
+            <div>
+              <h4 className="text-base text-gray-800">Dirección principal</h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InputForm
+                label="Calle *"
+                value={direccion.calle}
+                required
+                onChange={(v) => setDireccion({ ...direccion, calle: v })}
+              />
+
+              <InputForm
+                label="Número *"
+                value={direccion.numero}
+                required
+                onChange={(v) => setDireccion({ ...direccion, numero: v })}
+              />
+
+              <InputForm
+                label="Ciudad *"
+                value={direccion.ciudad}
+                required
+                onChange={(v) => setDireccion({ ...direccion, ciudad: v })}
+              />
+
+              <InputForm
+                label="Provincia *"
+                value={direccion.provincia}
+                required
+                onChange={(v) => setDireccion({ ...direccion, provincia: v })}
+              />
+
+              <div className="sm:col-span-2">
+                <InputForm
+                  label="Código Postal"
+                  value={direccion.codigoPostal}
+                  onChange={(v) =>
+                    setDireccion({ ...direccion, codigoPostal: v })
+                  }
+                />
+              </div>
             </div>
           </div>
 

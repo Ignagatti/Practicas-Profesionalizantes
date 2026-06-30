@@ -9,4 +9,9 @@ router.put('/:id', proveedoresController.actualizarProveedor);
 router.delete('/:id', proveedoresController.bloquearProveedor);
 router.put('/:id/desbloquear', proveedoresController.desbloquearProveedor);
 
+router.get('/:id/direcciones', proveedoresController.obtenerDireccionesProveedor);
+router.post('/:id/direcciones', proveedoresController.crearDireccionProveedor);
+router.put('/direcciones/:idDireccion', proveedoresController.actualizarDireccionProveedor);
+router.delete('/direcciones/:idDireccion', proveedoresController.eliminarDireccionProveedor);
+
 module.exports = router;

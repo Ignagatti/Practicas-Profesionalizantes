@@ -16,7 +16,8 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
         { id: 'pedidos', nombre: 'Pedidos', icono: ShoppingCart },
         { id: 'pagos', nombre: 'Pagos', icono: Wallet },
         { id: 'insumos', nombre: 'Lista de Precios', icono: List },
-        { id: 'clientes', nombre: 'Clientes/Proveedores', icono: Users },
+        { id: 'clientes', nombre: 'Clientes', icono: Users },
+        { id: 'proveedores', nombre: 'Proveedores', icono: Users },
     ];
 
     return (

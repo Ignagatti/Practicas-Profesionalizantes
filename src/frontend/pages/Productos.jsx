@@ -199,10 +199,9 @@ function Productos() {
                 <div className="flex flex-col gap-4">
                     <div className="flex gap-4">
                         <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                             <input 
                                 type="text" placeholder="Buscar productos..." 
-                                className="w-full pl-20 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none"
+                                className="w-full pl-4 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:outline-none"
                                 value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>

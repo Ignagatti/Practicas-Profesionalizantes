@@ -25,18 +25,39 @@ import {
 const API_URL = "http://localhost:4000/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
-export function Dashboard() {
+export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   const periodo = "mensual";
 
   // ── Estado ──────────────────────────────────────────────────────────────────
   const [productos, setProductos]           = useState([]);
   const [insumos, setInsumos]               = useState([]);
-  const [pagosPendientes, setPagosPendientes] = useState([]);
+  const [localPagosPendientes] = useState([
+    { id: 1, tipo: 'cliente', nombre: 'Mueblería Del Sur', fecha_vencimiento: '2026-05-05', monto_adeudado: 127000, concepto: 'Saldo de pedido muebles' },
+    { id: 2, tipo: 'proveedor', nombre: 'Maderería Guatambú SA', fecha_vencimiento: '2026-04-30', monto_adeudado: 85000, concepto: 'Maderas para fábrica' },
+    { id: 3, tipo: 'cliente', nombre: 'Diseño Interior SA', fecha_vencimiento: '2026-05-10', monto_adeudado: 88800, concepto: 'Proyecto remodelación' },
+    { id: 4, tipo: 'proveedor', nombre: 'Textiles Premium SRL', fecha_vencimiento: '2026-05-02', monto_adeudado: 45000, concepto: 'Rollos de pana gris' }
+  ]);
+
+  const pagosPendientes = propPagosPendientes !== undefined ? propPagosPendientes : localPagosPendientes;
+
   const [cargando, setCargando]             = useState(true);
   const [error, setError]                   = useState(null);
   const [fechaDesde, setFechaDesde]         = useState("");
   const [fechaHasta, setFechaHasta]         = useState("");
   const [selectedPago, setSelectedPago]     = useState(null);
+
+  // ── Al montar, verificar si se solicitó hacer scroll a pagos pendientes ─────
+  useEffect(() => {
+    if (sessionStorage.getItem('scroll_to_payments') === 'true') {
+      sessionStorage.removeItem('scroll_to_payments');
+      setTimeout(() => {
+        const target = document.getElementById('section-pagos-pendientes');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, []);
 
   // ── Cargar datos del backend al montar ──────────────────────────────────────
   useEffect(() => {
@@ -45,25 +66,21 @@ export function Dashboard() {
       setError(null);
       try {
         // Llamadas en paralelo para mayor velocidad
-        const [resProductos, resInsumos, resPagos] = await Promise.all([
+        const [resProductos, resInsumos] = await Promise.all([
           fetch(`${API_URL}/productos`),
           fetch(`${API_URL}/insumos`),
-          // fetch(`${API_URL}/pagos-pendientes`),
         ]);
 
         if (!resProductos.ok) throw new Error("Error al cargar productos.");
         if (!resInsumos.ok)   throw new Error("Error al cargar insumos.");
-        // if (!resPagos.ok)     throw new Error("Error al cargar pagos pendientes.");
 
         const [dataProductos, dataInsumos] = await Promise.all([
           resProductos.json(),
           resInsumos.json(),
-          // resPagos.json(),
         ]);
 
         setProductos(dataProductos);
         setInsumos(dataInsumos);
-        // setPagosPendientes(dataPagos || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -283,7 +300,7 @@ export function Dashboard() {
       </div>
 
       {/* Avisos de Pagos Pendientes */}
-      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div id="section-pagos-pendientes" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
         <h3 className="text-lg mb-4 text-gray-800">Avisos de Pagos Pendientes</h3>
 
         {pagosPendientes.length === 0 ? (

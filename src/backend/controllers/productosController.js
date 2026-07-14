@@ -50,14 +50,14 @@ const eliminarProducto = async (req, res) => {
     try {
         // 1. Verificamos el estado antes de borrar
         const producto = await pool.query('SELECT Estado FROM Producto WHERE Id_Producto = $1', [id]);
-        
+
         if (producto.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
 
         const estado = (producto.rows[0].Estado || "").toLowerCase();
 
         if (estado === 'en_produccion') {
-            return res.status(400).json({ 
-                error: 'No se puede eliminar un producto que ya está EN PRODUCCIÓN.' 
+            return res.status(400).json({
+                error: 'No se puede eliminar un producto que ya está EN PRODUCCIÓN.'
             });
         }
 
@@ -70,9 +70,42 @@ const eliminarProducto = async (req, res) => {
     }
 };
 
+// PASAR DE EN PRODUCCIÓN A TERMINADO
+const terminarProductosMasivo = async (req, res) => {
+    const { ids } = req.body; // Esperamos un array de IDs: [1, 2, 3]
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Debe proporcionar una lista de IDs válida.' });
+    }
+
+    try {
+        // Actualiza a 'terminado' solo aquellos que estén 'en_produccion' dentro de la lista de IDs proporcionada
+        const query = `
+            UPDATE Producto 
+            SET Estado = 'terminado' 
+            WHERE Id_Producto = ANY($1) AND LOWER(Estado) = 'en_produccion'
+            RETURNING *
+        `;
+        const resultado = await pool.query(query, [ids]);
+
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({ mensaje: 'No se encontraron productos en producción para actualizar.' });
+        }
+
+        res.json({
+            mensaje: `${resultado.rowCount} producto(s) pasaron a estado "terminado".`,
+            productosActualizados: resultado.rows
+        });
+    } catch (error) {
+        console.error('Error en terminarProductosMasivo:', error.message);
+        res.status(500).json({ error: 'Error al actualizar el estado de los productos.' });
+    }
+};
+
 module.exports = {
     obtenerProductos,
     crearProducto,
     actualizarProducto,
-    eliminarProducto
+    eliminarProducto,
+    terminarProductosMasivo
 };

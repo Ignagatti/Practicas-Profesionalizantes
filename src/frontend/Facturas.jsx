@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 // ── URL base del backend ──────────────────────────────────────────────────────
-const API_URL = "http://localhost:3001";
+const API_URL = "http://localhost:4000/api";
 
 // ── Config de estados para badges ────────────────────────────────────────────
 const estadoConfig = {

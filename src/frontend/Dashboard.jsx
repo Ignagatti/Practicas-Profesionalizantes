@@ -31,12 +31,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   // ── Estado ──────────────────────────────────────────────────────────────────
   const [productos, setProductos]           = useState([]);
   const [insumos, setInsumos]               = useState([]);
-  const [localPagosPendientes] = useState([
-    { id: 1, tipo: 'cliente', nombre: 'Mueblería Del Sur', fecha_vencimiento: '2026-05-05', monto_adeudado: 127000, concepto: 'Saldo de pedido muebles' },
-    { id: 2, tipo: 'proveedor', nombre: 'Maderería Guatambú SA', fecha_vencimiento: '2026-04-30', monto_adeudado: 85000, concepto: 'Maderas para fábrica' },
-    { id: 3, tipo: 'cliente', nombre: 'Diseño Interior SA', fecha_vencimiento: '2026-05-10', monto_adeudado: 88800, concepto: 'Proyecto remodelación' },
-    { id: 4, tipo: 'proveedor', nombre: 'Textiles Premium SRL', fecha_vencimiento: '2026-05-02', monto_adeudado: 45000, concepto: 'Rollos de pana gris' }
-  ]);
+  const [localPagosPendientes] = useState([]);
 
   const pagosPendientes = propPagosPendientes !== undefined ? propPagosPendientes : localPagosPendientes;
 

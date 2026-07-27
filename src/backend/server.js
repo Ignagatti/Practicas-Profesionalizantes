@@ -1,37 +1,109 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-const pool = require('./config/db');
-const clientesRoutes = require('./routes/clientesRoutes'); 
-const proveedoresRoutes = require('./routes/proveedoresRoutes');
-const insumosRoutes = require('./routes/insumosRoutes');
-const productosRoutes = require('./routes/productosRoutes');
-const facturasProveedorRoutes = require('./routes/facturasProveedorRoutes');
+const express = require("express");
+const cors = require("cors");
+
+require("dotenv").config();
+
+const movimientosRoutes =
+    require("./routes/movimientosRoutes");
+
+const pool = require("./config/db");
+
+const clientesRoutes = require("./routes/clientesRoutes");
+const proveedoresRoutes = require("./routes/proveedoresRoutes");
+const insumosRoutes = require("./routes/insumosRoutes");
+const productosRoutes = require("./routes/productosRoutes");
+
+const facturasProveedorRoutes = require("./routes/facturasProveedorRoutes");
+const pagosRoutes = require("./routes/pagosRoutes");
+const estadosPagoRoutes = require("./routes/estadosPagoRoutes");
+const saldosRoutes = require("./routes/saldosRoutes");
+
 
 const app = express();
+
 const PORT = process.env.PORT || 4000;
 
-// Middleware de CORS para permitir peticiones del frontend
+
+// =====================================================
+// MIDDLEWARES
+// =====================================================
+
 app.use(cors());
 
-// Middleware obligatorio para que Express pueda leer datos enviados en formato JSON
 app.use(express.json());
 
-app.use('/api/facturasProveedor', facturasProveedorRoutes);
-app.use('/api/clientes', clientesRoutes);
-app.use('/api/proveedores', proveedoresRoutes);
-app.use('/api/insumos', insumosRoutes);
-app.use('/api/productos', productosRoutes);
 
-pool.query('SELECT NOW()')
-    .then(res => {
-        console.log('---');
-        console.log('🚀 SERVIDOR ACTUALIZADO E INICIADO');
-        console.log('✅ Ruta /api/facturasProveedor LISTA');
-        console.log('---');
+// =====================================================
+// RUTAS
+// =====================================================
+
+app.use("/api/clientes", clientesRoutes);
+
+app.use("/api/proveedores", proveedoresRoutes);
+
+app.use("/api/insumos", insumosRoutes);
+
+app.use("/api/productos", productosRoutes);
+
+app.use(
+    "/api/facturasProveedor",
+    facturasProveedorRoutes
+);
+
+app.use(
+    "/api/pagos",
+    pagosRoutes
+);
+
+app.use(
+    "/api/estados-pago",
+    estadosPagoRoutes
+);
+
+app.use(
+    "/api/saldos",
+    saldosRoutes
+);
+
+app.use(
+    "/api/movimientos",
+    movimientosRoutes
+);
+
+// =====================================================
+// COMPROBAR CONEXIÓN CON POSTGRESQL
+// =====================================================
+
+pool.query("SELECT NOW()")
+    .then(() => {
+
+        console.log("---");
+        console.log("🚀 SERVIDOR ACTUALIZADO E INICIADO");
+        console.log("✅ Ruta /api/facturasProveedor LISTA");
+        console.log("✅ Ruta /api/pagos LISTA");
+        console.log("✅ Ruta /api/estados-pago LISTA");
+        console.log("✅ Ruta /api/saldos LISTA");
+        console.log("---");
+
     })
-    .catch(err => console.error('Error al conectar a la base de datos:', err.stack));
+    .catch((error) => {
+
+        console.error(
+            "Error al conectar a la base de datos:",
+            error
+        );
+
+    });
+
+
+// =====================================================
+// INICIAR SERVIDOR
+// =====================================================
 
 app.listen(PORT, () => {
-    console.log(`Servidor backend corriendo en el puerto ${PORT}`);
+
+    console.log(
+        `Servidor backend corriendo en el puerto ${PORT}`
+    );
+
 });

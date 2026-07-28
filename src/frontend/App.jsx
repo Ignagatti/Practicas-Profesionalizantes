@@ -6,6 +6,7 @@ import { Dashboard } from "./Dashboard.jsx";
 import { Clientes } from "./pages/Clientes.jsx";
 import { Proveedores } from "./pages/Proveedores.jsx";
 import { Movimientos } from "./Movimientos.jsx";
+import Pagos from "./Pagos.jsx";
 
 function App() {
   const [seccion, setSeccion] =
@@ -20,6 +21,7 @@ function App() {
       clientes: "Clientes",
       proveedores: "Proveedores",
       movimientos: "Historial de movimientos",
+      pagos: "Gestión de Pagos",
     };
 
     return titulos[seccion] || "Dashboard";
@@ -45,6 +47,9 @@ function App() {
 
       case "movimientos":
         return <Movimientos />;
+
+      case "pagos":
+        return <Pagos />;
 
       default:
         return <Dashboard />;

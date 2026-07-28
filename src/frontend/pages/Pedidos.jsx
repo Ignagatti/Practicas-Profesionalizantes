@@ -10,10 +10,11 @@ import {
   DollarSign,
   Package,
 } from "lucide-react";
-import { useAppContext } from "../context/AppContext";
+// import { useAppContext } from "../context/AppContext";
 
 export function Pedidos() {
-  const { insumos, productos, pedidos, setPedidos } = useAppContext();
+  // const { insumos, productos, pedidos, setPedidos } = useAppContext();
+  const insumos = []; const productos = []; const pedidos = []; const setPedidos = () => {};
   const [searchTerm, setSearchTerm] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -287,10 +288,6 @@ export function Pedidos() {
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
             <input
               type="text"
               placeholder="Buscar por número de pedido o cliente..."

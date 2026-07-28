@@ -1,16 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar.jsx";
 import Productos from "./pages/Productos.jsx";
 import Insumos from "./pages/Insumos.jsx";
-import { Dashboard } from "./Dashboard.jsx";
+import { Dashboard } from "./pages/Dashboard.jsx";
 import { Clientes } from "./pages/Clientes.jsx";
 import { Proveedores } from "./pages/Proveedores.jsx";
-import { Movimientos } from "./Movimientos.jsx";
-import Pagos from "./Pagos.jsx";
+import { Movimientos } from "./pages/Movimientos.jsx";
+import Pagos from "./pages/Pagos.jsx";
+import { Pedidos } from "./pages/Pedidos.jsx";
+import { Facturas } from "./pages/Facturas.jsx";
+import { Precios } from "./pages/Precios.jsx";
+import { Saldos } from "./pages/Saldos.jsx";
+
+const API_URL = "http://localhost:4000/api";
 
 function App() {
   const [seccion, setSeccion] = useState("dashboard");
   const [pagosPendientes, setPagosPendientes] = useState([]);
+
+  useEffect(() => {
+    async function cargarPendientes() {
+      try {
+        const respuesta = await fetch(`${API_URL}/facturasProveedor`);
+        if (!respuesta.ok) return;
+        
+        const datos = await respuesta.json();
+        const listaFacturas = Array.isArray(datos) ? datos : datos.facturas || [];
+        
+        const pendientes = listaFacturas
+          .filter(f => Number(f.monto_adeudado || f.Monto_Adeudado) > 0)
+          .map(f => {
+            const idFactura = f.id_factura_proveedor || f.Id_Factura_Proveedor || f.id;
+            const nro = f.nro_factura_proveedor || f.Nro_Factura_Proveedor || "S/N";
+            
+            const razonSocial = f.razon_social || f.Razon_Social || "";
+            const nombreCompleto = f.nombre || f.Nombre ? `${f.nombre||f.Nombre} ${f.apellido||f.Apellido}`.trim() : "";
+            const proveedorN = f.proveedor || razonSocial || nombreCompleto || "Proveedor Desconocido";
+            
+            return {
+              id: idFactura,
+              tipo: "proveedor",
+              nombre: proveedorN,
+              fecha_vencimiento: (f.fecha_vencimiento || f.Fecha_Vencimiento || f.fecha_emision || "").split("T")[0],
+              monto_adeudado: Number(f.monto_adeudado || f.Monto_Adeudado),
+              concepto: `Factura N° ${nro}`
+            };
+          });
+          
+        setPagosPendientes(pendientes);
+      } catch (err) {
+        console.error("Error al cargar facturas pendientes:", err);
+      }
+    }
+    
+    cargarPendientes();
+  }, []);
 
   const handleBellClick = (e) => {
     e.preventDefault();
@@ -61,6 +105,18 @@ function App() {
 
       case "pagos":
         return <Pagos />;
+
+      case "pedidos":
+        return <Pedidos />;
+
+      case "facturas":
+        return <Facturas />;
+
+      case "precios":
+        return <Precios />;
+
+      case "saldos":
+        return <Saldos />;
 
       default:
         return <Dashboard pagosPendientes={pagosPendientes} />;

@@ -682,10 +682,6 @@ export function Movimientos() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
 
           <div className="relative">
-            <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
 
             <input
               type="text"

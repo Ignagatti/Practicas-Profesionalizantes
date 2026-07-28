@@ -331,8 +331,11 @@ async function leerRespuesta(respuesta) {
 // =====================================================
 
 export default function Pagos() {
+  const [tipoVista, setTipoVista] = useState("cliente");
   const [pagos, setPagos] = useState([]);
   const [facturas, setFacturas] = useState([]);
+  const [clientesTotales, setClientesTotales] = useState([]);
+  const [proveedoresTotales, setProveedoresTotales] = useState([]);
 
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -380,11 +383,12 @@ export default function Pagos() {
     setError("");
 
     try {
-      const [respuestaPagos, respuestaFacturas] =
+      const [respuestaPagos, respuestaFacturas, resClientes, resProveedores] =
         await Promise.all([
           fetch(`${API_URL}/pagos`),
-
           fetch(`${API_URL}/facturasProveedor`),
+          fetch(`${API_URL}/clientes`),
+          fetch(`${API_URL}/proveedores`),
         ]);
 
       const datosPagos =
@@ -419,6 +423,9 @@ export default function Pagos() {
         ? datosFacturas
         : datosFacturas.facturas || [];
 
+      const listaClientes = resClientes.ok ? await resClientes.json() : [];
+      const listaProveedores = resProveedores.ok ? await resProveedores.json() : [];
+
       setPagos(
         listaPagos.map(normalizarPago)
       );
@@ -426,6 +433,9 @@ export default function Pagos() {
       setFacturas(
         listaFacturas.map(normalizarFactura)
       );
+
+      setClientesTotales(listaClientes);
+      setProveedoresTotales(listaProveedores);
     } catch (err) {
       console.error(
         "Error al cargar los pagos:",
@@ -1052,7 +1062,7 @@ export default function Pagos() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl text-gray-800">
-            Pagos a proveedores
+            Pagos a {tipoVista === "proveedor" ? "proveedores" : "clientes"}
           </h2>
 
           <p className="text-gray-500 text-sm mt-1">
@@ -1061,9 +1071,35 @@ export default function Pagos() {
         </div>
 
         <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-200">
-            <Truck size={18} />
-            Proveedores
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setTipoVista("cliente");
+                setSearchTerm("");
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                tipoVista === "cliente"
+                  ? "bg-white text-red-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Clientes
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTipoVista("proveedor");
+                setSearchTerm("");
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                tipoVista === "proveedor"
+                  ? "bg-white text-red-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Proveedores
+            </button>
           </div>
 
           <button
@@ -1156,10 +1192,7 @@ export default function Pagos() {
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
+
 
             <input
               type="text"
@@ -1168,7 +1201,7 @@ export default function Pagos() {
               onChange={(event) =>
                 setSearchTerm(event.target.value)
               }
-              className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -1466,7 +1499,7 @@ export default function Pagos() {
 
                 <div>
                   <label className="block mb-2 text-sm text-gray-700">
-                    Proveedor *
+                    {tipoVista === "proveedor" ? "Proveedor *" : "Cliente *"}
                   </label>
 
                   <select
@@ -1481,20 +1514,16 @@ export default function Pagos() {
                     className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">
-                      Seleccionar proveedor
+                      Seleccionar {tipoVista === "proveedor" ? "proveedor" : "cliente"}
                     </option>
 
-                    {proveedoresDisponibles.map(
-                      (proveedor) => (
+                    {(tipoVista === "proveedor" ? proveedoresTotales : clientesTotales).map(
+                      (entidad) => (
                         <option
-                          key={
-                            proveedor.id_proveedor
-                          }
-                          value={
-                            proveedor.id_proveedor
-                          }
+                          key={entidad.id}
+                          value={entidad.id}
                         >
-                          {proveedor.proveedor}
+                          {entidad.razonSocial || `${entidad.nombre} ${entidad.apellido}`}
                         </option>
                       )
                     )}
@@ -1503,14 +1532,10 @@ export default function Pagos() {
 
                 <div>
                   <label className="block mb-2 text-sm text-gray-700">
-                    Monto total del pago *
+                    Monto total del pago ($) *
                   </label>
 
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      $
-                    </span>
-
+                  <div>
                     <input
                       type="number"
                       min="0.01"
@@ -1524,7 +1549,7 @@ export default function Pagos() {
                             event.target.value,
                         }))
                       }
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="0,00"
                     />
                   </div>

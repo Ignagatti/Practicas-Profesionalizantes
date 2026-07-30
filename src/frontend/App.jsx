@@ -5,6 +5,7 @@ import Insumos from './pages/Insumos.jsx';
 import { Dashboard } from './Dashboard.jsx';
 import { Clientes } from './pages/Clientes.jsx';
 import { Proveedores } from './pages/Proveedores.jsx';
+import { Pedidos } from "./pages/Pedidos.jsx";
 
 function App() {
     const [seccion, setSeccion] = useState('dashboard');
@@ -16,6 +17,9 @@ function App() {
 
             case 'productos':
                 return <Productos />;
+            
+            case "pedidos":
+                return <Pedidos />;
 
             case 'insumos':
                 return <Insumos />;

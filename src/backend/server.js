@@ -6,6 +6,7 @@ const clientesRoutes = require('./routes/clientesRoutes');
 const proveedoresRoutes = require('./routes/proveedoresRoutes');
 const insumosRoutes = require('./routes/insumosRoutes');
 const productosRoutes = require('./routes/productosRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,7 @@ app.use('/api/clientes', clientesRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/insumos', insumosRoutes);
 app.use('/api/productos', productosRoutes);
+app.use('/api/pedidos', pedidosRoutes);
 
 pool.query('SELECT NOW()')
     .then(res => {

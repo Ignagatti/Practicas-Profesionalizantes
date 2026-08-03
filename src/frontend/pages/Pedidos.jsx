@@ -1,410 +1,1152 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Plus,
-  Download,
-  Edit,
-  Trash2,
   Eye,
   X,
   DollarSign,
   Package,
+  Edit,
+  Trash2,
+  Download,
+  FileText,
 } from "lucide-react";
-// import { useAppContext } from "../context/AppContext";
+
+const API_URL = "http://localhost:4000/api";
+
+const ESTADOS_PAGO = ["pendiente", "parcial", "pagado"];
+const ESTADOS_FACTURACION = ["sin_factura", "pendiente", "facturado"];
+
+function obtenerFechaActualISO() {
+  const hoy = new Date();
+  const offset = hoy.getTimezoneOffset();
+  const fechaLocal = new Date(hoy.getTime() - offset * 60000);
+  return fechaLocal.toISOString().split("T")[0];
+}
+
+function sumarDiasISO(fechaISO, dias) {
+  const fechaBase = fechaISO || obtenerFechaActualISO();
+  const fecha = new Date(`${fechaBase}T00:00:00`);
+  fecha.setDate(fecha.getDate() + dias);
+  return fecha.toISOString().split("T")[0];
+}
+
+function obtenerRangoFechas(fechaDesde, fechaHasta) {
+  const fechaActual = obtenerFechaActualISO();
+
+  if (!fechaDesde && !fechaHasta) {
+    return {
+      desde: "",
+      hasta: "",
+    };
+  }
+
+  if (fechaDesde && fechaHasta) {
+    return {
+      desde: fechaDesde <= fechaHasta ? fechaDesde : fechaHasta,
+      hasta: fechaDesde <= fechaHasta ? fechaHasta : fechaDesde,
+    };
+  }
+
+  if (fechaDesde && !fechaHasta) {
+    return {
+      desde: fechaDesde,
+      hasta: fechaActual,
+    };
+  }
+
+  if (!fechaDesde && fechaHasta) {
+    return {
+      desde: "",
+      hasta: fechaHasta,
+    };
+  }
+
+  return {
+    desde: "",
+    hasta: "",
+  };
+}
+
+function clonarPedido(pedido) {
+  return JSON.parse(JSON.stringify(pedido));
+}
+
+function formatearPrecio(valor) {
+  return Number(valor || 0).toLocaleString("es-AR");
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return "-";
+
+  const fechaLimpia = fecha.includes("T") ? fecha.split("T")[0] : fecha;
+  const [anio, mes, dia] = fechaLimpia.split("-");
+
+  return `${dia}/${mes}/${anio}`;
+}
+
+function formatearEstado(texto) {
+  const estados = {
+    pendiente: "Pendiente",
+    parcial: "Parcial",
+    pagado: "Pagado",
+    sin_factura: "No se factura",
+    facturado: "Facturado",
+  };
+
+  return estados[texto] || texto || "-";
+}
+
+function getNombreCliente(pedido) {
+  if (pedido.razon_social) return pedido.razon_social;
+  if (pedido.Razon_Social) return pedido.Razon_Social;
+
+  const nombre = pedido.nombre || pedido.Nombre || "";
+  const apellido = pedido.apellido || pedido.Apellido || "";
+
+  return `${nombre} ${apellido}`.trim();
+}
+
+function getDescripcionProducto(producto) {
+  return [
+    producto.modelo || producto.Modelo,
+    producto.tela || producto.Tela,
+    producto.color_lustre || producto.Color_Lustre,
+  ]
+    .filter(Boolean)
+    .join(" - ");
+}
+
+function getSubtotalProducto(producto) {
+  const precio = producto.precio ?? producto.Precio ?? 0;
+  const cantidad = producto.cantidad ?? producto.Cantidad ?? 1;
+
+  return Number(precio || 0) * Number(cantidad || 1);
+}
+
+function calcularTotalPedido(productos = []) {
+  return productos.reduce((total, producto) => {
+    return total + getSubtotalProducto(producto);
+  }, 0);
+}
+
+function getEstadoPagoInfo(estado) {
+  if (estado === "pagado") {
+    return {
+      label: "Pago",
+      color: "bg-green-100 text-green-700",
+    };
+  }
+
+  if (estado === "parcial") {
+    return {
+      label: "Parcial",
+      color: "bg-yellow-100 text-yellow-700",
+    };
+  }
+
+  return {
+    label: "Pend.",
+    color: "bg-red-100 text-red-700",
+  };
+}
+
+function getEstadoFacturaInfo(estado) {
+  if (estado === "facturado") {
+    return {
+      label: "Facturado",
+      color: "bg-green-100 text-green-700",
+    };
+  }
+
+  if (estado === "pendiente") {
+    return {
+      label: "Falta facturar",
+      color: "bg-yellow-100 text-yellow-700",
+    };
+  }
+
+  return {
+    label: "No se factura",
+    color: "bg-gray-100 text-gray-700",
+  };
+}
+
+function normalizarPedido(pedido) {
+  return {
+    id_pedido: pedido.id_pedido ?? pedido.Id_Pedido,
+    fecha_generacion: pedido.fecha_generacion ?? pedido.Fecha_Generacion,
+    vencimiento: pedido.vencimiento ?? pedido.Vencimiento,
+    observaciones: pedido.observaciones ?? pedido.Observaciones,
+    precio_total: pedido.precio_total ?? pedido.Precio_Total ?? 0,
+    estado_facturacion:
+      pedido.estado_facturacion ?? pedido.Estado_Facturacion ?? "sin_factura",
+    nro_factura: pedido.nro_factura ?? pedido.Nro_Factura ?? null,
+    pdf_factura_url: pedido.pdf_factura_url ?? pedido.Pdf_Factura_Url ?? null,
+    pdf_factura_nombre:
+      pedido.pdf_factura_nombre ?? pedido.Pdf_Factura_Nombre ?? null,
+    monto_adeudado: pedido.monto_adeudado ?? pedido.Monto_Adeudado ?? 0,
+    estado_pago: pedido.estado_pago ?? pedido.Estado_Pago ?? "pendiente",
+    id_cliente: pedido.id_cliente ?? pedido.Id_Cliente,
+    nombre: pedido.nombre ?? pedido.Nombre,
+    apellido: pedido.apellido ?? pedido.Apellido,
+    razon_social: pedido.razon_social ?? pedido.Razon_Social,
+    productos: Array.isArray(pedido.productos)
+      ? pedido.productos.map(normalizarProducto)
+      : [],
+  };
+}
+
+function normalizarProducto(producto) {
+  return {
+    id_producto: producto.id_producto ?? producto.Id_Producto,
+    modelo: producto.modelo ?? producto.Modelo,
+    tela: producto.tela ?? producto.Tela,
+    color_lustre: producto.color_lustre ?? producto.Color_Lustre,
+    estado: producto.estado ?? producto.Estado,
+    cantidad: producto.cantidad ?? producto.Cantidad ?? 1,
+    precio: producto.precio ?? producto.Precio ?? 0,
+    id_cliente: producto.id_cliente ?? producto.Id_Cliente,
+  };
+}
 
 export function Pedidos() {
-  // const { insumos, productos, pedidos, setPedidos } = useAppContext();
-  const insumos = []; const productos = []; const pedidos = []; const setPedidos = () => {};
+  const fechaActual = obtenerFechaActualISO();
+
+  const [pedidos, setPedidos] = useState([]);
+  const [clientes, setClientes] = useState([]);
+
+  const [productosDisponibles, setProductosDisponibles] = useState([]);
+  const [productosDisponiblesEdicion, setProductosDisponiblesEdicion] =
+    useState([]);
+  const [productoEdicionSeleccionado, setProductoEdicionSeleccionado] =
+    useState("");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+
+  const [cargando, setCargando] = useState(false);
+  const [mensajeError, setMensajeError] = useState("");
+  const [mensajeExito, setMensajeExito] = useState("");
+
+  const [mensajeErrorModal, setMensajeErrorModal] = useState("");
+  const [mensajeExitoModal, setMensajeExitoModal] = useState("");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showAddProductModal, setShowAddProductModal] = useState(false);
+
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [pedidoOriginal, setPedidoOriginal] = useState(null);
   const [isEditingPedido, setIsEditingPedido] = useState(false);
-  const [tempNumeroFactura, setTempNumeroFactura] = useState("");
-  const [tempPdfFactura, setTempPdfFactura] = useState(undefined);
 
   const [newPedido, setNewPedido] = useState({
-    cliente: "",
-    fechaGeneracion: new Date().toISOString().split("T")[0],
+    Id_Cliente: "",
+    Fecha_Generacion: fechaActual,
+    Vencimiento: sumarDiasISO(fechaActual, 30),
+    Observaciones: "",
+    Estado_Facturacion: "sin_factura",
+    Nro_Factura: "",
+    Pdf_Factura_File: null,
+    Pdf_Factura_Nombre: "",
+    Estado_Pago: "pendiente",
     productos: [],
-    seFactura: false,
-    estadoPago: "pendiente",
   });
 
-  const [selectedProductosIds, setSelectedProductosIds] = useState([]);
-  const [cantidadesPorProducto, setCantidadesPorProducto] = useState({});
+  const cargarPedidos = async () => {
+    try {
+      setCargando(true);
+      setMensajeError("");
 
-  const getInsumoNombre = (id) => {
-    if (!id) return "Sin especificar";
-    return insumos.find((i) => i.id === id)?.nombre || "Desconocido";
-  };
+      const params = new URLSearchParams();
 
-  const getProductoById = (id) => {
-    return productos.find((p) => p.id === id);
-  };
-
-  const getProductoDescription = (producto) => {
-    let desc = getInsumoNombre(producto.modeloId);
-    if (producto.telaId) desc += ` - ${getInsumoNombre(producto.telaId)}`;
-    if (producto.lustreId) desc += ` - ${getInsumoNombre(producto.lustreId)}`;
-    return desc;
-  };
-
-  const filteredPedidos = pedidos.filter((pedido) => {
-    const matchesSearch =
-      pedido.numeroPedido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pedido.cliente.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesFechaDesde = !fechaDesde || pedido.fechaGeneracion >= fechaDesde;
-    const matchesFechaHasta = !fechaHasta || pedido.fechaGeneracion <= fechaHasta;
-
-    return matchesSearch && matchesFechaDesde && matchesFechaHasta;
-  });
-
-  const handleView = (pedido) => {
-    setSelectedPedido({ ...pedido });
-    setIsEditingPedido(false);
-    setTempNumeroFactura("");
-    setTempPdfFactura(undefined);
-    setShowViewModal(true);
-  };
-
-  const handleGuardarFactura = () => {
-    if (!selectedPedido) return;
-
-    if (!tempNumeroFactura.trim()) {
-      alert("Debe ingresar el número de factura");
-      return;
-    }
-
-    const pedidoActualizado = {
-      ...selectedPedido,
-      numeroFactura: tempNumeroFactura,
-      pdfFactura: tempPdfFactura,
-    };
-
-    setPedidos((prev) =>
-      prev.map((p) => (p.id === selectedPedido.id ? pedidoActualizado : p))
-    );
-
-    setSelectedPedido(pedidoActualizado);
-    setTempNumeroFactura("");
-    setTempPdfFactura(undefined);
-    alert("Información de factura guardada correctamente");
-  };
-
-  const handleAddProductToPedido = () => {
-    if (selectedProductosIds.length === 0) {
-      alert("Debe seleccionar al menos un producto");
-      return;
-    }
-
-    for (const productoId of selectedProductosIds) {
-      const cantidad = cantidadesPorProducto[productoId] || 1;
-      if (cantidad < 1) {
-        alert("Todas las cantidades deben ser mayor a 0");
-        return;
+      if (searchTerm.trim()) {
+        params.append("search", searchTerm.trim());
       }
+
+      const rangoFechas = obtenerRangoFechas(fechaDesde, fechaHasta);
+
+      if (rangoFechas.desde) {
+        params.append("fechaDesde", rangoFechas.desde);
+      }
+
+      if (rangoFechas.hasta) {
+        params.append("fechaHasta", rangoFechas.hasta);
+      }
+
+      const res = await fetch(`${API_URL}/pedidos?${params.toString()}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al obtener pedidos");
+      }
+
+      setPedidos(data.map(normalizarPedido));
+    } catch (error) {
+      setMensajeError(error.message);
+    } finally {
+      setCargando(false);
     }
-
-    const nuevosProdutosPedido = selectedProductosIds.map((productoId) => ({
-      productoId,
-      cantidadSolicitada: cantidadesPorProducto[productoId] || 1,
-    }));
-
-    if (isEditingPedido && selectedPedido) {
-      const precioIncremento = nuevosProdutosPedido.reduce((sum, pp) => {
-        const producto = getProductoById(pp.productoId);
-        return sum + (producto ? producto.precioUnitario * pp.cantidadSolicitada : 0);
-      }, 0);
-
-      setSelectedPedido({
-        ...selectedPedido,
-        productos: [...selectedPedido.productos, ...nuevosProdutosPedido],
-        precioTotal: selectedPedido.precioTotal + precioIncremento,
-      });
-    } else {
-      setNewPedido({
-        ...newPedido,
-        productos: [...newPedido.productos, ...nuevosProdutosPedido],
-      });
-    }
-
-    setShowAddProductModal(false);
-    setSelectedProductosIds([]);
-    setCantidadesPorProducto({});
   };
 
-  const handleRemoveProduct = (productoId) => {
-    if (!selectedPedido) return;
+  const cargarClientes = async () => {
+    try {
+      const res = await fetch(`${API_URL}/clientes`);
+      const data = await res.json();
 
-    const productoPedidoAEliminar = selectedPedido.productos.find(
-      (p) => p.productoId === productoId
-    );
-    if (!productoPedidoAEliminar) return;
+      if (!res.ok) {
+        throw new Error(data.error || "Error al obtener clientes");
+      }
 
-    const producto = getProductoById(productoId);
-    if (!producto) return;
+      const clientesActivos = data.filter(
+        (cliente) => cliente.estado !== "bloqueado"
+      );
 
-    setSelectedPedido({
-      ...selectedPedido,
-      productos: selectedPedido.productos.filter((p) => p.productoId !== productoId),
-      precioTotal:
-        selectedPedido.precioTotal -
-        producto.precioUnitario * productoPedidoAEliminar.cantidadSolicitada,
+      setClientes(clientesActivos);
+    } catch (error) {
+      setMensajeError(error.message);
+    }
+  };
+
+  const cargarProductosDisponibles = async (idCliente) => {
+    if (!idCliente) {
+      setProductosDisponibles([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${API_URL}/pedidos/productos-disponibles/${idCliente}`
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al obtener productos disponibles");
+      }
+
+      setProductosDisponibles(data.map(normalizarProducto));
+    } catch (error) {
+      setMensajeError(error.message);
+    }
+  };
+
+  const cargarProductosDisponiblesEdicion = async (pedido) => {
+    if (!pedido) return;
+
+    try {
+      const res = await fetch(
+        `${API_URL}/pedidos/productos-disponibles/${pedido.id_cliente}`
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al obtener productos disponibles");
+      }
+
+      const productosActuales = new Set(
+        pedido.productos.map((producto) => Number(producto.id_producto))
+      );
+
+      const disponibles = data
+        .map(normalizarProducto)
+        .filter(
+          (producto) => !productosActuales.has(Number(producto.id_producto))
+        );
+
+      setProductosDisponiblesEdicion(disponibles);
+    } catch (error) {
+      setMensajeErrorModal(error.message);
+    }
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      cargarPedidos();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm, fechaDesde, fechaHasta]);
+
+  useEffect(() => {
+    cargarClientes();
+  }, []);
+
+  const abrirModalAgregar = () => {
+    const hoy = obtenerFechaActualISO();
+
+    setMensajeError("");
+    setMensajeExito("");
+    setProductosDisponibles([]);
+
+    setNewPedido({
+      Id_Cliente: "",
+      Fecha_Generacion: hoy,
+      Vencimiento: sumarDiasISO(hoy, 30),
+      Observaciones: "",
+      Estado_Facturacion: "sin_factura",
+      Nro_Factura: "",
+      Pdf_Factura_File: null,
+      Pdf_Factura_Nombre: "",
+      Estado_Pago: "pendiente",
+      productos: [],
+    });
+
+    setShowAddModal(true);
+  };
+
+  const handleSeleccionarCliente = async (idCliente) => {
+    setNewPedido({
+      ...newPedido,
+      Id_Cliente: idCliente,
+      productos: [],
+    });
+
+    await cargarProductosDisponibles(idCliente);
+  };
+
+  const handleCambiarFechaGeneracion = (fecha) => {
+    const fechaFinal = fecha || obtenerFechaActualISO();
+
+    setNewPedido({
+      ...newPedido,
+      Fecha_Generacion: fechaFinal,
+      Vencimiento: newPedido.Vencimiento || sumarDiasISO(fechaFinal, 30),
     });
   };
 
-  const handleSavePedidoChanges = () => {
-    if (!selectedPedido) return;
-
-    if (selectedPedido.seFactura && !selectedPedido.numeroFactura?.trim()) {
-      alert("Debe ingresar el número de factura para pedidos que se facturan");
-      return;
-    }
-
-    setPedidos((prev) =>
-      prev.map((p) => (p.id === selectedPedido.id ? selectedPedido : p))
-    );
-
-    alert("Pedido actualizado correctamente");
-    setIsEditingPedido(false);
+  const actualizarFacturacionNuevoPedido = (estadoFacturacion) => {
+    setNewPedido({
+      ...newPedido,
+      Estado_Facturacion: estadoFacturacion,
+      Nro_Factura:
+        estadoFacturacion === "sin_factura" ? "" : newPedido.Nro_Factura,
+      Pdf_Factura_File:
+        estadoFacturacion === "sin_factura"
+          ? null
+          : newPedido.Pdf_Factura_File,
+      Pdf_Factura_Nombre:
+        estadoFacturacion === "sin_factura"
+          ? ""
+          : newPedido.Pdf_Factura_Nombre,
+    });
   };
 
-  const handleCreatePedido = (e) => {
+  const actualizarFacturacionPedidoSeleccionado = (estadoFacturacion) => {
+    if (!selectedPedido) return;
+
+    setSelectedPedido({
+      ...selectedPedido,
+      estado_facturacion: estadoFacturacion,
+      nro_factura:
+        estadoFacturacion === "sin_factura"
+          ? ""
+          : selectedPedido.nro_factura || "",
+      pdf_factura_url:
+        estadoFacturacion === "sin_factura"
+          ? null
+          : selectedPedido.pdf_factura_url,
+      pdf_factura_nombre:
+        estadoFacturacion === "sin_factura"
+          ? null
+          : selectedPedido.pdf_factura_nombre,
+      pdf_factura_file:
+        estadoFacturacion === "sin_factura"
+          ? null
+          : selectedPedido.pdf_factura_file || null,
+      eliminar_pdf_factura:
+        estadoFacturacion === "sin_factura"
+          ? true
+          : selectedPedido.eliminar_pdf_factura || false,
+    });
+
+    setMensajeErrorModal("");
+    setMensajeExitoModal("");
+  };
+
+  const handleArchivoFacturaNuevo = (file) => {
+    if (!file) return;
+
+    setNewPedido({
+      ...newPedido,
+      Pdf_Factura_File: file,
+      Pdf_Factura_Nombre: file.name,
+    });
+  };
+
+  const handleArchivoFacturaSeleccionado = (file) => {
+    if (!file || !selectedPedido) return;
+
+    setSelectedPedido({
+      ...selectedPedido,
+      pdf_factura_file: file,
+      pdf_factura_nombre: file.name,
+      eliminar_pdf_factura: false,
+    });
+
+    setMensajeErrorModal("");
+    setMensajeExitoModal(
+      "PDF de factura actualizado. Guardá los cambios para confirmar."
+    );
+  };
+
+  const eliminarPdfFacturaPedido = () => {
+    if (!selectedPedido) return;
+
+    setSelectedPedido({
+      ...selectedPedido,
+      pdf_factura_url: null,
+      pdf_factura_nombre: null,
+      pdf_factura_file: null,
+      eliminar_pdf_factura: true,
+    });
+
+    setMensajeErrorModal("");
+    setMensajeExitoModal(
+      "PDF de factura eliminado. Guardá los cambios para confirmar."
+    );
+  };
+
+  const toggleProducto = (idProducto) => {
+    const existe = newPedido.productos.includes(idProducto);
+
+    setNewPedido({
+      ...newPedido,
+      productos: existe
+        ? newPedido.productos.filter((id) => id !== idProducto)
+        : [...newPedido.productos, idProducto],
+    });
+  };
+
+  const calcularTotalNuevoPedido = () => {
+    return productosDisponibles
+      .filter((producto) => newPedido.productos.includes(producto.id_producto))
+      .reduce((total, producto) => total + getSubtotalProducto(producto), 0);
+  };
+
+  const subirFacturaPedido = async (idPedido, datosFactura) => {
+    const formData = new FormData();
+
+    formData.append("Estado_Facturacion", datosFactura.estadoFacturacion);
+    formData.append("Nro_Factura", datosFactura.nroFactura || "");
+
+    if (datosFactura.archivoPdf) {
+      formData.append("Pdf_Factura", datosFactura.archivoPdf);
+    }
+
+    const res = await fetch(`${API_URL}/pedidos/${idPedido}/factura`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Error al guardar la factura");
+    }
+
+    return data;
+  };
+
+  const eliminarPdfFacturaBackend = async (idPedido) => {
+    const res = await fetch(`${API_URL}/pedidos/${idPedido}/factura/pdf`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Error al eliminar el PDF de factura");
+    }
+
+    return data;
+  };
+
+  const handleCreatePedido = async (e) => {
     e.preventDefault();
 
-    if (!newPedido.cliente) {
-      alert("Debe seleccionar un cliente");
+    if (!newPedido.Id_Cliente) {
+      setMensajeError("Debe seleccionar un cliente.");
       return;
     }
 
     if (newPedido.productos.length === 0) {
-      alert("Debe agregar al menos un producto");
+      setMensajeError("Debe seleccionar al menos un producto.");
       return;
     }
 
-    const newId = Math.max(...pedidos.map((p) => p.id), 0) + 1;
-    const numeroPedido = `PED-${String(newId).padStart(3, "0")}`;
+    if (
+      newPedido.Estado_Facturacion === "facturado" &&
+      !newPedido.Nro_Factura.trim()
+    ) {
+      setMensajeError(
+        "Debe ingresar el número de factura para marcarlo como facturado."
+      );
+      return;
+    }
 
-    const precioTotal = newPedido.productos.reduce((sum, pp) => {
-      const producto = getProductoById(pp.productoId);
-      return sum + (producto ? producto.precioUnitario * pp.cantidadSolicitada : 0);
-    }, 0);
+    try {
+      setMensajeError("");
+      setMensajeExito("");
 
-    const pedidoCompleto = {
-      id: newId,
-      numeroPedido,
-      cliente: newPedido.cliente,
-      fechaGeneracion: newPedido.fechaGeneracion,
-      productos: newPedido.productos,
-      precioTotal,
-      seFactura: newPedido.seFactura,
-      estadoPago: newPedido.estadoPago,
-    };
+      const body = {
+        Id_Cliente: Number(newPedido.Id_Cliente),
+        Fecha_Generacion: newPedido.Fecha_Generacion || obtenerFechaActualISO(),
+        Vencimiento:
+          newPedido.Vencimiento ||
+          sumarDiasISO(
+            newPedido.Fecha_Generacion || obtenerFechaActualISO(),
+            30
+          ),
+        Observaciones: newPedido.Observaciones || null,
+        Estado_Facturacion: newPedido.Estado_Facturacion,
+        Nro_Factura:
+          newPedido.Estado_Facturacion === "sin_factura"
+            ? null
+            : newPedido.Nro_Factura || null,
+        Estado_Pago: newPedido.Estado_Pago,
+        productos: newPedido.productos,
+      };
 
-    setPedidos([...pedidos, pedidoCompleto]);
-    setShowAddModal(false);
-    setNewPedido({
-      cliente: "",
-      fechaGeneracion: new Date().toISOString().split("T")[0],
-      productos: [],
-      seFactura: false,
-      estadoPago: "pendiente",
-    });
+      const res = await fetch(`${API_URL}/pedidos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
-    alert("Pedido generado correctamente");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al crear pedido");
+      }
+
+      const idPedidoCreado =
+        data.pedido?.id_pedido || data.pedido?.Id_Pedido || data.id_pedido;
+
+      if (
+        idPedidoCreado &&
+        newPedido.Estado_Facturacion !== "sin_factura" &&
+        (newPedido.Nro_Factura || newPedido.Pdf_Factura_File)
+      ) {
+        await subirFacturaPedido(idPedidoCreado, {
+          estadoFacturacion: newPedido.Estado_Facturacion,
+          nroFactura: newPedido.Nro_Factura,
+          archivoPdf: newPedido.Pdf_Factura_File,
+        });
+      }
+
+      setMensajeExito("Pedido generado correctamente.");
+      setShowAddModal(false);
+      await cargarPedidos();
+    } catch (error) {
+      setMensajeError(error.message);
+    }
   };
 
-  const handleDeletePedido = () => {
+  const handleView = (pedido) => {
+    const copia = clonarPedido(pedido);
+
+    setSelectedPedido(copia);
+    setPedidoOriginal(clonarPedido(pedido));
+    setIsEditingPedido(false);
+    setProductosDisponiblesEdicion([]);
+    setProductoEdicionSeleccionado("");
+    setMensajeErrorModal("");
+    setMensajeExitoModal("");
+    setShowViewModal(true);
+  };
+
+  const abrirEdicionPedido = async () => {
+    setMensajeErrorModal("");
+    setMensajeExitoModal("");
+    setIsEditingPedido(true);
+    await cargarProductosDisponiblesEdicion(selectedPedido);
+  };
+
+  const agregarProductoAlPedido = async () => {
+    if (!productoEdicionSeleccionado || !selectedPedido) return;
+
+    try {
+      setMensajeErrorModal("");
+
+      const producto = productosDisponiblesEdicion.find(
+        (p) => Number(p.id_producto) === Number(productoEdicionSeleccionado)
+      );
+
+      if (!producto) return;
+
+      const totalAnterior = Number(selectedPedido.precio_total || 0);
+      const productosActualizados = [...selectedPedido.productos, producto];
+      const totalActualizado = calcularTotalPedido(productosActualizados);
+
+      const estabaPagado = selectedPedido.estado_pago === "pagado";
+      const nuevoEstadoPago = estabaPagado
+        ? "parcial"
+        : selectedPedido.estado_pago;
+
+      const nuevoMontoAdeudado = estabaPagado
+        ? Math.max(totalActualizado - totalAnterior, 0)
+        : selectedPedido.estado_pago === "pendiente"
+          ? totalActualizado
+          : selectedPedido.monto_adeudado;
+
+      const pedidoActualizado = {
+        ...selectedPedido,
+        productos: productosActualizados,
+        precio_total: totalActualizado,
+        estado_pago: nuevoEstadoPago,
+        monto_adeudado: nuevoMontoAdeudado,
+      };
+
+      setSelectedPedido(pedidoActualizado);
+      setProductoEdicionSeleccionado("");
+      await cargarProductosDisponiblesEdicion(pedidoActualizado);
+
+      setMensajeExitoModal(
+        estabaPagado
+          ? "Producto agregado. Como el pedido estaba pagado y el total cambió, el estado de pago pasó a parcial."
+          : "Producto agregado al pedido."
+      );
+    } catch (error) {
+      setMensajeErrorModal(error.message);
+    }
+  };
+
+  const quitarProductoDelPedido = async (idProducto) => {
     if (!selectedPedido) return;
 
-    if (
-      confirm(
-        `¿Está seguro que desea eliminar el pedido ${selectedPedido.numeroPedido}? Esta acción no se puede deshacer.`
-      )
-    ) {
-      setPedidos((prev) => prev.filter((p) => p.id !== selectedPedido.id));
-      setShowViewModal(false);
-      setSelectedPedido(null);
-      alert("Pedido eliminado correctamente");
-    }
-  };
-
-  const handleDownloadPDF = () => {
-    alert("Función de descarga PDF - En desarrollo");
-  };
-
-  const getProductosDisponibles = (cliente, currentPedidoId) => {
-    const productosCliente = productos.filter((p) => p.cliente === cliente);
-
-    const productosEnOtrosPedidos = new Set();
-    pedidos.forEach((pedido) => {
-      if (currentPedidoId && pedido.id === currentPedidoId) return;
-      pedido.productos.forEach((pp) => {
-        productosEnOtrosPedidos.add(pp.productoId);
-      });
-    });
-
-    const productosYaAgregados = new Set();
-    if (isEditingPedido && selectedPedido) {
-      selectedPedido.productos.forEach((pp) => {
-        productosYaAgregados.add(pp.productoId);
-      });
-    } else {
-      newPedido.productos.forEach((pp) => {
-        productosYaAgregados.add(pp.productoId);
-      });
+    if (selectedPedido.productos.length <= 1) {
+      setMensajeErrorModal("El pedido debe tener al menos un producto.");
+      return;
     }
 
-    return productosCliente.filter(
-      (p) => !productosEnOtrosPedidos.has(p.id) && !productosYaAgregados.has(p.id)
+    const productosActualizados = selectedPedido.productos.filter(
+      (producto) => Number(producto.id_producto) !== Number(idProducto)
     );
+
+    const totalActualizado = calcularTotalPedido(productosActualizados);
+
+    const pedidoActualizado = {
+      ...selectedPedido,
+      productos: productosActualizados,
+      precio_total: totalActualizado,
+      monto_adeudado:
+        selectedPedido.estado_pago === "pagado" ? 0 : totalActualizado,
+    };
+
+    setSelectedPedido(pedidoActualizado);
+    await cargarProductosDisponiblesEdicion(pedidoActualizado);
+
+    setMensajeErrorModal("");
+    setMensajeExitoModal("Producto quitado del pedido.");
+  };
+
+  const guardarCambiosPedido = async () => {
+    if (!selectedPedido) return;
+
+    if (selectedPedido.productos.length === 0) {
+      setMensajeErrorModal("El pedido debe tener al menos un producto.");
+      return;
+    }
+
+    if (
+      selectedPedido.estado_facturacion === "facturado" &&
+      !selectedPedido.nro_factura?.trim()
+    ) {
+      setMensajeErrorModal(
+        "Debe ingresar el número de factura para marcarlo como facturado."
+      );
+      return;
+    }
+
+    try {
+      setMensajeErrorModal("");
+
+      const totalActualizado = calcularTotalPedido(selectedPedido.productos);
+
+      const montoAdeudadoActualizado =
+        selectedPedido.estado_pago === "pagado"
+          ? 0
+          : selectedPedido.estado_pago === "parcial" &&
+              selectedPedido.monto_adeudado !== null &&
+              selectedPedido.monto_adeudado !== undefined
+            ? selectedPedido.monto_adeudado
+            : totalActualizado;
+
+      const pedidoActualizado = {
+        ...selectedPedido,
+        precio_total: totalActualizado,
+        monto_adeudado: montoAdeudadoActualizado,
+        nro_factura:
+          selectedPedido.estado_facturacion === "sin_factura"
+            ? null
+            : selectedPedido.nro_factura || null,
+        pdf_factura_url:
+          selectedPedido.estado_facturacion === "sin_factura"
+            ? null
+            : selectedPedido.pdf_factura_url || null,
+        pdf_factura_nombre:
+          selectedPedido.estado_facturacion === "sin_factura"
+            ? null
+            : selectedPedido.pdf_factura_nombre || null,
+      };
+
+      const body = {
+        Vencimiento: pedidoActualizado.vencimiento,
+        Observaciones: pedidoActualizado.observaciones || null,
+        Estado_Pago: pedidoActualizado.estado_pago,
+        Estado_Facturacion: pedidoActualizado.estado_facturacion,
+        Nro_Factura: pedidoActualizado.nro_factura,
+        Monto_Adeudado: pedidoActualizado.monto_adeudado,
+        productos: pedidoActualizado.productos.map(
+          (producto) => producto.id_producto
+        ),
+      };
+
+      const res = await fetch(`${API_URL}/pedidos/${selectedPedido.id_pedido}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al actualizar pedido");
+      }
+
+      if (pedidoActualizado.estado_facturacion === "sin_factura") {
+        pedidoActualizado.pdf_factura_url = null;
+        pedidoActualizado.pdf_factura_nombre = null;
+      } else if (selectedPedido.eliminar_pdf_factura) {
+        await eliminarPdfFacturaBackend(selectedPedido.id_pedido);
+        pedidoActualizado.pdf_factura_url = null;
+        pedidoActualizado.pdf_factura_nombre = null;
+      } else if (selectedPedido.pdf_factura_file || selectedPedido.nro_factura) {
+        await subirFacturaPedido(selectedPedido.id_pedido, {
+          estadoFacturacion: selectedPedido.estado_facturacion,
+          nroFactura: selectedPedido.nro_factura || "",
+          archivoPdf: selectedPedido.pdf_factura_file || null,
+        });
+      }
+
+      setSelectedPedido(pedidoActualizado);
+      setPedidoOriginal(clonarPedido(pedidoActualizado));
+      setIsEditingPedido(false);
+      setProductosDisponiblesEdicion([]);
+      setProductoEdicionSeleccionado("");
+      setMensajeErrorModal("");
+      setMensajeExitoModal("Pedido actualizado correctamente.");
+
+      await cargarPedidos();
+    } catch (error) {
+      setMensajeErrorModal(error.message);
+    }
+  };
+
+  const cancelarEdicionPedido = () => {
+    setSelectedPedido(
+      pedidoOriginal ? clonarPedido(pedidoOriginal) : selectedPedido
+    );
+    setIsEditingPedido(false);
+    setMensajeErrorModal("");
+    setMensajeExitoModal("");
+    setProductosDisponiblesEdicion([]);
+    setProductoEdicionSeleccionado("");
+  };
+
+  const cerrarModalDetalle = () => {
+    setShowViewModal(false);
+    setIsEditingPedido(false);
+    setMensajeErrorModal("");
+    setMensajeExitoModal("");
+  };
+
+  const descargarFactura = (pedido) => {
+    if (!pedido?.pdf_factura_url) return;
+
+    const link = document.createElement("a");
+    link.href = pedido.pdf_factura_url;
+    link.download =
+      pedido.pdf_factura_nombre ||
+      `factura_PED-${String(pedido.id_pedido).padStart(3, "0")}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const descargarPdfPedido = (pedido) => {
+    if (!pedido) return;
+
+    const productosHTML = pedido.productos
+      .map(
+        (producto) => `
+          <tr>
+            <td>PR-${String(producto.id_producto).padStart(3, "0")} - ${getDescripcionProducto(producto)}</td>
+            <td>${producto.cantidad}</td>
+            <td>$${formatearPrecio(producto.precio)}</td>
+            <td>$${formatearPrecio(getSubtotalProducto(producto))}</td>
+          </tr>
+        `
+      )
+      .join("");
+
+    const ventana = window.open("", "_blank");
+
+    if (!ventana) {
+      setMensajeErrorModal("El navegador bloqueó la ventana emergente del PDF.");
+      return;
+    }
+
+    ventana.document.write(`
+      <html>
+        <head>
+          <title>Pedido PED-${String(pedido.id_pedido).padStart(3, "0")}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 32px; color: #111827; }
+            h1 { margin-bottom: 4px; color: #7f1d1d; }
+            p { margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+            th, td { border: 1px solid #d1d5db; padding: 10px; font-size: 13px; }
+            th { background: #f3f4f6; text-align: left; }
+            .total { margin-top: 20px; font-size: 18px; font-weight: bold; text-align: right; }
+          </style>
+        </head>
+        <body>
+          <h1>Pedido PED-${String(pedido.id_pedido).padStart(3, "0")}</h1>
+          <p><strong>Cliente:</strong> ${getNombreCliente(pedido)}</p>
+          <p><strong>Fecha de generación:</strong> ${formatearFecha(pedido.fecha_generacion)}</p>
+          <p><strong>Vencimiento:</strong> ${formatearFecha(pedido.vencimiento)}</p>
+          <p><strong>Estado de pago:</strong> ${formatearEstado(pedido.estado_pago)}</p>
+          <p><strong>Factura:</strong> ${getEstadoFacturaInfo(pedido.estado_facturacion).label}</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unit.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${productosHTML}
+            </tbody>
+          </table>
+
+          <div class="total">Total: $${formatearPrecio(pedido.precio_total)}</div>
+        </body>
+      </html>
+    `);
+
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">Gestión de Pedidos</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Gestión de Pedidos</h2>
           <p className="text-gray-500 text-sm mt-1">
-            {filteredPedidos.length} pedidos registrados
+            {pedidos.length} pedidos registrados
           </p>
         </div>
+
         <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
+          onClick={abrirModalAgregar}
+          className="flex items-center gap-2 bg-red-700 text-white px-5 py-2.5 rounded-lg hover:bg-red-800 transition-colors shadow-sm font-medium"
         >
           <Plus size={20} />
           Agregar Pedido
         </button>
       </div>
 
-      {/* Filtros */}
+      {mensajeError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {mensajeError}
+        </div>
+      )}
+
+      {mensajeExito && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+          {mensajeExito}
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
+        <div className="flex flex-col lg:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              size={20}
+            />
+
             <input
               type="text"
               placeholder="Buscar por número de pedido o cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-20 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Desde:</label>
+
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <label className="text-sm text-gray-700 whitespace-nowrap">
+              Desde:
+            </label>
+
             <input
               type="date"
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full lg:w-40 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Hasta:</label>
+
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <label className="text-sm text-gray-700 whitespace-nowrap">
+              Hasta:
+            </label>
+
             <input
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full lg:w-40 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
             />
           </div>
         </div>
       </div>
 
-      {/* Tabla de Pedidos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Nº Pedido
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Cliente
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Fecha
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Pago
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Factura
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                   Total
                 </th>
-                <th className="px-3 py-3 text-right text-xs text-gray-500 uppercase"></th>
+                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredPedidos.map((pedido) => {
-                const estadoFactura = !pedido.seFactura
-                  ? { label: "No se factura", color: "bg-gray-100 text-gray-700" }
-                  : pedido.numeroFactura
-                  ? { label: "Facturado", color: "bg-green-100 text-green-700" }
-                  : { label: "Falta facturar", color: "bg-yellow-100 text-yellow-700" };
 
-                return (
-                  <tr key={pedido.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
-                      {pedido.numeroPedido}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-gray-800">
-                      {pedido.cliente}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600">
-                      {pedido.fechaGeneracion}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          pedido.estadoPago === "pago"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {pedido.estadoPago === "pago" ? "Pago" : "Pend."}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs ${estadoFactura.color}`}>
-                        {estadoFactura.label}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
-                      ${pedido.precioTotal.toLocaleString()}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
-                      <button
-                        onClick={() => handleView(pedido)}
-                        className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
-                        title="Ver detalles"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+            <tbody className="divide-y divide-gray-200">
+              {cargando ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-6 text-center text-gray-500">
+                    Cargando pedidos...
+                  </td>
+                </tr>
+              ) : pedidos.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-4 py-10 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Package size={36} className="text-gray-300" />
+                      <p className="text-gray-600 font-medium">
+                        No hay pedidos para mostrar
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Probá modificar los filtros o agregá un nuevo pedido.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                pedidos.map((pedido) => {
+                  const pagoInfo = getEstadoPagoInfo(pedido.estado_pago);
+                  const facturaInfo = getEstadoFacturaInfo(
+                    pedido.estado_facturacion
+                  );
+
+                  return (
+                    <tr
+                      key={pedido.id_pedido}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                        PED-{String(pedido.id_pedido).padStart(3, "0")}
+                      </td>
+
+                      <td className="px-3 py-3 text-sm text-gray-800">
+                        {getNombreCliente(pedido)}
+                      </td>
+
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600">
+                        {formatearFecha(pedido.fecha_generacion)}
+                      </td>
+
+                      <td className="px-3 py-3 whitespace-nowrap text-sm">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${pagoInfo.color}`}
+                        >
+                          {pagoInfo.label}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-3 whitespace-nowrap text-sm">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${facturaInfo.color}`}
+                        >
+                          {facturaInfo.label}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                        ${formatearPrecio(pedido.precio_total)}
+                      </td>
+
+                      <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
+                        <button
+                          onClick={() => handleView(pedido)}
+                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                          title="Ver detalles"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal Agregar Pedido */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">Agregar Nuevo Pedido</h3>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">
+                  Agregar Nuevo Pedido
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  Seleccioná un cliente y los productos ya cargados para ese cliente.
+                </p>
+              </div>
+
               <button
                 onClick={() => setShowAddModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -414,187 +1156,284 @@ export function Pedidos() {
             </div>
 
             <form onSubmit={handleCreatePedido} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">Cliente *</label>
+                  <label className="block text-sm mb-2 text-gray-700">
+                    Cliente *
+                  </label>
+
                   <select
-                    value={newPedido.cliente}
-                    onChange={(e) =>
-                      setNewPedido({ ...newPedido, cliente: e.target.value, productos: [] })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={newPedido.Id_Cliente}
+                    onChange={(e) => handleSeleccionarCliente(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
                     required
                   >
                     <option value="">Seleccionar cliente...</option>
-                    <option>Mueblería Del Sur</option>
-                    <option>Carpintería López</option>
-                    <option>Diseño Interior SA</option>
-                    <option>Muebles Modernos</option>
+
+                    {clientes.map((cliente) => (
+                      <option key={cliente.id_cliente} value={cliente.id_cliente}>
+                        {cliente.razon_social ||
+                          `${cliente.nombre} ${cliente.apellido}`}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm mb-2 text-gray-700">
-                    Fecha del Pedido *
+                    Fecha de generación
                   </label>
+
                   <input
                     type="date"
-                    value={newPedido.fechaGeneracion}
+                    value={newPedido.Fecha_Generacion}
+                    onChange={(e) => handleCambiarFechaGeneracion(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700">
+                    Vencimiento
+                  </label>
+
+                  <input
+                    type="date"
+                    value={newPedido.Vencimiento}
                     onChange={(e) =>
-                      setNewPedido({ ...newPedido, fechaGeneracion: e.target.value })
+                      setNewPedido({
+                        ...newPedido,
+                        Vencimiento: e.target.value,
+                      })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="seFactura"
-                    checked={newPedido.seFactura}
-                    onChange={(e) =>
-                      setNewPedido({ ...newPedido, seFactura: e.target.checked })
-                    }
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="seFactura" className="text-sm text-gray-700">
-                    Se factura este pedido
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700">
+                    Estado de Pago
                   </label>
+
+                  <select
+                    value={newPedido.Estado_Pago}
+                    onChange={(e) =>
+                      setNewPedido({
+                        ...newPedido,
+                        Estado_Pago: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
+                  >
+                    {ESTADOS_PAGO.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {formatearEstado(estado)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">Estado de Pago *</label>
+                  <label className="block text-sm mb-2 text-gray-700">
+                    Estado de Facturación
+                  </label>
+
                   <select
-                    value={newPedido.estadoPago}
+                    value={newPedido.Estado_Facturacion}
                     onChange={(e) =>
-                      setNewPedido({ ...newPedido, estadoPago: e.target.value })
+                      actualizarFacturacionNuevoPedido(e.target.value)
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
                   >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="pago">Pago</option>
+                    {ESTADOS_FACTURACION.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {formatearEstado(estado)}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm text-gray-700">
-                    Productos ({newPedido.productos.length})
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!newPedido.cliente) {
-                        alert("Primero debe seleccionar un cliente");
-                        return;
-                      }
-                      setShowAddProductModal(true);
-                    }}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
-                  >
-                    <Plus size={16} />
-                    Agregar producto
-                  </button>
-                </div>
-                <div className="border border-gray-300 rounded-lg overflow-hidden">
-                  {newPedido.productos.length > 0 ? (
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-xs text-gray-500">
-                            Producto
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs text-gray-500">
-                            Cantidad
-                          </th>
-                          <th className="px-4 py-2 text-left text-xs text-gray-500">
-                            Precio Unit.
-                          </th>
-                          <th className="px-4 py-2 text-right text-xs text-gray-500">
-                            Subtotal
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {newPedido.productos.map((pp, idx) => {
-                          const producto = getProductoById(pp.productoId);
-                          if (!producto) return null;
-                          return (
-                            <tr key={idx}>
-                              <td className="px-4 py-2 text-sm">
-                                {producto.numeroProducto} - {getProductoDescription(producto)}
-                              </td>
-                              <td className="px-4 py-2 text-sm">{pp.cantidadSolicitada}</td>
-                              <td className="px-4 py-2 text-sm">
-                                ${producto.precioUnitario.toLocaleString()}
-                              </td>
-                              <td className="px-4 py-2 text-sm text-right">
-                                ${(producto.precioUnitario * pp.cantidadSolicitada).toLocaleString()}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No hay productos agregados
-                    </div>
-                  )}
-                </div>
-              </div>
+              {newPedido.Estado_Facturacion !== "sin_factura" && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText size={18} className="text-blue-600" />
 
-              {newPedido.productos.length > 0 ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">Precio Total:</span>
-                    <div className="flex items-center gap-1">
-                      <DollarSign size={20} className="text-green-600" />
-                      <span className="text-xl text-green-700">
-                        {newPedido.productos
-                          .reduce((sum, pp) => {
-                            const producto = getProductoById(pp.productoId);
-                            return (
-                              sum +
-                              (producto ? producto.precioUnitario * pp.cantidadSolicitada : 0)
-                            );
-                          }, 0)
-                          .toLocaleString()}
-                      </span>
-                    </div>
+                    <h4 className="text-sm font-semibold text-gray-800">
+                      Información de factura
+                    </h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-2 text-gray-700">
+                      Número de Factura
+                      {newPedido.Estado_Facturacion === "facturado" ? " *" : ""}
+                    </label>
+
+                    <input
+                      type="text"
+                      value={newPedido.Nro_Factura}
+                      onChange={(e) =>
+                        setNewPedido({
+                          ...newPedido,
+                          Nro_Factura: e.target.value,
+                        })
+                      }
+                      placeholder="Ej: FC-001"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                    />
+
+                    {newPedido.Estado_Facturacion === "pendiente" && (
+                      <p className="text-xs text-blue-700 mt-1">
+                        Podés dejarlo vacío y cargarlo más adelante.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm mb-2 text-gray-700">
+                      PDF de Factura
+                    </label>
+
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) =>
+                        handleArchivoFacturaNuevo(e.target.files?.[0])
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white"
+                    />
+
+                    {newPedido.Pdf_Factura_Nombre ? (
+                      <p className="text-xs text-blue-700 mt-2">
+                        Archivo cargado: {newPedido.Pdf_Factura_Nombre}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-2">
+                        No hay archivo cargado.
+                      </p>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-700">
-                    ⚠️ Debe agregar al menos un producto para generar el pedido
-                  </p>
-                </div>
               )}
+
+              <div>
+                <label className="block text-sm mb-2 text-gray-700">
+                  Observaciones
+                </label>
+
+                <textarea
+                  value={newPedido.Observaciones}
+                  onChange={(e) =>
+                    setNewPedido({
+                      ...newPedido,
+                      Observaciones: e.target.value,
+                    })
+                  }
+                  rows="3"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
+                  placeholder="Observaciones del pedido..."
+                />
+              </div>
+
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Package size={18} className="text-red-700" />
+
+                    <span className="text-sm text-gray-700">
+                      Productos disponibles del cliente
+                    </span>
+                  </div>
+                </div>
+
+                {newPedido.Id_Cliente ? (
+                  productosDisponibles.length > 0 ? (
+                    <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
+                      {productosDisponibles.map((producto) => {
+                        const seleccionado = newPedido.productos.includes(
+                          producto.id_producto
+                        );
+
+                        return (
+                          <label
+                            key={producto.id_producto}
+                            className={`flex items-start gap-3 p-4 cursor-pointer ${
+                              seleccionado ? "bg-red-50" : "hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={seleccionado}
+                              onChange={() => toggleProducto(producto.id_producto)}
+                              className="mt-1"
+                            />
+
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-800">
+                                PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
+                                {getDescripcionProducto(producto)}
+                              </p>
+
+                              <p className="text-xs text-gray-500 mt-1">
+                                Cantidad: {producto.cantidad} | Precio Unit.: $
+                                {formatearPrecio(producto.precio)} | Subtotal: $
+                                {formatearPrecio(getSubtotalProducto(producto))}
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No hay productos disponibles para este cliente.
+                    </div>
+                  )
+                ) : (
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    Primero seleccioná un cliente.
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Precio Total:</span>
+
+                  <div className="flex items-center gap-1">
+                    <DollarSign size={20} className="text-green-600" />
+
+                    <span className="text-xl text-green-700">
+                      {formatearPrecio(calcularTotalNuevoPedido())}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
                 >
-                  Cancelar
+                  Cerrar
                 </button>
+
                 <button
                   type="submit"
                   disabled={newPedido.productos.length === 0}
                   className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
                     newPedido.productos.length > 0
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      ? "bg-red-700 text-white hover:bg-red-800"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
-                  Generar Pedido
+                  {newPedido.productos.length > 0
+                    ? `Generar Pedido (${newPedido.productos.length})`
+                    : "Seleccioná productos"}
                 </button>
               </div>
             </form>
@@ -602,21 +1441,23 @@ export function Pedidos() {
         </div>
       )}
 
-      {/* Modal Ver/Editar Pedido */}
       {showViewModal && selectedPedido && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">
-                Detalle del Pedido - {selectedPedido.numeroPedido}
-              </h3>
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">
+                  Detalle del Pedido - PED-
+                  {String(selectedPedido.id_pedido).padStart(3, "0")}
+                </h3>
+
+                <p className="text-sm text-gray-500">
+                  Información general, productos incluidos y facturación.
+                </p>
+              </div>
+
               <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  setIsEditingPedido(false);
-                  setTempNumeroFactura("");
-                  setTempPdfFactura(undefined);
-                }}
+                onClick={cerrarModalDetalle}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X size={20} />
@@ -624,61 +1465,296 @@ export function Pedidos() {
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              {mensajeErrorModal && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {mensajeErrorModal}
+                </div>
+              )}
+
+              {mensajeExitoModal && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                  {mensajeExitoModal}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Cliente</p>
-                  <p className="text-base text-gray-800">{selectedPedido.cliente}</p>
+
+                  <p className="text-base text-gray-800">
+                    {getNombreCliente(selectedPedido)}
+                  </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-500">Fecha de Generación</p>
-                  <p className="text-base text-gray-800">{selectedPedido.fechaGeneracion}</p>
+
+                  <p className="text-base text-gray-800">
+                    {formatearFecha(selectedPedido.fecha_generacion)}
+                  </p>
                 </div>
+
                 <div>
-                  <p className="text-sm text-gray-500">Estado de Pago</p>
-                  <select
-                    value={selectedPedido.estadoPago}
-                    onChange={(e) =>
-                      setSelectedPedido({
-                        ...selectedPedido,
-                        estadoPago: e.target.value,
-                      })
-                    }
-                    className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="pago">Pago</option>
-                  </select>
+                  <p className="text-sm text-gray-500">Vencimiento</p>
+
+                  <p className="text-base text-gray-800">
+                    {formatearFecha(selectedPedido.vencimiento)}
+                  </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-500">Precio Total</p>
-                  <div className="flex items-center gap-1">
-                    <DollarSign size={16} className="text-green-600" />
-                    <p className="text-lg text-green-700">
-                      {selectedPedido.precioTotal.toLocaleString()}
-                    </p>
-                  </div>
+
+                  <p className="text-lg text-green-700">
+                    ${formatearPrecio(selectedPedido.precio_total)}
+                  </p>
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm text-gray-700">Productos del Pedido</h4>
-                  {isEditingPedido && (
-                    <button
-                      onClick={() => setShowAddProductModal(true)}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Estado de Pago</p>
+
+                  {isEditingPedido ? (
+                    <select
+                      value={selectedPedido.estado_pago}
+                      onChange={(e) =>
+                        setSelectedPedido({
+                          ...selectedPedido,
+                          estado_pago: e.target.value,
+                        })
+                      }
+                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
                     >
-                      <Plus size={16} />
-                      Agregar producto
-                    </button>
+                      {ESTADOS_PAGO.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {formatearEstado(estado)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
+                        getEstadoPagoInfo(selectedPedido.estado_pago).color
+                      }`}
+                    >
+                      {getEstadoPagoInfo(selectedPedido.estado_pago).label}
+                    </span>
                   )}
                 </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">Facturación</p>
+
+                  {isEditingPedido ? (
+                    <select
+                      value={selectedPedido.estado_facturacion}
+                      onChange={(e) =>
+                        actualizarFacturacionPedidoSeleccionado(e.target.value)
+                      }
+                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
+                    >
+                      {ESTADOS_FACTURACION.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {formatearEstado(estado)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span
+                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
+                        getEstadoFacturaInfo(selectedPedido.estado_facturacion)
+                          .color
+                      }`}
+                    >
+                      {
+                        getEstadoFacturaInfo(selectedPedido.estado_facturacion)
+                          .label
+                      }
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {selectedPedido.estado_facturacion !== "sin_factura" && (
+                <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <FileText size={18} className="text-blue-600" />
+
+                    <h4 className="text-sm font-semibold text-gray-800">
+                      Información de factura
+                    </h4>
+                  </div>
+
+                  {isEditingPedido ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm mb-2 text-gray-700">
+                          Número de Factura
+                          {selectedPedido.estado_facturacion === "facturado"
+                            ? " *"
+                            : ""}
+                        </label>
+
+                        <input
+                          type="text"
+                          value={selectedPedido.nro_factura || ""}
+                          onChange={(e) =>
+                            setSelectedPedido({
+                              ...selectedPedido,
+                              nro_factura: e.target.value,
+                            })
+                          }
+                          placeholder="Ej: FC-001"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+
+                        {selectedPedido.estado_facturacion === "pendiente" && (
+                          <p className="text-xs text-blue-700 mt-1">
+                            Podés cargar el número ahora o completarlo más adelante.
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm mb-2 text-gray-700">
+                          PDF de Factura
+                        </label>
+
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={(e) =>
+                            handleArchivoFacturaSeleccionado(e.target.files?.[0])
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                        />
+
+                        {selectedPedido.pdf_factura_nombre ? (
+                          <div className="mt-2 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+                            <p className="text-xs text-gray-600">
+                              Archivo actual: {selectedPedido.pdf_factura_nombre}
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={eliminarPdfFacturaPedido}
+                              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs"
+                            >
+                              <Trash2 size={14} />
+                              Eliminar PDF
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 mt-2">
+                            No hay PDF cargado.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-900">
+                        <strong>Número de factura:</strong>{" "}
+                        {selectedPedido.nro_factura || "Sin número cargado"}
+                      </p>
+
+                      <button
+                        onClick={() => descargarFactura(selectedPedido)}
+                        disabled={!selectedPedido.pdf_factura_url}
+                        className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm ${
+                          selectedPedido.pdf_factura_url
+                            ? "bg-blue-600 text-white hover:bg-blue-700"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <Download size={16} />
+                        Descargar factura PDF
+                      </button>
+
+                      {!selectedPedido.pdf_factura_url && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          No hay PDF de factura cargado.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-800">
+                      Productos del pedido
+                    </h4>
+                  </div>
+
+                  <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                    {selectedPedido.productos?.length || 0} producto(s)
+                  </span>
+                </div>
+
+                {isEditingPedido && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+                    <label className="block text-sm mb-2 text-gray-700">
+                      Agregar producto disponible del cliente
+                    </label>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <select
+                        value={productoEdicionSeleccionado}
+                        onChange={(e) =>
+                          setProductoEdicionSeleccionado(e.target.value)
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                      >
+                        <option value="">Seleccionar producto...</option>
+
+                        {productosDisponiblesEdicion.map((producto) => (
+                          <option
+                            key={producto.id_producto}
+                            value={producto.id_producto}
+                          >
+                            PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
+                            {getDescripcionProducto(producto)} - $
+                            {formatearPrecio(getSubtotalProducto(producto))}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={agregarProductoAlPedido}
+                        disabled={!productoEdicionSeleccionado}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          productoEdicionSeleccionado
+                            ? "bg-blue-600 text-white hover:bg-blue-700"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+
+                    {productosDisponiblesEdicion.length === 0 && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        No hay productos disponibles para agregar a este pedido.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs text-gray-500">Producto</th>
-                        <th className="px-4 py-2 text-left text-xs text-gray-500">Cantidad</th>
+                        <th className="px-4 py-2 text-left text-xs text-gray-500">
+                          Producto
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs text-gray-500">
+                          Cantidad
+                        </th>
                         <th className="px-4 py-2 text-left text-xs text-gray-500">
                           Precio Unit.
                         </th>
@@ -687,439 +1763,120 @@ export function Pedidos() {
                         </th>
                         {isEditingPedido && (
                           <th className="px-4 py-2 text-right text-xs text-gray-500">
-                            Acciones
+                            Acción
                           </th>
                         )}
                       </tr>
                     </thead>
+
                     <tbody className="divide-y divide-gray-200">
-                      {selectedPedido.productos.map((pp) => {
-                        const producto = getProductoById(pp.productoId);
-                        if (!producto) return null;
-                        return (
-                          <tr key={pp.productoId}>
-                            <td className="px-4 py-2 text-sm">
-                              {producto.numeroProducto} - {getProductoDescription(producto)}
+                      {selectedPedido.productos?.map((producto) => (
+                        <tr key={producto.id_producto}>
+                          <td className="px-4 py-2 text-sm text-gray-800">
+                            PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
+                            {getDescripcionProducto(producto)}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm text-gray-600">
+                            {producto.cantidad}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm text-gray-600">
+                            ${formatearPrecio(producto.precio)}
+                          </td>
+
+                          <td className="px-4 py-2 text-sm text-right text-gray-800">
+                            ${formatearPrecio(getSubtotalProducto(producto))}
+                          </td>
+
+                          {isEditingPedido && (
+                            <td className="px-4 py-2 text-right">
+                              <button
+                                onClick={() =>
+                                  quitarProductoDelPedido(producto.id_producto)
+                                }
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                                title="Quitar del pedido"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </td>
-                            <td className="px-4 py-2 text-sm">{pp.cantidadSolicitada}</td>
-                            <td className="px-4 py-2 text-sm">
-                              ${producto.precioUnitario.toLocaleString()}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-right">
-                              ${(producto.precioUnitario * pp.cantidadSolicitada).toLocaleString()}
-                            </td>
-                            {isEditingPedido && (
-                              <td className="px-4 py-2 text-right">
-                                <button
-                                  onClick={() => handleRemoveProduct(pp.productoId)}
-                                  className="p-1 hover:bg-red-50 rounded transition-colors text-red-600"
-                                  title="Eliminar producto"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
+                          )}
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              {/* Sección de Facturación */}
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="text-sm text-gray-700 mb-4">Información de Facturación</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500">¿Se factura?</p>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        selectedPedido.seFactura
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {selectedPedido.seFactura ? "Sí" : "No"}
-                    </span>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Observaciones</p>
+
+                {isEditingPedido ? (
+                  <textarea
+                    value={selectedPedido.observaciones || ""}
+                    onChange={(e) =>
+                      setSelectedPedido({
+                        ...selectedPedido,
+                        observaciones: e.target.value,
+                      })
+                    }
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-800">
+                      {selectedPedido.observaciones || "Sin observaciones."}
+                    </p>
                   </div>
-
-                  {selectedPedido.seFactura && (
-                    <>
-                      {isEditingPedido ? (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                          <div>
-                            <label className="block text-sm mb-2 text-gray-700">
-                              Número de Factura *
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="Ej: FC-001"
-                              value={selectedPedido.numeroFactura || ""}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              onChange={(e) => {
-                                setSelectedPedido({
-                                  ...selectedPedido,
-                                  numeroFactura: e.target.value,
-                                });
-                              }}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm mb-2 text-gray-700">
-                              PDF de Factura (Opcional){" "}
-                              {selectedPedido.pdfFactura && "- Cambiar archivo"}
-                            </label>
-                            <input
-                              type="file"
-                              accept="application/pdf"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  const url = URL.createObjectURL(file);
-                                  setSelectedPedido({
-                                    ...selectedPedido,
-                                    pdfFactura: url,
-                                  });
-                                }
-                              }}
-                            />
-                            {selectedPedido.pdfFactura && (
-                              <p className="text-xs text-gray-600 mt-1">
-                                PDF cargado previamente. Seleccione un nuevo archivo para
-                                reemplazarlo.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {selectedPedido.numeroFactura ? (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                              <div>
-                                <p className="text-sm text-blue-700">Número de Factura</p>
-                                <p className="text-base text-blue-900 font-medium">
-                                  {selectedPedido.numeroFactura}
-                                </p>
-                              </div>
-
-                              {selectedPedido.pdfFactura && (
-                                <div className="flex gap-2">
-                                  <a
-                                    href={selectedPedido.pdfFactura}
-                                    download
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                                  >
-                                    <Download size={16} />
-                                    Descargar Factura PDF
-                                  </a>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm("¿Está seguro que desea eliminar el PDF?")) {
-                                        setSelectedPedido({
-                                          ...selectedPedido,
-                                          pdfFactura: undefined,
-                                        });
-                                        handleSavePedidoChanges();
-                                      }
-                                    }}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                                  >
-                                    <Trash2 size={16} />
-                                    Eliminar PDF
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
-                              <p className="text-sm text-yellow-700 mb-2">
-                                Este pedido requiere facturación pero aún no tiene factura
-                                asociada.
-                              </p>
-
-                              <div className="space-y-3">
-                                <div>
-                                  <label className="block text-sm mb-2 text-gray-700">
-                                    Número de Factura *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    placeholder="Ej: FC-001"
-                                    value={tempNumeroFactura}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    onChange={(e) => setTempNumeroFactura(e.target.value)}
-                                  />
-                                </div>
-
-                                <div>
-                                  <label className="block text-sm mb-2 text-gray-700">
-                                    PDF de Factura (Opcional)
-                                  </label>
-                                  <input
-                                    type="file"
-                                    accept="application/pdf"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        const url = URL.createObjectURL(file);
-                                        setTempPdfFactura(url);
-                                      }
-                                    }}
-                                  />
-                                </div>
-
-                                <button
-                                  onClick={handleGuardarFactura}
-                                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                                >
-                                  Guardar Información de Factura
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
+                )}
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                 {isEditingPedido ? (
                   <>
                     <button
-                      onClick={() => {
-                        const pedidoOriginal = pedidos.find((p) => p.id === selectedPedido?.id);
-                        if (pedidoOriginal) {
-                          setSelectedPedido({ ...pedidoOriginal });
-                        }
-                        setTempNumeroFactura("");
-                        setTempPdfFactura(undefined);
-                        setIsEditingPedido(false);
-                      }}
+                      onClick={cancelarEdicionPedido}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Cancelar
                     </button>
+
                     <button
-                      onClick={handleSavePedidoChanges}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      onClick={guardarCambiosPedido}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                     >
-                      Guardar Cambios
+                      <Edit size={16} />
+                      Guardar cambios
                     </button>
                   </>
                 ) : (
                   <>
                     <button
-                      onClick={handleDownloadPDF}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                      onClick={() => descargarPdfPedido(selectedPedido)}
+                      className="flex-1 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
                     >
                       <Download size={16} />
-                      Descargar PDF
+                      Descargar PDF del pedido
                     </button>
+
                     <button
-                      onClick={() => {
-                        setTempNumeroFactura("");
-                        setTempPdfFactura(undefined);
-                        setIsEditingPedido(true);
-                      }}
+                      onClick={cerrarModalDetalle}
+                      className="flex-1 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
+                    >
+                      Cerrar
+                    </button>
+
+                    <button
+                      onClick={abrirEdicionPedido}
                       className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <Edit size={16} />
-                      Editar Pedido
-                    </button>
-                    <button
-                      onClick={handleDeletePedido}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Trash2 size={16} />
-                      Eliminar
+                      Editar pedido
                     </button>
                   </>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Agregar Producto del Cliente */}
-      {showAddProductModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">Seleccionar Producto del Cliente</h3>
-              <button
-                onClick={() => {
-                  setShowAddProductModal(false);
-                  setSelectedProductosIds([]);
-                  setCantidadesPorProducto({});
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {(() => {
-                const clienteActual =
-                  isEditingPedido && selectedPedido
-                    ? selectedPedido.cliente
-                    : newPedido.cliente;
-
-                const currentPedidoId =
-                  isEditingPedido && selectedPedido ? selectedPedido.id : undefined;
-                const productosDisponibles = getProductosDisponibles(
-                  clienteActual,
-                  currentPedidoId
-                );
-
-                const handleToggleProducto = (productoId) => {
-                  if (selectedProductosIds.includes(productoId)) {
-                    setSelectedProductosIds(
-                      selectedProductosIds.filter((id) => id !== productoId)
-                    );
-                    const newCantidades = { ...cantidadesPorProducto };
-                    delete newCantidades[productoId];
-                    setCantidadesPorProducto(newCantidades);
-                  } else {
-                    setSelectedProductosIds([...selectedProductosIds, productoId]);
-                    setCantidadesPorProducto({ ...cantidadesPorProducto, [productoId]: 1 });
-                  }
-                };
-
-                const handleCantidadChange = (productoId, cantidad) => {
-                  setCantidadesPorProducto({
-                    ...cantidadesPorProducto,
-                    [productoId]: cantidad,
-                  });
-                };
-
-                return (
-                  <>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Package size={20} className="text-blue-600" />
-                        <h4 className="text-sm text-gray-700">
-                          Productos disponibles de {clienteActual}
-                        </h4>
-                      </div>
-                      <p className="text-xs text-gray-600">
-                        {productosDisponibles.length} producto(s) disponible(s) para agregar
-                      </p>
-                      {selectedProductosIds.length > 0 && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          {selectedProductosIds.length} producto(s) seleccionado(s)
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm mb-2 text-gray-700">
-                        Seleccionar Productos (puede seleccionar múltiples)
-                      </label>
-                      {productosDisponibles.length > 0 ? (
-                        <div className="border border-gray-300 rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-                          {productosDisponibles.map((producto) => {
-                            const isSelected = selectedProductosIds.includes(producto.id);
-                            return (
-                              <div
-                                key={producto.id}
-                                className={`p-3 border-b border-gray-200 last:border-0 ${
-                                  isSelected ? "bg-blue-50" : "hover:bg-gray-50"
-                                } transition-colors`}
-                              >
-                                <label className="flex items-start cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => handleToggleProducto(producto.id)}
-                                    className="mt-1 mr-3"
-                                  />
-                                  <div className="flex-1">
-                                    <p className="text-sm text-gray-800">
-                                      {producto.numeroProducto} -{" "}
-                                      {getProductoDescription(producto)}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      Precio: ${producto.precioUnitario.toLocaleString()}
-                                    </p>
-                                  </div>
-                                </label>
-                                {isSelected && (
-                                  <div className="mt-2 ml-6">
-                                    {/* Campo de cantidad opcional */}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="border border-gray-300 rounded-lg p-4 text-center text-gray-500 text-sm">
-                          No hay productos disponibles para agregar
-                          <p className="text-xs mt-1">
-                            (Todos los productos de este cliente ya están asignados a pedidos)
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {selectedProductosIds.length > 0 && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-700">Subtotal:</span>
-                          <div className="flex items-center gap-1">
-                            <DollarSign size={20} className="text-green-600" />
-                            <span className="text-xl text-green-700">
-                              {selectedProductosIds
-                                .reduce((sum, productoId) => {
-                                  const producto = getProductoById(productoId);
-                                  const cantidad = cantidadesPorProducto[productoId] || 1;
-                                  return (
-                                    sum + (producto ? producto.precioUnitario * cantidad : 0)
-                                  );
-                                }, 0)
-                                .toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  onClick={() => {
-                    setShowAddProductModal(false);
-                    setSelectedProductosIds([]);
-                    setCantidadesPorProducto({});
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleAddProductToPedido}
-                  disabled={selectedProductosIds.length === 0}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                    selectedProductosIds.length > 0
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  Agregar{" "}
-                  {selectedProductosIds.length > 0
-                    ? `${selectedProductosIds.length} Producto(s)`
-                    : "Producto"}
-                </button>
               </div>
             </div>
           </div>

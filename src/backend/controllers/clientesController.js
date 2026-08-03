@@ -6,7 +6,13 @@ const validarEmail = (email) => {
     return regex.test(email);
 };
 
-const validarCliente = ({ Nombre, Apellido, Telefono, CUIT_CUIL, Email }) => {
+const validarCliente = (cliente) => {
+    if (!cliente) {
+        return 'No se recibieron datos del cliente';
+    }
+
+    const { Nombre, Apellido, Telefono, CUIT_CUIL, Email } = cliente;
+
     if (!Nombre || !Apellido || !Telefono || !CUIT_CUIL || !Email) {
         return 'Todos los campos obligatorios deben estar completos';
     }
@@ -17,6 +23,7 @@ const validarCliente = ({ Nombre, Apellido, Telefono, CUIT_CUIL, Email }) => {
 
     return null;
 };
+
 
 const obtenerClientes = async (req, res) => {
     try {

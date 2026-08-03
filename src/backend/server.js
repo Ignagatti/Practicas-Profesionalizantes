@@ -1,23 +1,20 @@
 const express = require("express");
 const cors = require("cors");
-
 require("dotenv").config();
-
-const movimientosRoutes =
-    require("./routes/movimientosRoutes");
 
 const pool = require("./config/db");
 
+const movimientosRoutes = require("./routes/movimientosRoutes");
 const clientesRoutes = require("./routes/clientesRoutes");
 const proveedoresRoutes = require("./routes/proveedoresRoutes");
 const insumosRoutes = require("./routes/insumosRoutes");
 const productosRoutes = require("./routes/productosRoutes");
+const pedidosRoutes = require("./routes/pedidosRoutes");
 
 const facturasProveedorRoutes = require("./routes/facturasProveedorRoutes");
 const pagosRoutes = require("./routes/pagosRoutes");
 const estadosPagoRoutes = require("./routes/estadosPagoRoutes");
 const saldosRoutes = require("./routes/saldosRoutes");
-
 
 const app = express();
 
@@ -32,12 +29,12 @@ app.use(cors());
 
 app.use(express.json());
 
-
 // =====================================================
 // RUTAS
 // =====================================================
 
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/pedidos", pedidosRoutes);
 
 app.use("/api/proveedores", proveedoresRoutes);
 

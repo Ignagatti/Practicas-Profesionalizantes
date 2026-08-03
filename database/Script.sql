@@ -125,7 +125,13 @@ CREATE TABLE Producto (
     Estado estado_producto DEFAULT 'pendiente',
     Fecha_Pedido DATE,
     Cantidad INT CHECK (Cantidad > 0),
-    Precio DECIMAL(10,2) CHECK (Precio >= 0)
+    Precio DECIMAL(10,2) CHECK (Precio >= 0),
+    Observaciones TEXT,
+    Id_Cliente INT,
+
+    CONSTRAINT fk_producto_cliente
+        FOREIGN KEY (Id_Cliente)
+        REFERENCES Cliente(Id_Cliente)
 );
 
 CREATE TABLE Insumo (
@@ -161,7 +167,9 @@ CREATE TABLE Detalle_Pedido (
     Id_Detalle_Pedido SERIAL PRIMARY KEY,
     Id_Pedido INT REFERENCES Pedido(Id_Pedido),
     Id_Producto INT REFERENCES Producto(Id_Producto),
-    UNIQUE (Id_Pedido, Id_Producto)
+
+    CONSTRAINT unique_producto_en_pedido
+        UNIQUE (Id_Producto)
 );
 
 CREATE TABLE PagoPedido (

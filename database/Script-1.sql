@@ -7,7 +7,8 @@ INSERT INTO Insumo (Nombre, Categoria, Precio_Unitario) VALUES
 ('Madera Pino', 'Materia Prima', 1500.00),
 ('Tornillos x 100', 'Ferretería', 2500.00);
 
-INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio) VALUES
-('Sillón Maitena', 'Chenille Gris', 'Natural', 'en_produccion', 2, 45000.00),
-('Silla Imperial', 'Pana Roja', 'Nogal', 'terminado', 4, 12000.00),
-('Sillón Windsor', 'Lino Beige', 'Blanco', 'pendiente', 1, 55000.00);
+INSERT INTO Producto 
+(Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Id_Cliente) VALUES
+('Sillón Maitena', 'Chenille Gris', 'Natural', 'en_produccion', 2, 45000.00, 1),
+('Silla Imperial', 'Pana Roja', 'Nogal', 'terminado', 4, 12000.00, 1),
+('Sillón Windsor', 'Lino Beige', 'Blanco', 'pendiente', 1, 55000.00, 2);

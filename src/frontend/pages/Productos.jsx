@@ -454,8 +454,18 @@ function Productos() {
                                 </div>
                             </div>
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500">Cancelar</button>
-                                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100">{isEditing ? 'Guardar Cambios' : 'Crear Producto'}</button>
+                                {isEditing && selectedProducto && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} 
+                                        className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 flex-shrink-0"
+                                        title="Eliminar Producto"
+                                    >
+                                        <Trash2 size={20} />
+                                    </button>
+                                )}
+                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
+                                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">{isEditing ? 'Guardar Cambios' : 'Crear Producto'}</button>
                             </div>
                         </form>
                     </div>

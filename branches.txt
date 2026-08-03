@@ -1,0 +1,9 @@
+﻿  Iva
+  clientes
+  igna
+* main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/Iva
+  remotes/origin/clientes
+  remotes/origin/igna
+  remotes/origin/main

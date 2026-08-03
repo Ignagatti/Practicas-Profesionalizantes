@@ -10,6 +10,7 @@ import {
 import { obtenerInsumos } from '../services/insumosService';
 
 const PRODUCTO_VACIO = {
+    id_cliente: '',
     modelo: '',
     nombre_tela: '',
     tipo_tela: 'Sin tela',
@@ -50,11 +51,25 @@ function Productos() {
     const [seleccionados, setSeleccionados] = useState([]); // Para impresión / mandar a producción
     const [seleccionadosTerminar, setSeleccionadosTerminar] = useState([]); // Para pasar a terminado
     const [listaPrecios, setListaPrecios] = useState([]);
+    const [clientes, setClientes] = useState([]);
 
     useEffect(() => {
         cargarProductos();
         cargarListaPrecios();
+        cargarClientes();
     }, []);
+
+    const cargarClientes = async () => {
+        try {
+            const API_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : 'http://localhost:4000/api';
+            const res = await fetch(`${API_URL}/clientes`);
+            const data = await res.json();
+            const activos = data.filter(c => c.estado !== 'bloqueado');
+            setClientes(activos);
+        } catch (error) {
+            console.error('Error al cargar clientes:', error);
+        }
+    };
 
     const cargarListaPrecios = async () => {
         try {
@@ -97,6 +112,7 @@ function Productos() {
         setSelectedProducto(p);
         setFormData({
             ...p,
+            id_cliente: p.id_cliente || p.Id_Cliente || '',
             modelo: p.modelo || p.Modelo || '',
             nombre_tela: p.tela || p.Tela || '',
             tipo_tela: p.tipo_tela || p.Tipo_Tela || 'Sin tela',
@@ -318,7 +334,7 @@ function Productos() {
                             {filteredProductos.map((p, idx) => (
                                 <tr key={p.id_producto || p.Id_Producto} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 text-sm text-gray-400 font-medium">#00{idx+1}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Mueblería Del Sur'}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Sin cliente'}</td>
                                     <td className="px-6 py-4 text-sm text-gray-800 font-bold">{p.modelo || p.Modelo}</td>
                                     <td className="px-6 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td>
                                     <td className="px-6 py-4">
@@ -370,9 +386,17 @@ function Productos() {
 
                                 <div className="col-span-2">
                                     <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cliente *</label>
-                                    <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm">
-                                        <option>Mueblería Del Sur</option>
-                                        <option>Carpintería López</option>
+                                    <select 
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm"
+                                        value={formData.id_cliente || ''}
+                                        onChange={(e) => setFormData({...formData, id_cliente: e.target.value})}
+                                    >
+                                        <option value="">Seleccionar Cliente ...</option>
+                                        {clientes.map(c => (
+                                            <option key={c.id_cliente || c.Id_Cliente} value={c.id_cliente || c.Id_Cliente}>
+                                                {c.razon_social || c.Razon_Social || `${c.nombre || c.Nombre} ${c.apellido || c.Apellido}`}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="col-span-1">
@@ -502,7 +526,7 @@ function Productos() {
                                             const id = p.id_producto || p.Id_Producto;
                                             const isSelected = seleccionados.includes(id);
                                             return (
-                                                <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/20' : ''}`}><td className="px-6 py-4 text-center"><input type="checkbox" className="w-4 h-4" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Mueblería Del Sur'}</td><td className="px-4 py-4 text-sm font-bold text-gray-800">{p.modelo || p.Modelo}</td><td className="px-4 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td><td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td><td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
+                                                <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/20' : ''}`}><td className="px-6 py-4 text-center"><input type="checkbox" className="w-4 h-4" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td><td className="px-4 py-4 text-sm font-bold text-gray-800">{p.modelo || p.Modelo}</td><td className="px-4 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td><td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td><td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
                                             );
                                         })}
                                     </tbody>
@@ -570,7 +594,7 @@ function Productos() {
                                                                 readOnly
                                                             />
                                                         </td>
-                                                        <td className="px-4 py-4 text-sm text-gray-600" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.cliente || 'Mueblería Del Sur'}</td>
+                                                        <td className="px-4 py-4 text-sm text-gray-600" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.cliente || 'Sin cliente'}</td>
                                                         <td className="px-4 py-4 text-sm font-bold text-gray-800" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.modelo || p.Modelo}</td>
                                                         <td className="px-4 py-4 text-sm text-gray-800 font-bold text-center" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.cantidad || p.Cantidad}</td>
                                                         <td className="px-4 py-4 text-sm text-gray-400" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.tela || p.Tela || '-'}</td>

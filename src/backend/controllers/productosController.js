@@ -3,7 +3,14 @@ const pool = require('../config/db');
 // OBTENER TODOS
 const obtenerProductos = async (req, res) => {
     try {
-        const resultado = await pool.query('SELECT *, Observaciones as observaciones FROM Producto ORDER BY Id_Producto ASC');
+        const query = `
+            SELECT p.*, p.Observaciones as observaciones, 
+                   COALESCE(c.Razon_Social, c.Nombre || ' ' || c.Apellido) as cliente 
+            FROM Producto p 
+            LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
+            ORDER BY p.Id_Producto ASC
+        `;
+        const resultado = await pool.query(query);
         res.json(resultado.rows);
     } catch (error) {
         console.error('Error en obtenerProductos:', error.message);
@@ -13,11 +20,11 @@ const obtenerProductos = async (req, res) => {
 
 // CREAR NUEVO
 const crearProducto = async (req, res) => {
-    const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido } = req.body;
+    const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente } = req.body;
 
     try {
-        const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
-        const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, precio || 0, observaciones || '', fecha_pedido || new Date()];
+        const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido, Id_Cliente) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *';
+        const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, precio || 0, observaciones || '', fecha_pedido || new Date(), id_cliente || null];
         const resultado = await pool.query(query, valores);
         res.status(201).json(resultado.rows[0]);
     } catch (error) {
@@ -29,11 +36,11 @@ const crearProducto = async (req, res) => {
 // ACTUALIZAR
 const actualizarProducto = async (req, res) => {
     const { id } = req.params;
-    const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido } = req.body;
+    const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente } = req.body;
 
     try {
-        const query = 'UPDATE Producto SET Modelo = $1, Tela = $2, Color_Lustre = $3, Estado = $4, Cantidad = $5, Precio = $6, Observaciones = $7, Fecha_Pedido = $8 WHERE Id_Producto = $9 RETURNING *';
-        const valores = [modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id];
+        const query = 'UPDATE Producto SET Modelo = $1, Tela = $2, Color_Lustre = $3, Estado = $4, Cantidad = $5, Precio = $6, Observaciones = $7, Fecha_Pedido = $8, Id_Cliente = $9 WHERE Id_Producto = $10 RETURNING *';
+        const valores = [modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente || null, id];
         const resultado = await pool.query(query, valores);
 
         if (resultado.rowCount === 0) return res.status(404).send('Producto no encontrado');

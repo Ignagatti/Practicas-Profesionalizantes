@@ -15,9 +15,8 @@ const ESTADOS_PAGO_VALIDOS = [
 ];
 
 const ESTADOS_FACTURACION_VALIDOS = [
-    'sin_factura',
-    'pendiente',
-    'facturado'
+    'no_se_factura',
+    'se_factura'
 ];
 
 const obtenerPedidos = async (req, res) => {
@@ -266,7 +265,7 @@ const crearPedido = async (req, res) => {
         }
 
         const estadoPagoFinal = Estado_Pago || 'pendiente';
-        const estadoFacturacionFinal = Estado_Facturacion || 'sin_factura';
+        const estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
 
         if (!ESTADOS_PAGO_VALIDOS.includes(estadoPagoFinal)) {
             return res.status(400).json({
@@ -347,12 +346,16 @@ const crearPedido = async (req, res) => {
             });
         }
 
-        const precioTotal = productosResultado.rows.reduce((total, producto) => {
+        let precioTotal = productosResultado.rows.reduce((total, producto) => {
             const precio = Number(producto.precio || 0);
             const cantidad = Number(producto.cantidad || 1);
 
             return total + precio * cantidad;
         }, 0);
+
+        if (estadoFacturacionFinal === 'se_factura') {
+            precioTotal = precioTotal * 1.21;
+        }
 
         const montoAdeudado = estadoPagoFinal === 'pagado' ? 0 : precioTotal;
 
@@ -396,6 +399,11 @@ const crearPedido = async (req, res) => {
                 [pedidoCreado.id_pedido, idProducto]
             );
         }
+        
+        await client.query(
+            `UPDATE Cliente SET Saldo = Saldo - $1 WHERE Id_Cliente = $2`,
+            [precioTotal, Id_Cliente]
+        );
 
         await client.query('COMMIT');
 
@@ -536,7 +544,7 @@ const actualizarPedido = async (req, res) => {
         }
 
         const estadoPagoFinal = Estado_Pago || 'pendiente';
-        const estadoFacturacionFinal = Estado_Facturacion || 'sin_factura';
+        const estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
 
         if (!ESTADOS_PAGO_VALIDOS.includes(estadoPagoFinal)) {
             return res.status(400).json({
@@ -622,12 +630,16 @@ const actualizarPedido = async (req, res) => {
             });
         }
 
-        const precioTotal = productosResultado.rows.reduce((total, producto) => {
+        let precioTotal = productosResultado.rows.reduce((total, producto) => {
             const precio = Number(producto.precio || 0);
             const cantidad = Number(producto.cantidad || 1);
 
             return total + precio * cantidad;
         }, 0);
+
+        if (estadoFacturacionFinal === 'se_factura') {
+            precioTotal = precioTotal * 1.21;
+        }
 
         let montoAdeudadoFinal = Monto_Adeudado !== undefined ? Number(Monto_Adeudado) : precioTotal;
         if (estadoPagoFinal === 'pagado') {

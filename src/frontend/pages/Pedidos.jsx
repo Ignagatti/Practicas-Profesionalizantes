@@ -15,7 +15,7 @@ import {
 const API_URL = "http://localhost:4000/api";
 
 const ESTADOS_PAGO = ["pendiente", "parcial", "pagado"];
-const ESTADOS_FACTURACION = ["sin_factura", "pendiente", "facturado"];
+const ESTADOS_FACTURACION = ["no_se_factura", "se_factura"];
 
 function obtenerFechaActualISO() {
   const hoy = new Date();
@@ -90,8 +90,8 @@ function formatearEstado(texto) {
     pendiente: "Pendiente",
     parcial: "Parcial",
     pagado: "Pagado",
-    sin_factura: "No se factura",
-    facturado: "Facturado",
+    no_se_factura: "No se factura",
+    se_factura: "Se factura",
   };
 
   return estados[texto] || texto || "-";
@@ -151,15 +151,15 @@ function getEstadoPagoInfo(estado) {
   };
 }
 
-function getEstadoFacturaInfo(estado) {
-  if (estado === "facturado") {
-    return {
-      label: "Facturado",
-      color: "bg-green-100 text-green-700",
-    };
-  }
-
-  if (estado === "pendiente") {
+function getEstadoFacturaInfo(pedido) {
+  const estado = pedido.estado_facturacion || pedido.Estado_Facturacion;
+  if (estado === "se_factura") {
+    if (pedido.nro_factura || pedido.pdf_factura_url || pedido.pdf_factura_file) {
+      return {
+        label: "Facturado",
+        color: "bg-green-100 text-green-700",
+      };
+    }
     return {
       label: "Falta facturar",
       color: "bg-yellow-100 text-yellow-700",
@@ -180,7 +180,7 @@ function normalizarPedido(pedido) {
     observaciones: pedido.observaciones ?? pedido.Observaciones,
     precio_total: pedido.precio_total ?? pedido.Precio_Total ?? 0,
     estado_facturacion:
-      pedido.estado_facturacion ?? pedido.Estado_Facturacion ?? "sin_factura",
+      pedido.estado_facturacion ?? pedido.Estado_Facturacion ?? "no_se_factura",
     nro_factura: pedido.nro_factura ?? pedido.Nro_Factura ?? null,
     pdf_factura_url: pedido.pdf_factura_url ?? pedido.Pdf_Factura_Url ?? null,
     pdf_factura_nombre:
@@ -245,7 +245,7 @@ export function Pedidos() {
     Fecha_Generacion: fechaActual,
     Vencimiento: sumarDiasISO(fechaActual, 30),
     Observaciones: "",
-    Estado_Facturacion: "sin_factura",
+    Estado_Facturacion: "no_se_factura",
     Nro_Factura: "",
     Pdf_Factura_File: null,
     Pdf_Factura_Nombre: "",
@@ -383,7 +383,7 @@ export function Pedidos() {
       Fecha_Generacion: hoy,
       Vencimiento: sumarDiasISO(hoy, 30),
       Observaciones: "",
-      Estado_Facturacion: "sin_factura",
+      Estado_Facturacion: "no_se_factura",
       Nro_Factura: "",
       Pdf_Factura_File: null,
       Pdf_Factura_Nombre: "",
@@ -419,13 +419,13 @@ export function Pedidos() {
       ...newPedido,
       Estado_Facturacion: estadoFacturacion,
       Nro_Factura:
-        estadoFacturacion === "sin_factura" ? "" : newPedido.Nro_Factura,
+        estadoFacturacion === "no_se_factura" ? "" : newPedido.Nro_Factura,
       Pdf_Factura_File:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? null
           : newPedido.Pdf_Factura_File,
       Pdf_Factura_Nombre:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? ""
           : newPedido.Pdf_Factura_Nombre,
     });
@@ -438,23 +438,23 @@ export function Pedidos() {
       ...selectedPedido,
       estado_facturacion: estadoFacturacion,
       nro_factura:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? ""
           : selectedPedido.nro_factura || "",
       pdf_factura_url:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? null
           : selectedPedido.pdf_factura_url,
       pdf_factura_nombre:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? null
           : selectedPedido.pdf_factura_nombre,
       pdf_factura_file:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? null
           : selectedPedido.pdf_factura_file || null,
       eliminar_pdf_factura:
-        estadoFacturacion === "sin_factura"
+        estadoFacturacion === "no_se_factura"
           ? true
           : selectedPedido.eliminar_pdf_factura || false,
     });
@@ -518,9 +518,15 @@ export function Pedidos() {
   };
 
   const calcularTotalNuevoPedido = () => {
-    return productosDisponibles
+    let subtotal = productosDisponibles
       .filter((producto) => newPedido.productos.includes(producto.id_producto))
       .reduce((total, producto) => total + getSubtotalProducto(producto), 0);
+
+    if (newPedido.Estado_Facturacion === "se_factura") {
+      subtotal = subtotal * 1.21;
+    }
+    
+    return subtotal;
   };
 
   const subirFacturaPedido = async (idPedido, datosFactura) => {
@@ -600,7 +606,7 @@ export function Pedidos() {
         Observaciones: newPedido.Observaciones || null,
         Estado_Facturacion: newPedido.Estado_Facturacion,
         Nro_Factura:
-          newPedido.Estado_Facturacion === "sin_factura"
+          newPedido.Estado_Facturacion === "no_se_factura"
             ? null
             : newPedido.Nro_Factura || null,
         Estado_Pago: newPedido.Estado_Pago,
@@ -626,7 +632,7 @@ export function Pedidos() {
 
       if (
         idPedidoCreado &&
-        newPedido.Estado_Facturacion !== "sin_factura" &&
+        newPedido.Estado_Facturacion !== "no_se_factura" &&
         (newPedido.Nro_Factura || newPedido.Pdf_Factura_File)
       ) {
         await subirFacturaPedido(idPedidoCreado, {
@@ -678,7 +684,10 @@ export function Pedidos() {
 
       const totalAnterior = Number(selectedPedido.precio_total || 0);
       const productosActualizados = [...selectedPedido.productos, producto];
-      const totalActualizado = calcularTotalPedido(productosActualizados);
+      let totalActualizado = calcularTotalPedido(productosActualizados);
+      if (selectedPedido.estado_facturacion === "se_factura") {
+        totalActualizado = totalActualizado * 1.21;
+      }
 
       const estabaPagado = selectedPedido.estado_pago === "pagado";
       const nuevoEstadoPago = estabaPagado
@@ -725,7 +734,10 @@ export function Pedidos() {
       (producto) => Number(producto.id_producto) !== Number(idProducto)
     );
 
-    const totalActualizado = calcularTotalPedido(productosActualizados);
+    let totalActualizado = calcularTotalPedido(productosActualizados);
+    if (selectedPedido.estado_facturacion === "se_factura") {
+      totalActualizado = totalActualizado * 1.21;
+    }
 
     const pedidoActualizado = {
       ...selectedPedido,
@@ -763,7 +775,10 @@ export function Pedidos() {
     try {
       setMensajeErrorModal("");
 
-      const totalActualizado = calcularTotalPedido(selectedPedido.productos);
+      let totalActualizado = calcularTotalPedido(selectedPedido.productos);
+      if (selectedPedido.estado_facturacion === "se_factura") {
+        totalActualizado = totalActualizado * 1.21;
+      }
 
       const montoAdeudadoActualizado =
         selectedPedido.estado_pago === "pagado"
@@ -779,15 +794,15 @@ export function Pedidos() {
         precio_total: totalActualizado,
         monto_adeudado: montoAdeudadoActualizado,
         nro_factura:
-          selectedPedido.estado_facturacion === "sin_factura"
+          selectedPedido.estado_facturacion === "no_se_factura"
             ? null
             : selectedPedido.nro_factura || null,
         pdf_factura_url:
-          selectedPedido.estado_facturacion === "sin_factura"
+          selectedPedido.estado_facturacion === "no_se_factura"
             ? null
             : selectedPedido.pdf_factura_url || null,
         pdf_factura_nombre:
-          selectedPedido.estado_facturacion === "sin_factura"
+          selectedPedido.estado_facturacion === "no_se_factura"
             ? null
             : selectedPedido.pdf_factura_nombre || null,
       };
@@ -818,7 +833,7 @@ export function Pedidos() {
         throw new Error(data.error || "Error al actualizar pedido");
       }
 
-      if (pedidoActualizado.estado_facturacion === "sin_factura") {
+      if (pedidoActualizado.estado_facturacion === "no_se_factura") {
         pedidoActualizado.pdf_factura_url = null;
         pedidoActualizado.pdf_factura_nombre = null;
       } else if (selectedPedido.eliminar_pdf_factura) {
@@ -921,7 +936,7 @@ export function Pedidos() {
           <p><strong>Fecha de generación:</strong> ${formatearFecha(pedido.fecha_generacion)}</p>
           <p><strong>Vencimiento:</strong> ${formatearFecha(pedido.vencimiento)}</p>
           <p><strong>Estado de pago:</strong> ${formatearEstado(pedido.estado_pago)}</p>
-          <p><strong>Factura:</strong> ${getEstadoFacturaInfo(pedido.estado_facturacion).label}</p>
+          <p><strong>Factura:</strong> ${getEstadoFacturaInfo(pedido).label}</p>
 
           <table>
             <thead>
@@ -981,17 +996,12 @@ export function Pedidos() {
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
         <div className="flex flex-col lg:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              size={20}
-            />
-
             <input
               type="text"
               placeholder="Buscar por número de pedido o cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
             />
           </div>
 
@@ -1074,9 +1084,7 @@ export function Pedidos() {
               ) : (
                 pedidos.map((pedido) => {
                   const pagoInfo = getEstadoPagoInfo(pedido.estado_pago);
-                  const facturaInfo = getEstadoFacturaInfo(
-                    pedido.estado_facturacion
-                  );
+                  const facturaInfo = getEstadoFacturaInfo(pedido);
 
                   return (
                     <tr
@@ -1218,6 +1226,7 @@ export function Pedidos() {
                   </label>
 
                   <select
+                    disabled
                     value={newPedido.Estado_Pago}
                     onChange={(e) =>
                       setNewPedido({
@@ -1225,7 +1234,7 @@ export function Pedidos() {
                         Estado_Pago: e.target.value,
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-gray-100 cursor-not-allowed"
                   >
                     {ESTADOS_PAGO.map((estado) => (
                       <option key={estado} value={estado}>
@@ -1256,7 +1265,7 @@ export function Pedidos() {
                 </div>
               </div>
 
-              {newPedido.Estado_Facturacion !== "sin_factura" && (
+              {newPedido.Estado_Facturacion !== "no_se_factura" && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <FileText size={18} className="text-blue-600" />
@@ -1517,6 +1526,7 @@ export function Pedidos() {
 
                   {isEditingPedido ? (
                     <select
+                      disabled
                       value={selectedPedido.estado_pago}
                       onChange={(e) =>
                         setSelectedPedido({
@@ -1524,7 +1534,7 @@ export function Pedidos() {
                           estado_pago: e.target.value,
                         })
                       }
-                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
+                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-gray-100 cursor-not-allowed"
                     >
                       {ESTADOS_PAGO.map((estado) => (
                         <option key={estado} value={estado}>
@@ -1548,11 +1558,12 @@ export function Pedidos() {
 
                   {isEditingPedido ? (
                     <select
+                      disabled
                       value={selectedPedido.estado_facturacion}
                       onChange={(e) =>
                         actualizarFacturacionPedidoSeleccionado(e.target.value)
                       }
-                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm"
+                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-gray-100 cursor-not-allowed"
                     >
                       {ESTADOS_FACTURACION.map((estado) => (
                         <option key={estado} value={estado}>
@@ -1563,12 +1574,12 @@ export function Pedidos() {
                   ) : (
                     <span
                       className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
-                        getEstadoFacturaInfo(selectedPedido.estado_facturacion)
+                        getEstadoFacturaInfo(selectedPedido)
                           .color
                       }`}
                     >
                       {
-                        getEstadoFacturaInfo(selectedPedido.estado_facturacion)
+                        getEstadoFacturaInfo(selectedPedido)
                           .label
                       }
                     </span>
@@ -1576,7 +1587,7 @@ export function Pedidos() {
                 </div>
               </div>
 
-              {selectedPedido.estado_facturacion !== "sin_factura" && (
+              {selectedPedido.estado_facturacion !== "no_se_factura" && (
                 <div className="border border-gray-200 rounded-lg p-4 space-y-4">
                   <div className="flex items-center gap-2">
                     <FileText size={18} className="text-blue-600" />
@@ -1695,7 +1706,13 @@ export function Pedidos() {
                   </span>
                 </div>
 
-                {isEditingPedido && (
+                {isEditingPedido && selectedPedido.productos?.some(p => (p.estado || "").toLowerCase() === 'enviado') ? (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-orange-800">
+                      <strong>Atención:</strong> Este pedido contiene productos enviados. No podés agregar nuevos productos.
+                    </p>
+                  </div>
+                ) : isEditingPedido && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
                     <label className="block text-sm mb-2 text-gray-700">
                       Agregar producto disponible del cliente

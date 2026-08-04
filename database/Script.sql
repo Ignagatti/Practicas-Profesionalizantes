@@ -39,8 +39,8 @@ CREATE TYPE estado_producto AS ENUM (
 
 CREATE TYPE estado_facturacion AS ENUM (
     'sin_factura',
-    'pendiente',
-    'facturado'
+    'no_se_factura',
+    'se_factura'
 );
 
 CREATE TYPE tipo_pago AS ENUM (

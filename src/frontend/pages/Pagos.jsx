@@ -1531,16 +1531,57 @@ export default function Pagos() {
                     </option>
 
                     {(tipoVista === "proveedor" ? proveedoresTotales : clientesTotales).map(
-                      (entidad) => (
-                        <option
-                          key={entidad.id}
-                          value={entidad.id}
-                        >
-                          {entidad.razonSocial || `${entidad.nombre} ${entidad.apellido}`}
-                        </option>
-                      )
+                      (entidad) => {
+                        const idEntidad = entidad.id_proveedor || entidad.id_cliente || entidad.Id_Proveedor || entidad.Id_Cliente;
+                        const razonSocial = entidad.razon_social || entidad.Razon_Social;
+                        const nombre = entidad.nombre || entidad.Nombre || "";
+                        const apellido = entidad.apellido || entidad.Apellido || "";
+                        
+                        return (
+                          <option
+                            key={idEntidad}
+                            value={idEntidad}
+                          >
+                            {razonSocial ? razonSocial : `${nombre} ${apellido}`.trim()}
+                          </option>
+                        );
+                      }
                     )}
                   </select>
+                  {/* SALDO DEL CLIENTE/PROVEEDOR */}
+                  {newPago.id_proveedor && (
+                    (() => {
+                      const lista = tipoVista === "proveedor" ? proveedoresTotales : clientesTotales;
+                      const entidadSeleccionada = lista.find(e => 
+                        String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
+                      );
+                      
+                      if (entidadSeleccionada) {
+                        const saldo = Number(entidadSeleccionada.saldo || entidadSeleccionada.Saldo || 0);
+                        const isPositive = saldo > 0;
+                        const isNegative = saldo < 0;
+                        
+                        return (
+                          <div className={`mt-3 p-3 rounded-xl text-sm font-bold border-2 transition-all flex justify-between items-center ${
+                            isPositive ? 'bg-green-50 border-green-200 text-green-700 shadow-[0_2px_10px_-3px_rgba(34,197,94,0.3)]' : 
+                            isNegative ? 'bg-red-50 border-red-200 text-red-700 shadow-[0_2px_10px_-3px_rgba(239,68,68,0.3)]' : 
+                            'bg-gray-50 border-gray-200 text-gray-700'
+                          }`}>
+                            <span>Saldo Global: </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-base tracking-tight">{saldo === 0 ? '$0.00' : `$${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
+                              <span className={`opacity-90 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider ${
+                                isPositive ? 'bg-green-200 text-green-800' : isNegative ? 'bg-red-200 text-red-800' : ''
+                              }`}>
+                                {saldo === 0 ? '' : isPositive ? 'A FAVOR' : 'EN CONTRA'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()
+                  )}
                 </div>
 
                 <div>
@@ -1576,23 +1617,23 @@ export default function Pagos() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="text-lg text-gray-800">
-                      Facturas a pagar
+                      {tipoVista === "proveedor" ? "Facturas a pagar" : "Pedidos a pagar"}
                     </h3>
 
                     <p className="text-sm text-gray-500">
-                      Seleccioná las facturas y definí cuánto aplicar a cada una.
+                      Seleccioná {tipoVista === "proveedor" ? "las facturas" : "los pedidos"} y definí cuánto aplicar a cada {tipoVista === "proveedor" ? "una" : "uno"}.
                     </p>
                   </div>
                 </div>
 
                 {!newPago.id_proveedor ? (
                   <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500">
-                    Primero seleccioná un proveedor.
+                    Primero seleccioná un {tipoVista === "proveedor" ? "proveedor" : "cliente"}.
                   </div>
                 ) : facturasDisponibles.length ===
                   0 ? (
                   <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-500">
-                    El proveedor no tiene facturas pendientes.
+                    {tipoVista === "proveedor" ? "El proveedor no tiene facturas pendientes." : "El cliente no tiene pedidos pendientes."}
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -1605,7 +1646,7 @@ export default function Pagos() {
                             </th>
 
                             <th className="p-3 text-left">
-                              Factura
+                              {tipoVista === "proveedor" ? "Factura" : "Pedido"}
                             </th>
 
                             <th className="p-3 text-left">
@@ -1763,32 +1804,43 @@ export default function Pagos() {
                 </div>
 
                 <div
-                  className={`border rounded-lg p-4 ${
+                  className={`border rounded-lg p-4 transition-colors ${
                     montoRestanteFormulario < 0
                       ? "bg-red-50 border-red-200"
-                      : "bg-yellow-50 border-yellow-200"
+                      : montoRestanteFormulario > 0
+                      ? "bg-green-50 border-green-200"
+                      : "bg-gray-50 border-gray-200"
                   }`}
                 >
                   <p
-                    className={`text-sm ${
+                    className={`text-sm font-semibold ${
                       montoRestanteFormulario < 0
-                        ? "text-red-600"
-                        : "text-yellow-700"
+                        ? "text-red-700"
+                        : montoRestanteFormulario > 0
+                        ? "text-green-700"
+                        : "text-gray-500"
                     }`}
                   >
-                    Monto restante
+                    {montoRestanteFormulario < 0 
+                      ? "Faltan fondos al monto ingresado" 
+                      : montoRestanteFormulario > 0 
+                      ? `Plata a favor del ${tipoVista === "proveedor" ? "proveedor" : "cliente"}`
+                      : "Pago exacto (equilibrado)"
+                    }
                   </p>
 
                   <p
-                    className={`text-xl ${
+                    className={`text-xl font-bold ${
                       montoRestanteFormulario < 0
-                        ? "text-red-800"
-                        : "text-yellow-800"
+                        ? "text-red-700"
+                        : montoRestanteFormulario > 0
+                        ? "text-green-700"
+                        : "text-gray-800"
                     }`}
                   >
                     $
                     {formatearDinero(
-                      montoRestanteFormulario
+                      Math.abs(montoRestanteFormulario)
                     )}
                   </p>
                 </div>

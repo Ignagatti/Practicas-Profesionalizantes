@@ -90,7 +90,7 @@ const terminarProductosMasivo = async (req, res) => {
         const query = `
             UPDATE Producto 
             SET Estado = 'terminado' 
-            WHERE Id_Producto = ANY($1) AND LOWER(Estado) = 'en_produccion'
+            WHERE Id_Producto = ANY($1) AND Estado = 'en_produccion'
             RETURNING *
         `;
         const resultado = await pool.query(query, [ids]);

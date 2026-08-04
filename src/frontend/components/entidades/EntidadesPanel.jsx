@@ -43,6 +43,7 @@ function mapEntidadDesdeBackend(entidad, tipoVista) {
     telefono: entidad.telefono || "",
     email: entidad.email || "",
     estado: entidad.estado || "activo",
+    saldo: entidad.saldo || 0,
   };
 }
 
@@ -624,6 +625,9 @@ export function EntidadesPanel({
                     Email
                   </th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                    Saldo
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
                     Estado
                   </th>
                   <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">
@@ -652,6 +656,27 @@ export function EntidadesPanel({
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {entidad.email}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {(() => {
+                        const saldo = Number(entidad.saldo || entidad.Saldo || 0);
+                        const isPositive = saldo > 0;
+                        const isNegative = saldo < 0;
+                        return (
+                          <div className={`inline-flex flex-col`}>
+                            <span className={`font-bold ${
+                              isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'
+                            }`}>
+                              {saldo === 0 ? '$0.00' : `$${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            </span>
+                            <span className={`text-[9px] uppercase tracking-wider font-bold ${
+                              isPositive ? 'text-green-500' : isNegative ? 'text-red-500' : 'text-transparent'
+                            }`}>
+                              {saldo === 0 ? '-' : isPositive ? 'A Favor' : 'En contra'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span

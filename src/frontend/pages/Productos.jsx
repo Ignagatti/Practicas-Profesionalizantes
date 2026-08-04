@@ -313,6 +313,7 @@ function Productos() {
                     <option value="pendiente">Pendiente</option>
                     <option value="en_produccion">En Producción</option>
                     <option value="terminado">Terminado</option>
+                    <option value="enviado">Enviado</option>
                 </select>
             </div>
 
@@ -346,7 +347,10 @@ function Productos() {
                                     <td className="px-6 py-4">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
                                             (p.estado || p.Estado || "").toLowerCase() === 'pendiente' ? 'bg-gray-100 text-gray-500' :
-                                            (p.estado || p.Estado || "").toLowerCase() === 'en_produccion' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                            (p.estado || p.Estado || "").toLowerCase() === 'en_produccion' ? 'bg-blue-100 text-blue-700' : 
+                                            (p.estado || p.Estado || "").toLowerCase() === 'terminado' ? 'bg-green-100 text-green-700' : 
+                                            (p.estado || p.Estado || "").toLowerCase() === 'enviado' ? 'bg-purple-100 text-purple-700' : 
+                                            'bg-red-100 text-red-700'
                                         }`}>{ (p.estado || p.Estado || "pendiente").replace('_',' ') }</span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
@@ -381,6 +385,7 @@ function Productos() {
                                             <option value="pendiente">PENDIENTE</option>
                                             <option value="en_produccion">EN PRODUCCIÓN</option>
                                             <option value="terminado">TERMINADO</option>
+                                            <option value="enviado">ENVIADO</option>
                                         </select>
                                     </div>
                                 )}

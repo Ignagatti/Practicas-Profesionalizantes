@@ -278,7 +278,7 @@ const crearPago = async (req, res) => {
                     $1,
                     'parcial',
                     $2,
-                    $2 - $3,
+                    $2::numeric - $3::numeric,
                     $4
                 )
                 RETURNING *
@@ -352,27 +352,10 @@ const crearPago = async (req, res) => {
                     [nuevoMontoAdeudado, nuevoEstado, Id_Pedido]
                 );
 
-                await client.query(
-                    `
-                    UPDATE Cliente
-                    SET
-                        Saldo = Saldo - $1
-                    WHERE Id_Cliente = $2
-                    `,
-                    [montoUsado, datosPedido.id_cliente]
-                );
             }
 
             const montoRestante = montoPago - montoAplicado;
-            let estadoPago;
-
-            if (montoRestante === 0) {
-                estadoPago = "pagado";
-            } else if (montoAplicado > 0) {
-                estadoPago = "parcial";
-            } else {
-                estadoPago = "pendiente";
-            }
+            let estadoPago = "pagado";
 
             await client.query(
                 `
@@ -384,6 +367,15 @@ const crearPago = async (req, res) => {
                 `,
                 [montoRestante, estadoPago, idPago]
             );
+
+            // ACTUALIZAR SALDO DEL CLIENTE GLOBALY A FAVOR
+            const idClienteGlobal = facturas[0].id_cliente || facturas.length > 0 ? (await client.query('SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1', [facturas[0].Id_Pedido])).rows[0].id_cliente : null;
+            if (idClienteGlobal) {
+                await client.query(
+                    `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
+                    [Monto, idClienteGlobal]
+                );
+            }
 
             await client.query("COMMIT");
 
@@ -410,9 +402,9 @@ const crearPago = async (req, res) => {
             VALUES
             (
                 $1,
-                'parcial',
+                'pagado',
                 $2,
-                $2 - $3,
+                $2::numeric - $3::numeric,
                 $4
             )
             RETURNING *
@@ -571,23 +563,6 @@ const crearPago = async (req, res) => {
             );
 
 
-            // -----------------------------------------
-            // ACTUALIZAR SALDO DEL PROVEEDOR
-            // -----------------------------------------
-
-            await client.query(
-                `
-                UPDATE Proveedor
-                SET
-                    Saldo = Saldo - $1
-                WHERE Id_Proveedor = $2
-                `,
-                [
-                    montoUsado,
-                    datosFactura.id_proveedor
-                ]
-            );
-
         }
 
 
@@ -599,21 +574,7 @@ const crearPago = async (req, res) => {
             montoPago - montoAplicado;
 
 
-        let estadoPago;
-
-        if (montoRestante === 0) {
-
-            estadoPago = "pagado";
-
-        } else if (montoAplicado > 0) {
-
-            estadoPago = "parcial";
-
-        } else {
-
-            estadoPago = "pendiente";
-
-        }
+        let estadoPago = "pagado";
 
 
         await client.query(
@@ -630,6 +591,15 @@ const crearPago = async (req, res) => {
                 idPago
             ]
         );
+
+        // ACTUALIZAR SALDO DEL PROVEEDOR GLOBALY A FAVOR
+        const idProveedorGlobal = facturas.length > 0 ? (await client.query('SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1', [facturas[0].Id_Factura_Proveedor])).rows[0].id_proveedor : null;
+        if (idProveedorGlobal) {
+            await client.query(
+                `UPDATE Proveedor SET Saldo = Saldo + $1 WHERE Id_Proveedor = $2`,
+                [Monto, idProveedorGlobal]
+            );
+        }
 
 
         // =============================================
@@ -745,14 +715,13 @@ const eliminarPago = async (req, res) => {
                     [nuevoMontoAdeudado, nuevoEstado, detalle.id_pedido]
                 );
 
+            }
+            
+            const pagoResult = await client.query('SELECT Monto FROM PagoPedido WHERE Id_Pago_Pedido = $1', [id]);
+            if (pagoResult.rows.length > 0) {
                 await client.query(
-                    `
-                    UPDATE Cliente
-                    SET
-                        Saldo = Saldo + $1
-                    WHERE Id_Cliente = $2
-                    `,
-                    [montoUsado, detalle.id_cliente]
+                    `UPDATE Cliente SET Saldo = Saldo - $1 WHERE Id_Cliente = $2`,
+                    [pagoResult.rows[0].monto, detalles.rows[0].id_cliente]
                 );
             }
 
@@ -892,6 +861,14 @@ const eliminarPago = async (req, res) => {
                 ]
             );
 
+        }
+        
+        const pagoResult = await client.query('SELECT Monto FROM Pago_Insumo WHERE Id_Pago_Insumo = $1', [id]);
+        if (pagoResult.rows.length > 0) {
+            await client.query(
+                `UPDATE Proveedor SET Saldo = Saldo - $1 WHERE Id_Proveedor = $2`,
+                [pagoResult.rows[0].monto, detalles.rows[0].id_proveedor]
+            );
         }
 
 

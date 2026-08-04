@@ -21,35 +21,59 @@ function App() {
   useEffect(() => {
     async function cargarPendientes() {
       try {
-        const respuesta = await fetch(`${API_URL}/facturasProveedor`);
-        if (!respuesta.ok) return;
+        const [respFacturas, respPedidos] = await Promise.all([
+          fetch(`${API_URL}/facturasProveedor`),
+          fetch(`${API_URL}/pedidos`)
+        ]);
         
-        const datos = await respuesta.json();
-        const listaFacturas = Array.isArray(datos) ? datos : datos.facturas || [];
-        
-        const pendientes = listaFacturas
-          .filter(f => Number(f.monto_adeudado || f.Monto_Adeudado) > 0)
-          .map(f => {
-            const idFactura = f.id_factura_proveedor || f.Id_Factura_Proveedor || f.id;
-            const nro = f.nro_factura_proveedor || f.Nro_Factura_Proveedor || "S/N";
-            
-            const razonSocial = f.razon_social || f.Razon_Social || "";
-            const nombreCompleto = f.nombre || f.Nombre ? `${f.nombre||f.Nombre} ${f.apellido||f.Apellido}`.trim() : "";
-            const proveedorN = f.proveedor || razonSocial || nombreCompleto || "Proveedor Desconocido";
-            
-            return {
-              id: idFactura,
-              tipo: "proveedor",
-              nombre: proveedorN,
-              fecha_vencimiento: (f.fecha_vencimiento || f.Fecha_Vencimiento || f.fecha_emision || "").split("T")[0],
-              monto_adeudado: Number(f.monto_adeudado || f.Monto_Adeudado),
-              concepto: `Factura N° ${nro}`
-            };
-          });
+        let pendientesFacturas = [];
+        if (respFacturas.ok) {
+          const datos = await respFacturas.json();
+          const listaFacturas = Array.isArray(datos) ? datos : datos.facturas || [];
+          pendientesFacturas = listaFacturas
+            .filter(f => Number(f.monto_adeudado || f.Monto_Adeudado) > 0)
+            .map(f => {
+              const idFactura = f.id_factura_proveedor || f.Id_Factura_Proveedor || f.id;
+              const nro = f.nro_factura_proveedor || f.Nro_Factura_Proveedor || "S/N";
+              const razonSocial = f.razon_social || f.Razon_Social || "";
+              const nombreCompleto = f.nombre || f.Nombre ? `${f.nombre||f.Nombre} ${f.apellido||f.Apellido}`.trim() : "";
+              const proveedorN = f.proveedor || razonSocial || nombreCompleto || "Proveedor Desconocido";
+              return {
+                id: `prov-${idFactura}`,
+                tipo: "proveedor",
+                nombre: proveedorN,
+                fecha_vencimiento: (f.fecha_vencimiento || f.Fecha_Vencimiento || f.fecha_emision || "").split("T")[0],
+                monto_adeudado: Number(f.monto_adeudado || f.Monto_Adeudado),
+                concepto: `Factura N° ${nro}`
+              };
+            });
+        }
+
+        let pendientesPedidos = [];
+        if (respPedidos.ok) {
+          const datos = await respPedidos.json();
+          const listaPedidos = Array.isArray(datos) ? datos : datos.pedidos || [];
+          pendientesPedidos = listaPedidos
+            .filter(p => Number(p.monto_adeudado || p.Monto_Adeudado) > 0)
+            .map(p => {
+              const idPedido = p.id_pedido || p.Id_Pedido || p.id;
+              const razonSocial = p.razon_social || p.Razon_Social || "";
+              const nombreCompleto = p.nombre || p.Nombre ? `${p.nombre||p.Nombre} ${p.apellido||p.Apellido}`.trim() : "";
+              const clienteN = p.cliente || razonSocial || nombreCompleto || "Cliente Desconocido";
+              return {
+                id: `cli-${idPedido}`,
+                tipo: "cliente",
+                nombre: clienteN,
+                fecha_vencimiento: p.vencimiento || p.Vencimiento ? (p.vencimiento || p.Vencimiento).split("T")[0] : "—",
+                monto_adeudado: Number(p.monto_adeudado || p.Monto_Adeudado),
+                concepto: `Pedido N° ${idPedido}`
+              };
+            });
+        }
           
-        setPagosPendientes(pendientes);
+        setPagosPendientes([...pendientesFacturas, ...pendientesPedidos]);
       } catch (err) {
-        console.error("Error al cargar facturas pendientes:", err);
+        console.error("Error al cargar pendientes:", err);
       }
     }
     

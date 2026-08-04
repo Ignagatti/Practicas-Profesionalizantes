@@ -207,6 +207,7 @@ function Productos() {
                     await eliminarProducto(id);
                     cargarProductos();
                     setShowDetailModal(false);
+                    setShowFormModal(false);
                 } catch (error) {
                     setConfirmModal({
                         show: true,
@@ -454,18 +455,26 @@ function Productos() {
                                 </div>
                             </div>
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                {isEditing && selectedProducto && (
-                                    <button 
-                                        type="button" 
-                                        onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} 
-                                        className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 flex-shrink-0"
-                                        title="Eliminar Producto"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
+                                {isEditing ? (
+                                    <>
+                                        <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">Guardar Cambios</button>
+                                        <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
+                                        {selectedProducto && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} 
+                                                className="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-lg shadow-red-100 whitespace-nowrap"
+                                            >
+                                                Borrar
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
+                                        <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">Crear Producto</button>
+                                    </>
                                 )}
-                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
-                                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">{isEditing ? 'Guardar Cambios' : 'Crear Producto'}</button>
                             </div>
                         </form>
                     </div>
@@ -542,7 +551,7 @@ function Productos() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="flex justify-end gap-4"><button onClick={() => setShowSelectionModal(false)} className="px-8 py-3 border border-gray-200 rounded-xl font-bold">Cancelar</button><button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold">Imprimir and Producción</button></div>
+                            <div className="flex justify-end gap-4"><button onClick={() => setShowSelectionModal(false)} className="px-8 py-3 border border-gray-200 rounded-xl font-bold">Cancelar</button><button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold">Imprimir y Producción</button></div>
                         </div>
                     </div>
                 </div>

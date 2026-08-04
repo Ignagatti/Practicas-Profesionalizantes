@@ -6,6 +6,20 @@ const db = require("../config/db");
 
 const obtenerPagos = async (req, res) => {
     try {
+        const { tipo } = req.query;
+
+        if (tipo === "cliente") {
+            const resultado = await db.query(`
+                SELECT
+                    pp.*,
+                    mp.Tipo AS tipo_medio_pago
+                FROM PagoPedido pp
+                LEFT JOIN Metodo_Pago mp
+                    ON pp.Id_Medio_Pago = mp.Id_Medio_Pago
+                ORDER BY pp.Id_Pago_Pedido DESC
+            `);
+            return res.json(resultado.rows);
+        }
 
         const resultado = await db.query(`
             SELECT
@@ -38,8 +52,51 @@ const obtenerPagos = async (req, res) => {
 const obtenerPagoPorId = async (req, res) => {
 
     const { id } = req.params;
+    const { tipo } = req.query;
 
     try {
+
+        if (tipo === "cliente") {
+            const pago = await db.query(
+                `
+                SELECT
+                    pp.*,
+                    mp.Tipo AS tipo_medio_pago
+                FROM PagoPedido pp
+                LEFT JOIN Metodo_Pago mp
+                    ON pp.Id_Medio_Pago = mp.Id_Medio_Pago
+                WHERE pp.Id_Pago_Pedido = $1
+                `,
+                [id]
+            );
+
+            if (pago.rows.length === 0) {
+                return res.status(404).json({
+                    mensaje: "El pago no existe."
+                });
+            }
+
+            const detalles = await db.query(
+                `
+                SELECT
+                    dpp.*,
+                    p.Nro_Factura,
+                    p.Precio_Total,
+                    p.Monto_Adeudado,
+                    p.Estado_Pago
+                FROM Detalle_Pago_Pedido dpp
+                INNER JOIN Pedido p
+                    ON dpp.Id_Pedido = p.Id_Pedido
+                WHERE dpp.Id_Pago_Pedido = $1
+                `,
+                [id]
+            );
+
+            return res.json({
+                pago: pago.rows[0],
+                detalles: detalles.rows
+            });
+        }
 
         const pago = await db.query(
             `
@@ -111,6 +168,7 @@ const crearPago = async (req, res) => {
             Fecha_Pago,
             Monto,
             Id_Medio_Pago,
+            Tipo,
             facturas
         } = req.body;
 
@@ -203,6 +261,141 @@ const crearPago = async (req, res) => {
         // =============================================
         // CREAR EL PAGO
         // =============================================
+
+        if (Tipo === "cliente") {
+            const pago = await client.query(
+                `
+                INSERT INTO PagoPedido
+                (
+                    Fecha_Pago,
+                    Estado_Pago,
+                    Monto,
+                    Monto_Restante,
+                    Id_Medio_Pago
+                )
+                VALUES
+                (
+                    $1,
+                    'parcial',
+                    $2,
+                    $2 - $3,
+                    $4
+                )
+                RETURNING *
+                `,
+                [Fecha_Pago, Monto, montoAplicado, Id_Medio_Pago]
+            );
+
+            const idPago = pago.rows[0].id_pago_pedido;
+
+            for (const facturaPago of facturas) {
+                const { Id_Pedido, Monto_Usado } = facturaPago;
+
+                if (!Id_Pedido || !Monto_Usado || Number(Monto_Usado) <= 0) {
+                    throw new Error("Los datos de uno de los pedidos son inválidos.");
+                }
+
+                const pedido = await client.query(
+                    `
+                    SELECT *
+                    FROM Pedido
+                    WHERE Id_Pedido = $1
+                    FOR UPDATE
+                    `,
+                    [Id_Pedido]
+                );
+
+                if (pedido.rows.length === 0) {
+                    throw new Error(`El pedido ${Id_Pedido} no existe.`);
+                }
+
+                const datosPedido = pedido.rows[0];
+                const montoUsado = Number(Monto_Usado);
+                const montoAdeudado = Number(datosPedido.monto_adeudado);
+
+                if (montoUsado > montoAdeudado) {
+                    throw new Error(`El monto aplicado supera el saldo adeudado del pedido ${Id_Pedido}.`);
+                }
+
+                await client.query(
+                    `
+                    INSERT INTO Detalle_Pago_Pedido
+                    (
+                        Monto_Usado,
+                        Id_Pago_Pedido,
+                        Id_Pedido
+                    )
+                    VALUES ($1, $2, $3)
+                    `,
+                    [montoUsado, idPago, Id_Pedido]
+                );
+
+                const nuevoMontoAdeudado = montoAdeudado - montoUsado;
+                let nuevoEstado;
+
+                if (nuevoMontoAdeudado === 0) {
+                    nuevoEstado = "pagado";
+                } else if (nuevoMontoAdeudado < Number(datosPedido.precio_total)) {
+                    nuevoEstado = "parcial";
+                } else {
+                    nuevoEstado = "pendiente";
+                }
+
+                await client.query(
+                    `
+                    UPDATE Pedido
+                    SET
+                        Monto_Adeudado = $1,
+                        Estado_Pago = $2
+                    WHERE Id_Pedido = $3
+                    `,
+                    [nuevoMontoAdeudado, nuevoEstado, Id_Pedido]
+                );
+
+                await client.query(
+                    `
+                    UPDATE Cliente
+                    SET
+                        Saldo = Saldo - $1
+                    WHERE Id_Cliente = $2
+                    `,
+                    [montoUsado, datosPedido.id_cliente]
+                );
+            }
+
+            const montoRestante = montoPago - montoAplicado;
+            let estadoPago;
+
+            if (montoRestante === 0) {
+                estadoPago = "pagado";
+            } else if (montoAplicado > 0) {
+                estadoPago = "parcial";
+            } else {
+                estadoPago = "pendiente";
+            }
+
+            await client.query(
+                `
+                UPDATE PagoPedido
+                SET
+                    Monto_Restante = $1,
+                    Estado_Pago = $2
+                WHERE Id_Pago_Pedido = $3
+                `,
+                [montoRestante, estadoPago, idPago]
+            );
+
+            await client.query("COMMIT");
+
+            return res.status(201).json({
+                mensaje: "Pago registrado correctamente.",
+                pago: {
+                    ...pago.rows[0],
+                    monto_restante: montoRestante,
+                    estado_pago: estadoPago
+                }
+            });
+        }
 
         const pago = await client.query(
             `
@@ -488,12 +681,100 @@ const crearPago = async (req, res) => {
 const eliminarPago = async (req, res) => {
 
     const client = await db.connect();
+    const { tipo } = req.query;
 
     try {
 
         const { id } = req.params;
 
         await client.query("BEGIN");
+
+        if (tipo === "cliente") {
+            const detalles = await client.query(
+                `
+                SELECT
+                    dpp.*,
+                    p.Id_Cliente
+                FROM Detalle_Pago_Pedido dpp
+                INNER JOIN Pedido p
+                    ON dpp.Id_Pedido = p.Id_Pedido
+                WHERE dpp.Id_Pago_Pedido = $1
+                `,
+                [id]
+            );
+
+            if (detalles.rows.length === 0) {
+                throw new Error("El pago no existe o no tiene pedidos asociados.");
+            }
+
+            for (const detalle of detalles.rows) {
+                const montoUsado = Number(detalle.monto_usado);
+
+                const pedido = await client.query(
+                    `
+                    SELECT *
+                    FROM Pedido
+                    WHERE Id_Pedido = $1
+                    FOR UPDATE
+                    `,
+                    [detalle.id_pedido]
+                );
+
+                if (pedido.rows.length === 0) {
+                    throw new Error("Uno de los pedidos asociados ya no existe.");
+                }
+
+                const datosPedido = pedido.rows[0];
+                const nuevoMontoAdeudado = Number(datosPedido.monto_adeudado) + montoUsado;
+                let nuevoEstado;
+
+                if (nuevoMontoAdeudado >= Number(datosPedido.precio_total)) {
+                    nuevoEstado = "pendiente";
+                } else {
+                    nuevoEstado = "parcial";
+                }
+
+                await client.query(
+                    `
+                    UPDATE Pedido
+                    SET
+                        Monto_Adeudado = $1,
+                        Estado_Pago = $2
+                    WHERE Id_Pedido = $3
+                    `,
+                    [nuevoMontoAdeudado, nuevoEstado, detalle.id_pedido]
+                );
+
+                await client.query(
+                    `
+                    UPDATE Cliente
+                    SET
+                        Saldo = Saldo + $1
+                    WHERE Id_Cliente = $2
+                    `,
+                    [montoUsado, detalle.id_cliente]
+                );
+            }
+
+            await client.query(
+                `
+                DELETE FROM Detalle_Pago_Pedido
+                WHERE Id_Pago_Pedido = $1
+                `,
+                [id]
+            );
+
+            await client.query(
+                `
+                DELETE FROM PagoPedido
+                WHERE Id_Pago_Pedido = $1
+                `,
+                [id]
+            );
+
+            await client.query("COMMIT");
+            return res.json({ mensaje: "Pago eliminado correctamente." });
+        }
 
 
         // =============================================

@@ -184,18 +184,25 @@ function obtenerNombreProveedor(datos) {
 
 
 function normalizarFactura(factura) {
+  const idPedido = factura.id_pedido ?? factura.Id_Pedido;
+  const nroPedido = factura.nro_factura ?? factura.Nro_Factura;
+  const idCliente = factura.id_cliente ?? factura.Id_Cliente;
+  const clientName = factura.cliente || (factura.Nombre && factura.Apellido ? `${factura.Nombre} ${factura.Apellido}` : "");
+
   return {
     ...factura,
 
     id_factura_proveedor:
       factura.id_factura_proveedor ??
       factura.Id_Factura_Proveedor ??
+      idPedido ??
       factura.id,
 
     nro_factura_proveedor:
       factura.nro_factura_proveedor ??
       factura.Nro_Factura_Proveedor ??
-      "",
+      (nroPedido ? String(nroPedido) : "") ||
+      (idPedido ? `Pedido N° ${idPedido}` : ""),
 
     precio_total: Number(
       factura.precio_total ??
@@ -216,11 +223,12 @@ function normalizarFactura(factura) {
 
     id_proveedor:
       factura.id_proveedor ??
-      factura.Id_Proveedor,
+      factura.Id_Proveedor ??
+      idCliente,
 
     proveedor:
       factura.proveedor ??
-      obtenerNombreProveedor(factura),
+      (factura.id_proveedor || factura.Id_Proveedor ? obtenerNombreProveedor(factura) : clientName || "Cliente Desconocido"),
   };
 }
 
@@ -237,6 +245,8 @@ function normalizarPago(pago) {
     id_pago_insumo:
       pago.id_pago_insumo ??
       pago.Id_Pago_Insumo ??
+      pago.id_pago_pedido ??
+      pago.Id_Pago_Pedido ??
       pago.id,
 
     fecha_pago:
@@ -273,17 +283,22 @@ function normalizarPago(pago) {
 
 
 function normalizarDetalle(detalle) {
+  const idPedido = detalle.id_pedido ?? detalle.Id_Pedido;
+  const nroPedido = detalle.nro_factura ?? detalle.Nro_Factura;
+
   return {
     ...detalle,
 
     id_factura_proveedor:
       detalle.id_factura_proveedor ??
-      detalle.Id_Factura_Proveedor,
+      detalle.Id_Factura_Proveedor ??
+      idPedido,
 
     nro_factura_proveedor:
       detalle.nro_factura_proveedor ??
       detalle.Nro_Factura_Proveedor ??
-      "",
+      (nroPedido ? String(nroPedido) : "") ||
+      (idPedido ? `Pedido N° ${idPedido}` : ""),
 
     monto_usado: Number(
       detalle.monto_usado ??
@@ -375,7 +390,7 @@ export default function Pagos() {
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+  }, [tipoVista]);
 
 
   async function cargarDatos() {
@@ -383,10 +398,15 @@ export default function Pagos() {
     setError("");
 
     try {
+      const endpointPagos = `${API_URL}/pagos?tipo=${tipoVista}`;
+      const endpointFacturas = tipoVista === "proveedor" 
+        ? `${API_URL}/facturasProveedor` 
+        : `${API_URL}/pedidos`;
+
       const [respuestaPagos, respuestaFacturas, resClientes, resProveedores] =
         await Promise.all([
-          fetch(`${API_URL}/pagos`),
-          fetch(`${API_URL}/facturasProveedor`),
+          fetch(endpointPagos),
+          fetch(endpointFacturas),
           fetch(`${API_URL}/clientes`),
           fetch(`${API_URL}/proveedores`),
         ]);
@@ -842,20 +862,13 @@ export default function Pagos() {
     try {
       const payload = {
         Fecha_Pago: newPago.fecha_pago,
-
         Monto: Number(newPago.monto),
-
-        Id_Medio_Pago: Number(
-          newPago.id_medio_pago
-        ),
-
+        Id_Medio_Pago: Number(newPago.id_medio_pago),
+        Tipo: tipoVista,
         facturas: newPago.facturas.map(
           (factura) => ({
-            Id_Factura_Proveedor:
-              Number(
-                factura.id_factura_proveedor
-              ),
-
+            [tipoVista === "cliente" ? "Id_Pedido" : "Id_Factura_Proveedor"]:
+              Number(factura.id_factura_proveedor),
             Monto_Usado:
               Number(factura.monto_usado),
           })
@@ -921,7 +934,7 @@ export default function Pagos() {
 
     try {
       const respuesta = await fetch(
-        `${API_URL}/pagos/${pago.id_pago_insumo}`
+        `${API_URL}/pagos/${pago.id_pago_insumo}?tipo=${tipoVista}`
       );
 
       const datos =
@@ -989,7 +1002,7 @@ export default function Pagos() {
 
     try {
       const respuesta = await fetch(
-        `${API_URL}/pagos/${id}`,
+        `${API_URL}/pagos/${id}?tipo=${tipoVista}`,
         {
           method: "DELETE",
         }

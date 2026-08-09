@@ -159,60 +159,57 @@ const obtenerPagoPorId = async (req, res) => {
 // =====================================================
 
 const crearPago = async (req, res) => {
-
     const client = await db.connect();
 
     try {
-
         const {
             Fecha_Pago,
             Monto,
             Id_Medio_Pago,
             Tipo,
-            facturas
+            facturas,
+            monto_favor_usado
         } = req.body;
 
+        const montoFavorUsado = Number(monto_favor_usado || 0);
 
         // =============================================
         // VALIDACIONES BÁSICAS
         // =============================================
-
         if (
             !Fecha_Pago ||
-            !Monto ||
+            Monto === undefined ||
             !Id_Medio_Pago ||
             !facturas ||
             !Array.isArray(facturas) ||
             facturas.length === 0
         ) {
-
             return res.status(400).json({
                 mensaje: "Faltan datos obligatorios."
             });
-
         }
 
-
-        if (Number(Monto) <= 0) {
-
+        const montoPago = Number(Monto);
+        if (montoPago < 0) {
             return res.status(400).json({
-                mensaje: "El monto del pago debe ser mayor que cero."
+                mensaje: "El monto del pago debe ser mayor o igual a cero."
             });
-
         }
 
+        if (montoPago === 0 && montoFavorUsado === 0) {
+            return res.status(400).json({
+                mensaje: "Debe ingresar un monto de pago o aplicar saldo a favor."
+            });
+        }
 
         // =============================================
         // INICIAR TRANSACCIÓN
         // =============================================
-
         await client.query("BEGIN");
-
 
         // =============================================
         // VERIFICAR MÉTODO DE PAGO
         // =============================================
-
         const metodoPago = await client.query(
             `
             SELECT *
@@ -222,86 +219,176 @@ const crearPago = async (req, res) => {
             [Id_Medio_Pago]
         );
 
-
         if (metodoPago.rows.length === 0) {
-
-            throw new Error(
-                "El método de pago seleccionado no existe."
-            );
-
+            throw new Error("El método de pago seleccionado no existe.");
         }
 
-
         // =============================================
-        // VERIFICAR QUE EL MONTO DEL PAGO
+        // VERIFICAR QUE EL MONTO TOTAL DISPONIBLE
         // COINCIDA CON LOS MONTOS APLICADOS
         // =============================================
-
-        const montoPago = Number(Monto);
-
         const montoAplicado = facturas.reduce(
-            (total, factura) => {
-
-                return total + Number(factura.Monto_Usado);
-
-            },
+            (total, factura) => total + Number(factura.Monto_Usado),
             0
         );
 
+        const totalDisponible = montoPago + montoFavorUsado;
 
-        if (montoAplicado > montoPago) {
-
+        if (montoAplicado > totalDisponible) {
             throw new Error(
-                "El monto aplicado a las facturas no puede superar el monto total del pago."
+                "El monto aplicado a las facturas no puede superar el monto total del pago más el saldo a favor."
             );
-
         }
 
+        let idPagoNew = null;
+        let pagoNewRow = null;
 
-        // =============================================
-        // CREAR EL PAGO
-        // =============================================
+        // 1. Si Monto > 0, crear el pago
+        if (montoPago > 0) {
+            if (Tipo === "cliente") {
+                const pagoRes = await client.query(
+                    `
+                    INSERT INTO PagoPedido
+                    (
+                        Fecha_Pago,
+                        Estado_Pago,
+                        Monto,
+                        Monto_Restante,
+                        Id_Medio_Pago
+                    )
+                    VALUES
+                    (
+                        $1,
+                        'parcial',
+                        $2,
+                        $2,
+                        $3
+                    )
+                    RETURNING *
+                    `,
+                    [Fecha_Pago, montoPago, Id_Medio_Pago]
+                );
+                pagoNewRow = pagoRes.rows[0];
+                idPagoNew = pagoNewRow.id_pago_pedido;
+            } else {
+                const pagoRes = await client.query(
+                    `
+                    INSERT INTO Pago_Insumo
+                    (
+                        Fecha_Pago,
+                        Estado_Pago,
+                        Monto,
+                        Monto_Restante,
+                        Id_Medio_Pago
+                    )
+                    VALUES
+                    (
+                        $1,
+                        'parcial',
+                        $2,
+                        $2,
+                        $3
+                    )
+                    RETURNING *
+                    `,
+                    [Fecha_Pago, montoPago, Id_Medio_Pago]
+                );
+                pagoNewRow = pagoRes.rows[0];
+                idPagoNew = pagoNewRow.id_pago_insumo;
+            }
+        }
 
-        if (Tipo === "cliente") {
-            const pago = await client.query(
-                `
-                INSERT INTO PagoPedido
-                (
-                    Fecha_Pago,
-                    Estado_Pago,
-                    Monto,
-                    Monto_Restante,
-                    Id_Medio_Pago
-                )
-                VALUES
-                (
-                    $1,
-                    'parcial',
-                    $2,
-                    $2::numeric - $3::numeric,
-                    $4
-                )
-                RETURNING *
-                `,
-                [Fecha_Pago, Monto, montoAplicado, Id_Medio_Pago]
-            );
+        // 2. Preparar las fuentes de financiamiento (funding sources)
+        const sources = [];
 
-            const idPago = pago.rows[0].id_pago_pedido;
+        if (idPagoNew) {
+            sources.push({
+                id: idPagoNew,
+                type: 'new',
+                disponible: montoPago
+            });
+        }
 
-            for (const facturaPago of facturas) {
+        // Si se usa saldo a favor, buscar los pagos existentes con saldo restante
+        if (montoFavorUsado > 0) {
+            if (Tipo === "cliente") {
+                // Obtener cliente del primer pedido
+                const idClienteResult = await client.query(
+                    'SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1',
+                    [facturas[0].Id_Pedido]
+                );
+                if (idClienteResult.rows.length === 0) {
+                    throw new Error("No se pudo obtener el cliente del pedido.");
+                }
+                const idCliente = idClienteResult.rows[0].id_cliente;
+
+                const pagosAFAvor = await client.query(
+                    `
+                    SELECT * FROM PagoPedido
+                    WHERE Id_Pago_Pedido IN (
+                        SELECT DISTINCT dpp.Id_Pago_Pedido
+                        FROM Detalle_Pago_Pedido dpp
+                        JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido
+                        WHERE p.Id_Cliente = $1
+                    ) AND Monto_Restante > 0
+                    ORDER BY Fecha_Pago ASC, Id_Pago_Pedido ASC
+                    `,
+                    [idCliente]
+                );
+
+                for (const row of pagosAFAvor.rows) {
+                    sources.push({
+                        id: row.id_pago_pedido,
+                        type: 'old',
+                        disponible: Number(row.monto_restante)
+                    });
+                }
+            } else {
+                // Proveedor
+                const idProveedorResult = await client.query(
+                    'SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1',
+                    [facturas[0].Id_Factura_Proveedor]
+                );
+                if (idProveedorResult.rows.length === 0) {
+                    throw new Error("No se pudo obtener el proveedor de la factura.");
+                }
+                const idProveedor = idProveedorResult.rows[0].id_proveedor;
+
+                const pagosAFAvor = await client.query(
+                    `
+                    SELECT * FROM Pago_Insumo
+                    WHERE Id_Pago_Insumo IN (
+                        SELECT DISTINCT dpc.Id_Pago_Insumo
+                        FROM Detalle_Pago_Compra dpc
+                        JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor
+                        WHERE fp.Id_Proveedor = $1
+                    ) AND Monto_Restante > 0
+                    ORDER BY Fecha_Pago ASC, Id_Pago_Insumo ASC
+                    `,
+                    [idProveedor]
+                );
+
+                for (const row of pagosAFAvor.rows) {
+                    sources.push({
+                        id: row.id_pago_insumo,
+                        type: 'old',
+                        disponible: Number(row.monto_restante)
+                    });
+                }
+            }
+        }
+
+        // 3. Procesar cada factura/pedido
+        let tieneDeudaRestante = false;
+        for (const facturaPago of facturas) {
+            if (Tipo === "cliente") {
                 const { Id_Pedido, Monto_Usado } = facturaPago;
-
                 if (!Id_Pedido || !Monto_Usado || Number(Monto_Usado) <= 0) {
                     throw new Error("Los datos de uno de los pedidos son inválidos.");
                 }
 
                 const pedido = await client.query(
-                    `
-                    SELECT *
-                    FROM Pedido
-                    WHERE Id_Pedido = $1
-                    FOR UPDATE
-                    `,
+                    `SELECT * FROM Pedido WHERE Id_Pedido = $1 FOR UPDATE`,
                     [Id_Pedido]
                 );
 
@@ -310,337 +397,218 @@ const crearPago = async (req, res) => {
                 }
 
                 const datosPedido = pedido.rows[0];
-                const montoUsado = Number(Monto_Usado);
+                const montoTotalDeFactura = Number(Monto_Usado);
                 const montoAdeudado = Number(datosPedido.monto_adeudado);
 
-                if (montoUsado > montoAdeudado) {
+                if (montoTotalDeFactura > montoAdeudado) {
                     throw new Error(`El monto aplicado supera el saldo adeudado del pedido ${Id_Pedido}.`);
                 }
 
-                await client.query(
-                    `
-                    INSERT INTO Detalle_Pago_Pedido
-                    (
-                        Monto_Usado,
-                        Id_Pago_Pedido,
-                        Id_Pedido
-                    )
-                    VALUES ($1, $2, $3)
-                    `,
-                    [montoUsado, idPago, Id_Pedido]
-                );
+                let montoFaltaPagar = montoTotalDeFactura;
 
-                const nuevoMontoAdeudado = montoAdeudado - montoUsado;
-                let nuevoEstado;
+                // Consumir de los sources
+                for (const source of sources) {
+                    if (montoFaltaPagar <= 0) break;
+                    if (source.disponible <= 0) continue;
 
+                    const tomar = Math.min(source.disponible, montoFaltaPagar);
+                    
+                    // Registrar el Detalle_Pago_Pedido
+                    await client.query(
+                        `
+                        INSERT INTO Detalle_Pago_Pedido
+                        (Monto_Usado, Id_Pago_Pedido, Id_Pedido)
+                        VALUES ($1, $2, $3)
+                        `,
+                        [tomar, source.id, Id_Pedido]
+                    );
+
+                    source.disponible -= tomar;
+                    montoFaltaPagar -= tomar;
+
+                    // Si es un pago antiguo, actualizar su Monto_Restante inmediatamente
+                    if (source.type === 'old') {
+                        await client.query(
+                            `UPDATE PagoPedido SET Monto_Restante = Monto_Restante - $1 WHERE Id_Pago_Pedido = $2`,
+                            [tomar, source.id]
+                        );
+                    }
+                }
+
+                if (montoFaltaPagar > 0) {
+                    throw new Error(`No hay suficientes fondos (efectivo + saldo a favor) para cubrir el monto aplicado al pedido ${Id_Pedido}.`);
+                }
+
+                const nuevoMontoAdeudado = montoAdeudado - montoTotalDeFactura;
+                if (nuevoMontoAdeudado > 0) {
+                    tieneDeudaRestante = true;
+                }
+                let nuevoEstado = "pendiente";
                 if (nuevoMontoAdeudado === 0) {
                     nuevoEstado = "pagado";
                 } else if (nuevoMontoAdeudado < Number(datosPedido.precio_total)) {
                     nuevoEstado = "parcial";
-                } else {
-                    nuevoEstado = "pendiente";
                 }
 
                 await client.query(
                     `
                     UPDATE Pedido
-                    SET
-                        Monto_Adeudado = $1,
-                        Estado_Pago = $2
+                    SET Monto_Adeudado = $1, Estado_Pago = $2
                     WHERE Id_Pedido = $3
                     `,
                     [nuevoMontoAdeudado, nuevoEstado, Id_Pedido]
                 );
 
-            }
-
-            const montoRestante = montoPago - montoAplicado;
-            let estadoPago = "pagado";
-
-            await client.query(
-                `
-                UPDATE PagoPedido
-                SET
-                    Monto_Restante = $1,
-                    Estado_Pago = $2
-                WHERE Id_Pago_Pedido = $3
-                `,
-                [montoRestante, estadoPago, idPago]
-            );
-
-            // ACTUALIZAR SALDO DEL CLIENTE GLOBALY A FAVOR
-            const idClienteGlobal = facturas[0].id_cliente || facturas.length > 0 ? (await client.query('SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1', [facturas[0].Id_Pedido])).rows[0].id_cliente : null;
-            if (idClienteGlobal) {
-                await client.query(
-                    `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
-                    [Monto, idClienteGlobal]
-                );
-            }
-
-            await client.query("COMMIT");
-
-            return res.status(201).json({
-                mensaje: "Pago registrado correctamente.",
-                pago: {
-                    ...pago.rows[0],
-                    monto_restante: montoRestante,
-                    estado_pago: estadoPago
-                }
-            });
-        }
-
-        const pago = await client.query(
-            `
-            INSERT INTO Pago_Insumo
-            (
-                Fecha_Pago,
-                Estado_Pago,
-                Monto,
-                Monto_Restante,
-                Id_Medio_Pago
-            )
-            VALUES
-            (
-                $1,
-                'pagado',
-                $2,
-                $2::numeric - $3::numeric,
-                $4
-            )
-            RETURNING *
-            `,
-            [
-                Fecha_Pago,
-                Monto,
-                montoAplicado,
-                Id_Medio_Pago
-            ]
-        );
-
-
-        const idPago = pago.rows[0].id_pago_insumo;
-
-
-        // =============================================
-        // PROCESAR CADA FACTURA
-        // =============================================
-
-        for (const facturaPago of facturas) {
-
-            const {
-                Id_Factura_Proveedor,
-                Monto_Usado
-            } = facturaPago;
-
-
-            if (
-                !Id_Factura_Proveedor ||
-                !Monto_Usado ||
-                Number(Monto_Usado) <= 0
-            ) {
-
-                throw new Error(
-                    "Los datos de una de las facturas son inválidos."
-                );
-
-            }
-
-
-            // -----------------------------------------
-            // OBTENER LA FACTURA
-            // -----------------------------------------
-
-            const factura = await client.query(
-                `
-                SELECT *
-                FROM Factura_Proveedor
-                WHERE Id_Factura_Proveedor = $1
-                FOR UPDATE
-                `,
-                [Id_Factura_Proveedor]
-            );
-
-
-            if (factura.rows.length === 0) {
-
-                throw new Error(
-                    `La factura ${Id_Factura_Proveedor} no existe.`
-                );
-
-            }
-
-
-            const datosFactura = factura.rows[0];
-
-            const montoUsado = Number(Monto_Usado);
-
-            const montoAdeudado =
-                Number(datosFactura.monto_adeudado);
-
-
-            // -----------------------------------------
-            // NO PERMITIR PAGAR MÁS DE LO ADEUDADO
-            // -----------------------------------------
-
-            if (montoUsado > montoAdeudado) {
-
-                throw new Error(
-                    `El monto aplicado supera el saldo adeudado de la factura ${Id_Factura_Proveedor}.`
-                );
-
-            }
-
-
-            // -----------------------------------------
-            // CREAR DETALLE DEL PAGO
-            // -----------------------------------------
-
-            await client.query(
-                `
-                INSERT INTO Detalle_Pago_Compra
-                (
-                    Monto_Usado,
-                    Id_Pago_Insumo,
-                    Id_Factura_Proveedor
-                )
-                VALUES
-                (
-                    $1,
-                    $2,
-                    $3
-                )
-                `,
-                [
-                    montoUsado,
-                    idPago,
-                    Id_Factura_Proveedor
-                ]
-            );
-
-
-            // -----------------------------------------
-            // CALCULAR NUEVO MONTO ADEUDADO
-            // -----------------------------------------
-
-            const nuevoMontoAdeudado =
-                montoAdeudado - montoUsado;
-
-
-            let nuevoEstado;
-
-            if (nuevoMontoAdeudado === 0) {
-
-                nuevoEstado = "pagado";
-
-            } else if (nuevoMontoAdeudado < Number(datosFactura.precio_total)) {
-
-                nuevoEstado = "parcial";
-
             } else {
+                // Proveedor
+                const { Id_Factura_Proveedor, Monto_Usado } = facturaPago;
+                if (!Id_Factura_Proveedor || !Monto_Usado || Number(Monto_Usado) <= 0) {
+                    throw new Error("Los datos de una de las facturas son inválidos.");
+                }
 
-                nuevoEstado = "pendiente";
+                const factura = await client.query(
+                    `SELECT * FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1 FOR UPDATE`,
+                    [Id_Factura_Proveedor]
+                );
 
+                if (factura.rows.length === 0) {
+                    throw new Error(`La factura ${Id_Factura_Proveedor} no existe.`);
+                }
+
+                const datosFactura = factura.rows[0];
+                const montoTotalDeFactura = Number(Monto_Usado);
+                const montoAdeudado = Number(datosFactura.monto_adeudado);
+
+                if (montoTotalDeFactura > montoAdeudado) {
+                    throw new Error(`El monto aplicado supera el saldo adeudado de la factura ${Id_Factura_Proveedor}.`);
+                }
+
+                let montoFaltaPagar = montoTotalDeFactura;
+
+                // Consumir de los sources
+                for (const source of sources) {
+                    if (montoFaltaPagar <= 0) break;
+                    if (source.disponible <= 0) continue;
+
+                    const tomar = Math.min(source.disponible, montoFaltaPagar);
+                    
+                    // Registrar el Detalle_Pago_Compra
+                    await client.query(
+                        `
+                        INSERT INTO Detalle_Pago_Compra
+                        (Monto_Usado, Id_Pago_Insumo, Id_Factura_Proveedor)
+                        VALUES ($1, $2, $3)
+                        `,
+                        [tomar, source.id, Id_Factura_Proveedor]
+                    );
+
+                    source.disponible -= tomar;
+                    montoFaltaPagar -= tomar;
+
+                    // Si es un pago antiguo, actualizar su Monto_Restante inmediatamente
+                    if (source.type === 'old') {
+                        await client.query(
+                            `UPDATE Pago_Insumo SET Monto_Restante = Monto_Restante - $1 WHERE Id_Pago_Insumo = $2`,
+                            [tomar, source.id]
+                        );
+                    }
+                }
+
+                if (montoFaltaPagar > 0) {
+                    throw new Error(`No hay suficientes fondos (efectivo + saldo a favor) para cubrir el monto aplicado a la factura ${Id_Factura_Proveedor}.`);
+                }
+
+                const nuevoMontoAdeudado = montoAdeudado - montoTotalDeFactura;
+                if (nuevoMontoAdeudado > 0) {
+                    tieneDeudaRestante = true;
+                }
+                let nuevoEstado = "pendiente";
+                if (nuevoMontoAdeudado === 0) {
+                    nuevoEstado = "pagado";
+                } else if (nuevoMontoAdeudado < Number(datosFactura.precio_total)) {
+                    nuevoEstado = "parcial";
+                }
+
+                await client.query(
+                    `
+                    UPDATE Factura_Proveedor
+                    SET Monto_Adeudado = $1, Estado_Pago = $2
+                    WHERE Id_Factura_Proveedor = $3
+                    `,
+                    [nuevoMontoAdeudado, nuevoEstado, Id_Factura_Proveedor]
+                );
             }
-
-
-            // -----------------------------------------
-            // ACTUALIZAR FACTURA
-            // -----------------------------------------
-
-            await client.query(
-                `
-                UPDATE Factura_Proveedor
-                SET
-                    Monto_Adeudado = $1,
-                    Estado_Pago = $2
-                WHERE Id_Factura_Proveedor = $3
-                `,
-                [
-                    nuevoMontoAdeudado,
-                    nuevoEstado,
-                    Id_Factura_Proveedor
-                ]
-            );
-
-
         }
 
-
-        // =============================================
-        // ACTUALIZAR ESTADO DEL PAGO
-        // =============================================
-
-        const montoRestante =
-            montoPago - montoAplicado;
-
-
-        let estadoPago = "pagado";
-
-
-        await client.query(
-            `
-            UPDATE Pago_Insumo
-            SET
-                Monto_Restante = $1,
-                Estado_Pago = $2
-            WHERE Id_Pago_Insumo = $3
-            `,
-            [
-                montoRestante,
-                estadoPago,
-                idPago
-            ]
-        );
-
-        // ACTUALIZAR SALDO DEL PROVEEDOR GLOBALY A FAVOR
-        const idProveedorGlobal = facturas.length > 0 ? (await client.query('SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1', [facturas[0].Id_Factura_Proveedor])).rows[0].id_proveedor : null;
-        if (idProveedorGlobal) {
-            await client.query(
-                `UPDATE Proveedor SET Saldo = Saldo + $1 WHERE Id_Proveedor = $2`,
-                [Monto, idProveedorGlobal]
-            );
+        // 4. Si se creó un nuevo pago, actualizar su Monto_Restante y Estado_Pago finales
+        let finalMontoRestante = 0;
+        let finalEstadoPago = tieneDeudaRestante ? "parcial" : "pagado";
+        if (idPagoNew) {
+            const newSource = sources.find(s => s.type === 'new');
+            finalMontoRestante = newSource ? newSource.disponible : 0;
+            
+            if (Tipo === "cliente") {
+                await client.query(
+                    `UPDATE PagoPedido SET Monto_Restante = $1, Estado_Pago = $2 WHERE Id_Pago_Pedido = $3`,
+                    [finalMontoRestante, finalEstadoPago, idPagoNew]
+                );
+            } else {
+                await client.query(
+                    `UPDATE Pago_Insumo SET Monto_Restante = $1, Estado_Pago = $2 WHERE Id_Pago_Insumo = $3`,
+                    [finalMontoRestante, finalEstadoPago, idPagoNew]
+                );
+            }
         }
 
-
-        // =============================================
-        // CONFIRMAR TRANSACCIÓN
-        // =============================================
+        // 5. Actualizar el saldo global de Cliente o Proveedor (solo incrementa por el Monto nuevo)
+        if (montoPago > 0) {
+            if (Tipo === "cliente") {
+                const idClienteResult = await client.query(
+                    'SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1',
+                    [facturas[0].Id_Pedido]
+                );
+                if (idClienteResult.rows.length > 0) {
+                    const idClienteGlobal = idClienteResult.rows[0].id_cliente;
+                    await client.query(
+                        `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
+                        [montoPago, idClienteGlobal]
+                    );
+                }
+            } else {
+                const idProveedorResult = await client.query(
+                    'SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1',
+                    [facturas[0].Id_Factura_Proveedor]
+                );
+                if (idProveedorResult.rows.length > 0) {
+                    const idProveedorGlobal = idProveedorResult.rows[0].id_proveedor;
+                    await client.query(
+                        `UPDATE Proveedor SET Saldo = Saldo + $1 WHERE Id_Proveedor = $2`,
+                        [montoPago, idProveedorGlobal]
+                    );
+                }
+            }
+        }
 
         await client.query("COMMIT");
 
-
-        res.status(201).json({
-
+        return res.status(201).json({
             mensaje: "Pago registrado correctamente.",
-
-            pago: {
-                ...pago.rows[0],
-                monto_restante: montoRestante,
-                estado_pago: estadoPago
-            }
-
+            pago: pagoNewRow ? {
+                ...pagoNewRow,
+                monto_restante: finalMontoRestante,
+                estado_pago: finalEstadoPago
+            } : { mensaje: "Crédito aplicado." }
         });
-
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
         console.error(error);
-
-        res.status(500).json({
-
-            mensaje: error.message ||
-                "Error al registrar el pago."
-
+        return res.status(500).json({
+            mensaje: error.message || "Error al registrar el pago."
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
 
 

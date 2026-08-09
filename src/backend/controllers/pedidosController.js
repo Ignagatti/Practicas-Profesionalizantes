@@ -92,6 +92,7 @@ const obtenerPedidos = async (req, res) => {
                 c.Razon_Social,
                 c.Telefono,
                 c.Email,
+                c.Saldo AS saldo_cliente,
 
                 COALESCE(
                     json_agg(
@@ -160,6 +161,7 @@ const obtenerPedidoPorId = async (req, res) => {
                 c.Razon_Social,
                 c.Telefono,
                 c.Email,
+                c.Saldo AS saldo_cliente,
 
                 COALESCE(
                     json_agg(
@@ -190,7 +192,29 @@ const obtenerPedidoPorId = async (req, res) => {
             return res.status(404).json({ error: 'Pedido no encontrado' });
         }
 
-        res.json(resultado.rows[0]);
+        const pedido = resultado.rows[0];
+
+        // Obtener el historial de pagos asociados al pedido
+        const pagosResultado = await pool.query(
+            `
+            SELECT 
+                pp.Id_Pago_Pedido AS id_pago_pedido,
+                pp.Fecha_Pago AS fecha_pago,
+                pp.Monto AS monto_total,
+                dpp.Monto_Usado AS monto_usado,
+                mp.Tipo AS medio_pago
+            FROM Detalle_Pago_Pedido dpp
+            INNER JOIN PagoPedido pp ON dpp.Id_Pago_Pedido = pp.Id_Pago_Pedido
+            LEFT JOIN Metodo_Pago mp ON pp.Id_Medio_Pago = pp.Id_Medio_Pago
+            WHERE dpp.Id_Pedido = $1
+            ORDER BY pp.Fecha_Pago ASC, pp.Id_Pago_Pedido ASC
+            `,
+            [id]
+        );
+
+        pedido.pagos = pagosResultado.rows;
+
+        res.json(pedido);
     } catch (error) {
         console.error('Error en obtenerPedidoPorId:', error.message);
         res.status(500).json({

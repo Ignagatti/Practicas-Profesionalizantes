@@ -44,6 +44,8 @@ function mapEntidadDesdeBackend(entidad, tipoVista) {
     email: entidad.email || "",
     estado: entidad.estado || "activo",
     saldo: entidad.saldo || 0,
+    total_a_favor: entidad.total_a_favor || 0,
+    total_en_contra: entidad.total_en_contra || 0,
   };
 }
 
@@ -659,21 +661,30 @@ export function EntidadesPanel({
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {(() => {
-                        const saldo = Number(entidad.saldo || entidad.Saldo || 0);
-                        const isPositive = saldo > 0;
-                        const isNegative = saldo < 0;
+                        const totalCredito = Number(entidad.total_a_favor || 0);
+                        const totalDeuda = Number(entidad.total_en_contra || 0);
+                        const saldoNeto = totalCredito - totalDeuda;
+                        
                         return (
-                          <div className={`inline-flex flex-col`}>
-                            <span className={`font-bold ${
-                              isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-gray-500'
-                            }`}>
-                              {saldo === 0 ? '$0.00' : `$${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                            </span>
-                            <span className={`text-[9px] uppercase tracking-wider font-bold ${
-                              isPositive ? 'text-green-500' : isNegative ? 'text-red-500' : 'text-transparent'
-                            }`}>
-                              {saldo === 0 ? '-' : isPositive ? 'A Favor' : 'En contra'}
-                            </span>
+                          <div className="flex flex-col gap-0.5 text-xs min-w-[130px]">
+                            {totalCredito > 0 && (
+                              <div className="flex justify-between gap-2 text-green-600 font-semibold">
+                                <span>A Favor:</span>
+                                <span>${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                            )}
+                            {totalDeuda > 0 && (
+                              <div className="flex justify-between gap-2 text-red-600 font-semibold">
+                                <span>En Contra:</span>
+                                <span>${totalDeuda.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between gap-2 border-t border-gray-200 pt-0.5 font-bold text-gray-800">
+                              <span>Neto:</span>
+                              <span className={saldoNeto > 0 ? "text-green-600" : saldoNeto < 0 ? "text-red-600" : "text-gray-500"}>
+                                ${saldoNeto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
                           </div>
                         );
                       })()}

@@ -23,7 +23,27 @@ const validarProveedor = (proveedor) => {
 const obtenerProveedores = async (req, res) => {
     try {
         const resultado = await pool.query(
-            'SELECT * FROM Proveedor ORDER BY Id_Proveedor ASC'
+            `SELECT 
+                p.*,
+                COALESCE(
+                    (SELECT SUM(Monto_Restante) 
+                     FROM Pago_Insumo 
+                     WHERE Id_Pago_Insumo IN (
+                         SELECT DISTINCT dpc.Id_Pago_Insumo 
+                         FROM Detalle_Pago_Compra dpc 
+                         JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor 
+                         WHERE fp.Id_Proveedor = p.Id_Proveedor
+                     )
+                    ), 0
+                ) AS total_a_favor,
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado) 
+                     FROM Factura_Proveedor 
+                     WHERE Id_Proveedor = p.Id_Proveedor AND Estado_Pago <> 'pagado'
+                    ), 0
+                ) AS total_en_contra
+            FROM Proveedor p
+            ORDER BY p.Id_Proveedor ASC`
         );
 
         res.json(resultado.rows);
@@ -37,7 +57,27 @@ const obtenerProveedorPorId = async (req, res) => {
         const { id } = req.params;
 
         const resultado = await pool.query(
-            'SELECT * FROM Proveedor WHERE Id_Proveedor = $1',
+            `SELECT 
+                p.*,
+                COALESCE(
+                    (SELECT SUM(Monto_Restante) 
+                     FROM Pago_Insumo 
+                     WHERE Id_Pago_Insumo IN (
+                         SELECT DISTINCT dpc.Id_Pago_Insumo 
+                         FROM Detalle_Pago_Compra dpc 
+                         JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor 
+                         WHERE fp.Id_Proveedor = p.Id_Proveedor
+                     )
+                    ), 0
+                ) AS total_a_favor,
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado) 
+                     FROM Factura_Proveedor 
+                     WHERE Id_Proveedor = p.Id_Proveedor AND Estado_Pago <> 'pagado'
+                    ), 0
+                ) AS total_en_contra
+            FROM Proveedor p
+            WHERE p.Id_Proveedor = $1`,
             [id]
         );
 

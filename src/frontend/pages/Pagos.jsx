@@ -102,6 +102,7 @@ const FORM_VACIO = {
   id_medio_pago: "",
   id_proveedor: "",
   facturas: [],
+  monto_favor_usado: "",
 };
 
 
@@ -201,8 +202,8 @@ function normalizarFactura(factura) {
     nro_factura_proveedor:
       factura.nro_factura_proveedor ??
       factura.Nro_Factura_Proveedor ??
-      (nroPedido ? String(nroPedido) : "") ||
-      (idPedido ? `Pedido N° ${idPedido}` : ""),
+      ((nroPedido ? String(nroPedido) : "") ||
+        (idPedido ? `Pedido N° ${idPedido}` : "")),
 
     precio_total: Number(
       factura.precio_total ??
@@ -297,8 +298,8 @@ function normalizarDetalle(detalle) {
     nro_factura_proveedor:
       detalle.nro_factura_proveedor ??
       detalle.Nro_Factura_Proveedor ??
-      (nroPedido ? String(nroPedido) : "") ||
-      (idPedido ? `Pedido N° ${idPedido}` : ""),
+      ((nroPedido ? String(nroPedido) : "") ||
+        (idPedido ? `Pedido N° ${idPedido}` : "")),
 
     monto_usado: Number(
       detalle.monto_usado ??
@@ -619,7 +620,7 @@ export default function Pagos() {
 
 
   const montoRestanteFormulario =
-    Number(newPago.monto || 0) -
+    (Number(newPago.monto || 0) + Number(newPago.monto_favor_usado || 0)) -
     montoAplicadoFormulario;
 
 
@@ -774,11 +775,20 @@ export default function Pagos() {
       return;
     }
 
-    if (Number(newPago.monto) <= 0) {
-      setErrorForm(
-        "El monto del pago debe ser mayor que cero."
-      );
+    const montoEfectivo = Number(newPago.monto || 0);
+    const montoFavor = Number(newPago.monto_favor_usado || 0);
 
+    if (montoEfectivo < 0) {
+      setErrorForm(
+        "El monto del pago debe ser mayor o igual a cero."
+      );
+      return;
+    }
+
+    if (montoEfectivo === 0 && montoFavor === 0) {
+      setErrorForm(
+        "Ingresá un monto de pago o utilizá saldo a favor."
+      );
       return;
     }
 
@@ -792,7 +802,7 @@ export default function Pagos() {
 
     if (!newPago.id_proveedor) {
       setErrorForm(
-        "Seleccioná un proveedor."
+        tipoVista === "proveedor" ? "Seleccioná un proveedor." : "Seleccioná un cliente."
       );
 
       return;
@@ -800,9 +810,23 @@ export default function Pagos() {
 
     if (newPago.facturas.length === 0) {
       setErrorForm(
-        "Seleccioná al menos una factura."
+        tipoVista === "proveedor" ? "Seleccioná al menos una factura." : "Seleccioná al menos un pedido."
       );
 
+      return;
+    }
+
+    // Validar saldo a favor disponible
+    const lista = tipoVista === "proveedor" ? proveedoresTotales : clientesTotales;
+    const entidadSeleccionada = lista.find(e => 
+      String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
+    );
+    const totalCredito = entidadSeleccionada ? Number(entidadSeleccionada.total_a_favor || 0) : 0;
+    
+    if (montoFavor > totalCredito) {
+      setErrorForm(
+        `El saldo a favor utilizado ($${montoFavor.toLocaleString('es-AR', { minimumFractionDigits: 2 })}) supera el disponible ($${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2 })}).`
+      );
       return;
     }
 
@@ -839,19 +863,20 @@ export default function Pagos() {
           )
       ) {
         setErrorForm(
-          `El monto aplicado a la factura ${facturaOriginal.nro_factura_proveedor} supera su saldo adeudado.`
+          `El monto aplicado a ${tipoVista === "proveedor" ? "la factura " + facturaOriginal.nro_factura_proveedor : "el pedido N° " + facturaOriginal.id_factura_proveedor} supera su saldo adeudado.`
         );
 
         return;
       }
     }
 
+    const totalDisponible = montoEfectivo + montoFavor;
     if (
       montoAplicadoFormulario >
-      Number(newPago.monto)
+      totalDisponible
     ) {
       setErrorForm(
-        "El monto aplicado a las facturas no puede superar el monto total del pago."
+        "El monto aplicado a las facturas no puede superar la suma del monto total del pago y el saldo a favor utilizado."
       );
 
       return;
@@ -862,7 +887,8 @@ export default function Pagos() {
     try {
       const payload = {
         Fecha_Pago: newPago.fecha_pago,
-        Monto: Number(newPago.monto),
+        Monto: montoEfectivo,
+        monto_favor_usado: montoFavor,
         Id_Medio_Pago: Number(newPago.id_medio_pago),
         Tipo: tipoVista,
         facturas: newPago.facturas.map(
@@ -1557,23 +1583,36 @@ export default function Pagos() {
                       );
                       
                       if (entidadSeleccionada) {
-                        const saldo = Number(entidadSeleccionada.saldo || entidadSeleccionada.Saldo || 0);
+                        const totalCredito = Number(entidadSeleccionada.total_a_favor || 0);
+                        const totalDeuda = Number(entidadSeleccionada.total_en_contra || 0);
+                        const saldo = totalCredito - totalDeuda;
                         const isPositive = saldo > 0;
                         const isNegative = saldo < 0;
                         
                         return (
-                          <div className={`mt-3 p-3 rounded-xl text-sm font-bold border-2 transition-all flex justify-between items-center ${
-                            isPositive ? 'bg-green-50 border-green-200 text-green-700 shadow-[0_2px_10px_-3px_rgba(34,197,94,0.3)]' : 
-                            isNegative ? 'bg-red-50 border-red-200 text-red-700 shadow-[0_2px_10px_-3px_rgba(239,68,68,0.3)]' : 
-                            'bg-gray-50 border-gray-200 text-gray-700'
-                          }`}>
-                            <span>Saldo Global: </span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-base tracking-tight">{saldo === 0 ? '$0.00' : `$${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</span>
-                              <span className={`opacity-90 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider ${
-                                isPositive ? 'bg-green-200 text-green-800' : isNegative ? 'bg-red-200 text-red-800' : ''
+                          <div className="mt-3 p-3.5 rounded-xl border border-gray-200 bg-gray-50 shadow-sm space-y-2 text-gray-700">
+                            <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider border-b pb-1.5 border-gray-200">
+                              <span>Resumen de Cuenta</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${
+                                isPositive ? 'bg-green-100 text-green-800 font-bold' : 
+                                isNegative ? 'bg-red-100 text-red-800 font-bold' : 
+                                'bg-gray-200 text-gray-700'
                               }`}>
-                                {saldo === 0 ? '' : isPositive ? 'A FAVOR' : 'EN CONTRA'}
+                                {saldo === 0 ? 'Sin saldo' : isPositive ? 'A Favor' : 'En contra'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>{tipoVista === "proveedor" ? "Deuda total facturas:" : "Deuda total pedidos:"}</span>
+                              <span className="font-semibold text-red-600">${totalDeuda.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Monto a favor disponible:</span>
+                              <span className="font-semibold text-green-600">${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="flex justify-between text-sm font-bold border-t pt-1.5 border-gray-200">
+                              <span>Saldo neto deudor/acreedor:</span>
+                              <span className={saldo < 0 ? 'text-red-700' : saldo > 0 ? 'text-green-700' : 'text-gray-700'}>
+                                {saldo < 0 ? '-' : ''}${Math.abs(saldo).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
                           </div>
@@ -1592,7 +1631,7 @@ export default function Pagos() {
                   <div>
                     <input
                       type="number"
-                      min="0.01"
+                      min="0"
                       step="0.01"
                       value={newPago.monto}
                       onChange={(event) =>
@@ -1608,6 +1647,50 @@ export default function Pagos() {
                     />
                   </div>
                 </div>
+
+                {(() => {
+                  const lista = tipoVista === "proveedor" ? proveedoresTotales : clientesTotales;
+                  const entidadSeleccionada = lista.find(e => 
+                    String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
+                  );
+                  const totalCredito = entidadSeleccionada ? Number(entidadSeleccionada.total_a_favor || 0) : 0;
+                  
+                  if (totalCredito > 0) {
+                    return (
+                      <div className="col-span-1 sm:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-3.5 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-semibold text-blue-800 flex items-center gap-1.5">
+                            <Wallet className="h-4 w-4 shrink-0" />
+                            Saldo a favor disponible: ${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-xs text-blue-600">
+                            Podés aplicar este saldo para pagar las facturas/pedidos seleccionados.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <label className="text-xs font-medium text-blue-700 whitespace-nowrap">Usar saldo a favor ($):</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max={totalCredito}
+                            step="0.01"
+                            value={newPago.monto_favor_usado || ""}
+                            onChange={(event) => {
+                              const val = event.target.value;
+                              setNewPago((prev) => ({
+                                ...prev,
+                                monto_favor_usado: val
+                              }));
+                            }}
+                            className="w-full sm:w-32 px-3 py-1.5 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            placeholder="0,00"
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
 

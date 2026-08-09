@@ -154,14 +154,14 @@ function getEstadoPagoInfo(estado) {
 function getEstadoFacturaInfo(pedido) {
   const estado = pedido.estado_facturacion || pedido.Estado_Facturacion;
   if (estado === "se_factura") {
-    if (pedido.nro_factura || pedido.pdf_factura_url || pedido.pdf_factura_file) {
+    if (pedido.pdf_factura_url || pedido.pdf_factura_file || pedido.pdf_factura_nombre) {
       return {
         label: "Facturado",
         color: "bg-green-100 text-green-700",
       };
     }
     return {
-      label: "Falta facturar",
+      label: "Pendiente de facturación",
       color: "bg-yellow-100 text-yellow-700",
     };
   }
@@ -650,7 +650,7 @@ export function Pedidos() {
     }
   };
 
-  const handleView = (pedido) => {
+  const handleView = async (pedido) => {
     const copia = clonarPedido(pedido);
 
     setSelectedPedido(copia);
@@ -661,6 +661,20 @@ export function Pedidos() {
     setMensajeErrorModal("");
     setMensajeExitoModal("");
     setShowViewModal(true);
+
+    try {
+      const res = await fetch(`${API_URL}/pedidos/${pedido.id_pedido}`);
+      if (res.ok) {
+        const datosCompletos = await res.json();
+        setSelectedPedido((prev) =>
+          prev && Number(prev.id_pedido) === Number(pedido.id_pedido)
+            ? { ...prev, ...datosCompletos }
+            : prev
+        );
+      }
+    } catch (err) {
+      console.error("Error al obtener los detalles del pedido:", err);
+    }
   };
 
   const abrirEdicionPedido = async () => {
@@ -1486,13 +1500,31 @@ export function Pedidos() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Cliente</p>
 
-                  <p className="text-base text-gray-800">
+                  <p className="text-base text-gray-800 font-semibold">
                     {getNombreCliente(selectedPedido)}
                   </p>
+                  {selectedPedido.saldo_cliente !== undefined && (
+                    <p className={`text-xs mt-1 font-bold flex items-center flex-wrap gap-1 ${
+                      Number(selectedPedido.saldo_cliente) > 0 ? "text-green-600" :
+                      Number(selectedPedido.saldo_cliente) < 0 ? "text-red-600" :
+                      "text-gray-500"
+                    }`}>
+                      Saldo: {Number(selectedPedido.saldo_cliente) === 0 ? "$0,00" : (
+                        `${Number(selectedPedido.saldo_cliente) > 0 ? "" : "-"}$${formatearPrecio(Math.abs(selectedPedido.saldo_cliente))}`
+                      )}
+                      <span className={`text-[9px] uppercase px-1 py-0.5 rounded ${
+                        Number(selectedPedido.saldo_cliente) > 0 ? "bg-green-100 text-green-800" :
+                        Number(selectedPedido.saldo_cliente) < 0 ? "bg-red-100 text-red-800" : ""
+                      }`}>
+                        {Number(selectedPedido.saldo_cliente) === 0 ? "" :
+                         Number(selectedPedido.saldo_cliente) > 0 ? "A FAVOR" : "EN CONTRA"}
+                      </span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1514,8 +1546,18 @@ export function Pedidos() {
                 <div>
                   <p className="text-sm text-gray-500">Precio Total</p>
 
-                  <p className="text-lg text-green-700">
+                  <p className="text-lg text-green-700 font-semibold">
                     ${formatearPrecio(selectedPedido.precio_total)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500">Monto Adeudado</p>
+
+                  <p className={`text-lg font-bold ${
+                    Number(selectedPedido.monto_adeudado) > 0 ? "text-red-700" : "text-green-700"
+                  }`}>
+                    ${formatearPrecio(selectedPedido.monto_adeudado ?? 0)}
                   </p>
                 </div>
               </div>
@@ -1824,6 +1866,72 @@ export function Pedidos() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-gray-800 mb-3">
+                  Historial de Pagos del Pedido
+                </h4>
+
+                {selectedPedido.pagos && selectedPedido.pagos.length > 0 ? (
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="w-full bg-white">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs text-gray-500 font-semibold">
+                            Fecha
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs text-gray-500 font-semibold">
+                            Medio de Pago
+                          </th>
+                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                            Monto Anterior
+                          </th>
+                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                            Monto Abonado
+                          </th>
+                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                            Monto Restante
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="divide-y divide-gray-200">
+                        {(() => {
+                          let balanceAcumulado = Number(selectedPedido.precio_total);
+                          return selectedPedido.pagos.map((pago, idx) => {
+                            const montoAnterior = balanceAcumulado;
+                            balanceAcumulado -= Number(pago.monto_usado);
+                            const montoRestante = balanceAcumulado;
+                            return (
+                              <tr key={pago.id_pago_pedido || idx}>
+                                <td className="px-4 py-2 text-sm text-gray-800">
+                                  {formatearFecha(pago.fecha_pago)}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-gray-600 capitalize">
+                                  {pago.medio_pago || "Efectivo"}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-right text-gray-600">
+                                  ${formatearPrecio(montoAnterior)}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-right text-green-600 font-medium">
+                                  ${formatearPrecio(pago.monto_usado)}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-right text-gray-800 font-semibold">
+                                  ${formatearPrecio(Math.max(0, montoRestante))}
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center text-sm text-gray-500">
+                    No se registran abonos para este pedido.
+                  </div>
+                )}
               </div>
 
               <div>

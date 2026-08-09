@@ -28,9 +28,31 @@ const validarCliente = (cliente) => {
 const obtenerClientes = async (req, res) => {
     try {
         const resultado = await pool.query(
-            'SELECT * FROM Cliente ORDER BY Id_Cliente ASC'
+            `SELECT 
+                c.*,
+                COALESCE(
+                    (SELECT SUM(Monto_Restante) 
+                     FROM PagoPedido 
+                     WHERE Id_Pago_Pedido IN (
+                         SELECT DISTINCT dpp.Id_Pago_Pedido 
+                         FROM Detalle_Pago_Pedido dpp 
+                         JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido 
+                         WHERE p.Id_Cliente = c.Id_Cliente
+                     )
+                    ), 0
+                ) AS total_a_favor,
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado) 
+                     FROM Pedido 
+                     WHERE Id_Cliente = c.Id_Cliente AND Estado_Pago <> 'pagado'
+                    ), 0
+                ) AS total_en_contra
+            FROM Cliente c
+            ORDER BY c.Id_Cliente ASC`
         );
 
+        console.log("=== OBTENER CLIENTES LLAMADO ===");
+        console.log("First row returned:", resultado.rows[0]);
         res.json(resultado.rows);
     } catch (error) {
         console.error('Error en obtenerClientes:', error.message);
@@ -43,7 +65,27 @@ const obtenerClientePorId = async (req, res) => {
         const { id } = req.params;
 
         const resultado = await pool.query(
-            'SELECT * FROM Cliente WHERE Id_Cliente = $1',
+            `SELECT 
+                c.*,
+                COALESCE(
+                    (SELECT SUM(Monto_Restante) 
+                     FROM PagoPedido 
+                     WHERE Id_Pago_Pedido IN (
+                         SELECT DISTINCT dpp.Id_Pago_Pedido 
+                         FROM Detalle_Pago_Pedido dpp 
+                         JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido 
+                         WHERE p.Id_Cliente = c.Id_Cliente
+                     )
+                    ), 0
+                ) AS total_a_favor,
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado) 
+                     FROM Pedido 
+                     WHERE Id_Cliente = c.Id_Cliente AND Estado_Pago <> 'pagado'
+                    ), 0
+                ) AS total_en_contra
+            FROM Cliente c
+            WHERE c.Id_Cliente = $1`,
             [id]
         );
 

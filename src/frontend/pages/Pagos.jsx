@@ -646,8 +646,7 @@ export default function Pagos() {
 
       setNewPago(prev => ({
         ...prev,
-        monto_favor_usado: favorUsar > 0 ? favorUsar : "",
-        monto: restanteAPagar > 0 ? restanteAPagar : ""
+        monto_favor_usado: favorUsar > 0 ? favorUsar : ""
       }));
     }
   }, [montoAplicadoFormulario, newPago.id_proveedor, tipoVista, proveedoresTotales, clientesTotales]);
@@ -747,8 +746,7 @@ export default function Pagos() {
             id_factura_proveedor:
               factura.id_factura_proveedor,
 
-            monto_usado:
-              factura.monto_adeudado,
+            monto_usado: "",
           },
         ],
       };

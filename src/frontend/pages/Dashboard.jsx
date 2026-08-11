@@ -92,9 +92,9 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   }
 
   // ── Estadísticas de productos ────────────────────────────────────────────────
-  const productosPendientes    = productos.filter((p) => p.estado === "pendiente").length;
-  const productosTerminados    = productos.filter((p) => p.estado === "terminado").length;
-  const productosEnProduccion  = productos.filter((p) => p.estado === "en-produccion").length;
+  const productosPendientes    = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "pendiente").length;
+  const productosTerminados    = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "terminado").length;
+  const productosEnProduccion  = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "en_produccion").length;
   const totalFacturacion       = productos.reduce(
     (sum, p) => sum + (Number(p.precio || p.Precio || 0) * Number(p.cantidad || p.Cantidad || 0)), 0
   );

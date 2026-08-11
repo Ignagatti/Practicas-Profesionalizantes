@@ -51,8 +51,6 @@ const obtenerClientes = async (req, res) => {
             ORDER BY c.Id_Cliente ASC`
         );
 
-        console.log("=== OBTENER CLIENTES LLAMADO ===");
-        console.log("First row returned:", resultado.rows[0]);
         res.json(resultado.rows);
     } catch (error) {
         console.error('Error en obtenerClientes:', error.message);

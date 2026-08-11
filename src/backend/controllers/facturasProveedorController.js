@@ -81,8 +81,12 @@ const crearFactura = async (req, res) => {
             Observaciones,
             Fecha_Emision,
             Nro_Factura_Proveedor,
-            Id_Proveedor
+            Id_Proveedor,
+            tipo_comprobante
         } = req.body;
+
+        const archivo_pdf = req.file ? `/uploads/${req.file.filename}` : null;
+        const tipoComp = tipo_comprobante || 'factura';
 
          // Validaciones
         if (
@@ -129,7 +133,9 @@ const crearFactura = async (req, res) => {
                 Monto_Adeudado,
                 Estado_Pago,
                 Nro_Factura_Proveedor,
-                Id_Proveedor
+                Id_Proveedor,
+                tipo_comprobante,
+                archivo_pdf
             )
             VALUES
             (
@@ -140,7 +146,9 @@ const crearFactura = async (req, res) => {
                 $1,
                 'pendiente',
                 $5,
-                $6
+                $6,
+                $7,
+                $8
             )
             RETURNING *
             `,
@@ -149,8 +157,10 @@ const crearFactura = async (req, res) => {
                 Vencimiento,
                 Observaciones,
                 Fecha_Emision,
-                Nro_Factura_Proveedor,
-                Id_Proveedor
+                Nro_Factura_Proveedor || null,
+                Id_Proveedor,
+                tipoComp,
+                archivo_pdf
             ]
         );
 
@@ -208,8 +218,11 @@ const editarFactura = async (req, res) => {
             Vencimiento,
             Observaciones,
             Fecha_Emision,
-            Nro_Factura_Proveedor
+            Nro_Factura_Proveedor,
+            tipo_comprobante
         } = req.body;
+
+        const tipoComp = tipo_comprobante || 'factura';
 
         // Validaciones
         if (!Precio_Total || !Fecha_Emision) {
@@ -242,6 +255,12 @@ const editarFactura = async (req, res) => {
 
         const factura = facturaActual.rows[0];
 
+        // Archivo opcional en Update, si no hay archivo, preservamos el anterior.
+        let archivo_pdf = factura.archivo_pdf;
+        if (req.file) {
+            archivo_pdf = `/uploads/${req.file.filename}`;
+        }
+
         // No permitir modificar una factura totalmente pagada
         if (factura.estado_pago === "pagado") {
             throw new Error("No se puede modificar una factura pagada.");
@@ -261,7 +280,9 @@ const editarFactura = async (req, res) => {
                 Observaciones = $3,
                 Fecha_Emision = $4,
                 Monto_Adeudado = Monto_Adeudado + $5,
-                Nro_Factura_Proveedor = $6
+                Nro_Factura_Proveedor = $6,
+                tipo_comprobante = $8,
+                archivo_pdf = $9
             WHERE Id_Factura_Proveedor = $7
             RETURNING *
             `,
@@ -271,8 +292,10 @@ const editarFactura = async (req, res) => {
                 Observaciones,
                 Fecha_Emision,
                 diferencia,
-                Nro_Factura_Proveedor,
-                id
+                Nro_Factura_Proveedor || null,
+                id,
+                tipoComp,
+                archivo_pdf
             ]
         );
 

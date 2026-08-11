@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Clock,
   Truck,
+  FileText,
+  Printer,
 } from "lucide-react";
 
 
@@ -50,8 +52,9 @@ const FORM_VACIO = {
   vencimiento: "",
   precio_total: "",
   monto_adeudado: "",
-  estado_pago: "pendiente",
   observaciones: "",
+  tipo_comprobante: "factura",
+  archivo_pdf_file: null
 };
 
 
@@ -158,6 +161,14 @@ function normalizarFactura(factura) {
       factura.Estado_Pago ??
       "pendiente",
 
+    tipo_comprobante:
+      factura.tipo_comprobante ??
+      "factura",
+      
+    archivo_pdf:
+      factura.archivo_pdf ??
+      null,
+
     observaciones:
       factura.observaciones ??
       factura.Observaciones ??
@@ -227,7 +238,7 @@ async function leerRespuesta(respuesta) {
 // COMPONENTE
 // =====================================================
 
-export function Facturas() {
+export function PedidosProveedor({ tipoVista, setTipoVista }) {
   const [facturas, setFacturas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
 
@@ -558,71 +569,44 @@ export function Facturas() {
       return;
     }
 
-    if (!newFactura.nro_factura_proveedor.trim()) {
-      setErrorForm(
-        "Ingresá el número de factura."
-      );
-
+    if (newFactura.tipo_comprobante === 'factura' && !newFactura.nro_factura_proveedor.trim()) {
+      setErrorForm("Ingresá el número de factura.");
       return;
     }
 
-    if (
-      !newFactura.fecha_emision ||
-      !newFactura.vencimiento
-    ) {
-      setErrorForm(
-        "Completá las fechas de emisión y vencimiento."
-      );
-
+    if (!newFactura.fecha_emision || !newFactura.vencimiento) {
+      setErrorForm("Completá las fechas de emisión y vencimiento.");
       return;
     }
 
     if (Number(newFactura.precio_total) <= 0) {
-      setErrorForm(
-        "El precio total debe ser mayor que cero."
-      );
-
+      setErrorForm("El precio total debe ser mayor que cero.");
       return;
     }
 
     setGuardando(true);
 
     try {
-      const payload = {
-        nro_factura_proveedor:
-          newFactura.nro_factura_proveedor.trim(),
-
-        fecha_emision:
-          newFactura.fecha_emision,
-
-        vencimiento:
-          newFactura.vencimiento,
-
-        precio_total:
-          Number(newFactura.precio_total),
-
-        monto_adeudado:
-          Number(newFactura.precio_total),
-
-        estado_pago: "pendiente",
-
-        observaciones:
-          newFactura.observaciones.trim(),
-
-        id_proveedor:
-          Number(newFactura.id_proveedor),
-      };
+      const formData = new FormData();
+      if(newFactura.tipo_comprobante === 'factura' && newFactura.nro_factura_proveedor.trim()) {
+        formData.append("Nro_Factura_Proveedor", newFactura.nro_factura_proveedor.trim());
+      }
+      formData.append("Fecha_Emision", newFactura.fecha_emision);
+      formData.append("Vencimiento", newFactura.vencimiento);
+      formData.append("Precio_Total", Number(newFactura.precio_total));
+      formData.append("Observaciones", newFactura.observaciones.trim());
+      formData.append("Id_Proveedor", Number(newFactura.id_proveedor));
+      formData.append("tipo_comprobante", newFactura.tipo_comprobante);
+      
+      if(newFactura.tipo_comprobante === 'factura' && newFactura.archivo_pdf_file) {
+        formData.append("archivo_pdf", newFactura.archivo_pdf_file);
+      }
 
       const respuesta = await fetch(
         `${API_URL}/facturasProveedor`,
         {
           method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
 
@@ -671,13 +655,10 @@ export function Facturas() {
     setErrorForm("");
 
     if (
-      !viewingFactura.nro_factura_proveedor
-        ?.trim()
+      viewingFactura.tipo_comprobante === 'factura' &&
+      !viewingFactura.nro_factura_proveedor?.trim()
     ) {
-      setErrorForm(
-        "Ingresá el número de factura."
-      );
-
+      setErrorForm("Ingresá el número de factura.");
       return;
     }
 
@@ -705,36 +686,26 @@ export function Facturas() {
     setGuardando(true);
 
     try {
-      const payload = {
-        nro_factura_proveedor:
-          viewingFactura.nro_factura_proveedor.trim(),
+      const formData = new FormData();
+      if(viewingFactura.tipo_comprobante === 'factura' && viewingFactura.nro_factura_proveedor?.trim()) {
+        formData.append("Nro_Factura_Proveedor", viewingFactura.nro_factura_proveedor.trim());
+      }
+      formData.append("Fecha_Emision", viewingFactura.fecha_emision);
+      formData.append("Vencimiento", viewingFactura.vencimiento);
+      formData.append("Precio_Total", Number(viewingFactura.precio_total));
+      formData.append("Observaciones", viewingFactura.observaciones?.trim() || "");
+      formData.append("Id_Proveedor", Number(viewingFactura.id_proveedor));
+      formData.append("tipo_comprobante", viewingFactura.tipo_comprobante);
 
-        fecha_emision:
-          viewingFactura.fecha_emision,
-
-        vencimiento:
-          viewingFactura.vencimiento,
-
-        precio_total:
-          Number(viewingFactura.precio_total),
-
-        observaciones:
-          viewingFactura.observaciones?.trim() || "",
-
-        id_proveedor:
-          Number(viewingFactura.id_proveedor),
-      };
+      if(viewingFactura.tipo_comprobante === 'factura' && viewingFactura.archivo_pdf_file) {
+        formData.append("archivo_pdf", viewingFactura.archivo_pdf_file);
+      }
 
       const respuesta = await fetch(
         `${API_URL}/facturasProveedor/${viewingFactura.id_factura_proveedor}`,
         {
           method: "PUT",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify(payload),
+          body: formData,
         }
       );
 
@@ -854,13 +825,12 @@ export function Facturas() {
         </div>
       )}
 
-
       {/* HEADER */}
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">
-            Facturas de proveedores
+          <h2 className="text-2xl font-bold text-gray-800">
+            Compras (Pedidos a Proveedores)
           </h2>
 
           <p className="text-gray-500 text-sm mt-1">
@@ -869,9 +839,19 @@ export function Facturas() {
         </div>
 
         <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-200">
-            <Truck size={18} />
-            Proveedores
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setTipoVista && setTipoVista("cliente")}
+              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800"
+            >
+              Clientes
+            </button>
+            <button
+              onClick={() => setTipoVista && setTipoVista("proveedor")}
+              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors bg-white text-red-700 shadow-sm"
+            >
+              Proveedores
+            </button>
           </div>
 
           <button
@@ -1058,8 +1038,12 @@ export function Facturas() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
-                    N.º factura
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 tracking-wider">
+                    Tipo
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 tracking-wider">
+                    Nro. Comprobante
                   </th>
 
                   <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
@@ -1100,11 +1084,17 @@ export function Facturas() {
                     }
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      {factura.nro_factura_proveedor}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize leading-[1.25]">
+                       <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${factura.tipo_comprobante === 'remito' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                         {factura.tipo_comprobante}
+                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-gray-800">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {factura.nro_factura_proveedor || "-"}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                       {factura.proveedor}
                     </td>
 
@@ -1163,13 +1153,45 @@ export function Facturas() {
 
                         <button
                           type="button"
-                          onClick={() =>
-                            window.alert(
-                              "La descarga en PDF se implementará más adelante."
-                            )
-                          }
+                          onClick={() => {
+                            const ventana = window.open("", "_blank");
+                            if (ventana) {
+                              ventana.document.write(`
+                                <html>
+                                <head>
+                                  <title>Comprobante de Proveedor</title>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; padding: 32px; color: #111827; }
+                                    h1 { margin-bottom: 4px; color: #1e3a8a; }
+                                    p { margin: 8px 0; font-size: 14px; }
+                                    .box { border: 1px solid #d1d5db; padding: 20px; border-radius: 8px; margin-top: 20px; }
+                                    .total { margin-top: 20px; font-size: 18px; font-weight: bold; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <h1>${factura.tipo_comprobante === 'remito' ? 'Remito' : 'Factura'} de Proveedor</h1>
+                                  <div class="box">
+                                    <p><strong>Proveedor:</strong> ${factura.proveedor}</p>
+                                    ${factura.tipo_comprobante !== 'remito' ? `<p><strong>Nro. Factura:</strong> ${factura.nro_factura_proveedor || '-'}</p>` : ''}
+                                    <p><strong>Fecha de Emisión:</strong> ${formatearFecha(factura.fecha_emision)}</p>
+                                    <p><strong>Vencimiento:</strong> ${formatearFecha(factura.vencimiento)}</p>
+                                    <p><strong>Estado:</strong> ${estadoConfig[factura.estado_pago]?.label || factura.estado_pago}</p>
+                                    <p><strong>Observaciones:</strong> ${factura.observaciones || '---'}</p>
+                                    <p class="total">Monto Total: $${formatearDinero(factura.precio_total)}</p>
+                                    <p class="total" style="color: #b91c1c;">Monto Adeudado: $${formatearDinero(factura.monto_adeudado)}</p>
+                                  </div>
+                                </body>
+                                </html>
+                              `);
+                              ventana.document.close();
+                              ventana.focus();
+                              setTimeout(() => ventana.print(), 250);
+                            } else {
+                              alert("Por favor, permite ventanas emergentes para imprimir.");
+                            }
+                          }}
                           className="p-2 hover:bg-green-50 rounded-lg transition-colors text-green-600"
-                          title="Descargar"
+                          title="Imprimir Comprobante"
                         >
                           <Download size={16} />
                         </button>
@@ -1287,56 +1309,68 @@ export function Facturas() {
 
                 <div>
                   <label className="block text-sm mb-2 text-gray-700">
-                    Número de factura *
+                    Tipo de comprobante *
                   </label>
-
-                  <input
-                    type="text"
-                    value={
-                      newFactura.nro_factura_proveedor
-                    }
+                  <select
+                    value={newFactura.tipo_comprobante}
                     onChange={(event) =>
                       setNewFactura((prev) => ({
                         ...prev,
-
-                        nro_factura_proveedor:
-                          event.target.value,
+                        tipo_comprobante: event.target.value,
+                        nro_factura_proveedor: event.target.value === 'remito' ? '' : prev.nro_factura_proveedor
                       }))
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ej.: A-0001-00001234"
-                  />
+                  >
+                    <option value="factura">Factura</option>
+                    <option value="remito">Remito</option>
+                  </select>
                 </div>
+
+                {newFactura.tipo_comprobante === 'factura' && (
+                  <div>
+                    <label className="block text-sm mb-2 text-gray-700">
+                      Número de factura *
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        newFactura.nro_factura_proveedor
+                      }
+                      onChange={(event) =>
+                        setNewFactura((prev) => ({
+                          ...prev,
+
+                          nro_factura_proveedor:
+                            event.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ej.: A-0001-00001234"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm mb-2 text-gray-700">
                     Precio total *
                   </label>
 
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      $
-                    </span>
-
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={
-                        newFactura.precio_total
-                      }
-                      onChange={(event) =>
-                        setNewFactura((prev) => ({
-                          ...prev,
-
-                          precio_total:
-                            event.target.value,
-                        }))
-                      }
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0,00"
-                    />
-                  </div>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={newFactura.precio_total}
+                    onChange={(event) =>
+                      setNewFactura((prev) => ({
+                        ...prev,
+                        precio_total: event.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="$ 0.00"
+                  />
                 </div>
 
                 <div>
@@ -1382,6 +1416,25 @@ export function Facturas() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
+                {newFactura.tipo_comprobante === 'factura' && (
+                  <div>
+                    <label className="block text-sm mb-2 text-gray-700">
+                      Archivo PDF (Opcional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(event) =>
+                        setNewFactura((prev) => ({
+                          ...prev,
+                          archivo_pdf_file: event.target.files[0]
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                )}
 
                 <div className="sm:col-span-2">
                   <label className="block text-sm mb-2 text-gray-700">
@@ -1476,10 +1529,38 @@ export function Facturas() {
                   </p>
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <p className="text-sm text-gray-500 mb-1">
-                    Número de factura
+                    Tipo de comprobante
                   </p>
+                  
+                  {isEditandoFactura ? (
+                    <select
+                      value={viewingFactura.tipo_comprobante || 'factura'}
+                      onChange={(event) =>
+                        setViewingFactura((prev) => ({
+                          ...prev,
+                          tipo_comprobante: event.target.value,
+                          nro_factura_proveedor: event.target.value === 'remito' ? '' : prev.nro_factura_proveedor
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="factura">Factura</option>
+                      <option value="remito">Remito</option>
+                    </select>
+                  ) : (
+                    <p className="text-base text-gray-800 capitalize">
+                      {viewingFactura.tipo_comprobante || 'Factura'}
+                    </p>
+                  )}
+                </div>
+
+                {(!viewingFactura.tipo_comprobante || viewingFactura.tipo_comprobante === 'factura') && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">
+                      Número de factura
+                    </p>
 
                   {isEditandoFactura ? (
                     <input
@@ -1507,6 +1588,7 @@ export function Facturas() {
                     </p>
                   )}
                 </div>
+                )}
 
                 <div>
                   <p className="text-sm text-gray-500 mb-1">
@@ -1598,31 +1680,20 @@ export function Facturas() {
                   </p>
 
                   {isEditandoFactura ? (
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                        $
-                      </span>
-
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={
-                          viewingFactura.precio_total
-                        }
-                        onChange={(event) =>
-                          setViewingFactura(
-                            (prev) => ({
-                              ...prev,
-
-                              precio_total:
-                                event.target.value,
-                            })
-                          )
-                        }
-                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={viewingFactura.precio_total}
+                      onChange={(event) =>
+                        setViewingFactura((prev) => ({
+                          ...prev,
+                          precio_total: event.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="$ 0.00"
+                    />
                   ) : (
                     <p className="text-lg text-gray-800">
                       $
@@ -1645,6 +1716,64 @@ export function Facturas() {
                     )}
                   </p>
                 </div>
+
+                {(!viewingFactura.tipo_comprobante || viewingFactura.tipo_comprobante === 'factura') && (
+                  <div className="sm:col-span-2">
+                    <p className="text-sm text-gray-500 mb-1">
+                      Archivo PDF
+                    </p>
+
+                    {isEditandoFactura ? (
+                       <div>
+                       <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={(event) =>
+                            setViewingFactura((prev) => ({
+                              ...prev,
+                              archivo_pdf_file: event.target.files[0]
+                            }))
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        />
+                        {viewingFactura.archivo_pdf && (
+                           <p className="text-xs text-gray-500 mt-2">Ya existe un archivo cargado. Si seleccionás uno nuevo, se reemplazará.</p>
+                        )}
+                       </div>
+                    ) : (
+                      <div>
+                        {viewingFactura.archivo_pdf ? (
+                          <button 
+                            type="button" 
+                            onClick={async () => {
+                                const url = `http://localhost:4000${viewingFactura.archivo_pdf}`;
+                                try {
+                                  const resp = await fetch(url);
+                                  const blob = await resp.blob();
+                                  const link = document.createElement("a");
+                                  link.href = window.URL.createObjectURL(blob);
+                                  link.download = `Factura_Proveedor_${viewingFactura.nro_factura_proveedor || viewingFactura.id_proveedor}.pdf`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  window.URL.revokeObjectURL(link.href);
+                                } catch (err) {
+                                  window.open(url, "_blank");
+                                }
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors font-medium shadow-sm"
+                          >
+                             <Download size={18} />
+                             Descargar Factura PDF
+                          </button>
+                        ) : (
+                          <p className="text-base text-gray-500">Sin archivo adjunto</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
 
                 <div className="sm:col-span-2">
                   <p className="text-sm text-gray-500 mb-1">
@@ -1709,6 +1838,51 @@ export function Facturas() {
                   </>
                 ) : (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ventana = window.open("", "_blank");
+                        if (ventana) {
+                          ventana.document.write(`
+                            <html>
+                            <head>
+                              <title>Comprobante de Proveedor</title>
+                              <style>
+                                body { font-family: Arial, sans-serif; padding: 32px; color: #111827; }
+                                h1 { margin-bottom: 4px; color: #1e3a8a; }
+                                p { margin: 8px 0; font-size: 14px; }
+                                .box { border: 1px solid #d1d5db; padding: 20px; border-radius: 8px; margin-top: 20px; }
+                                .total { margin-top: 20px; font-size: 18px; font-weight: bold; }
+                              </style>
+                            </head>
+                            <body>
+                              <h1>${viewingFactura.tipo_comprobante === 'remito' ? 'Remito' : 'Factura'} de Proveedor</h1>
+                              <div class="box">
+                                <p><strong>Proveedor:</strong> ${viewingFactura.proveedor}</p>
+                                ${viewingFactura.tipo_comprobante !== 'remito' ? `<p><strong>Nro. Factura:</strong> ${viewingFactura.nro_factura_proveedor || '-'}</p>` : ''}
+                                <p><strong>Fecha de Emisión:</strong> ${formatearFecha(viewingFactura.fecha_emision)}</p>
+                                <p><strong>Vencimiento:</strong> ${formatearFecha(viewingFactura.vencimiento)}</p>
+                                <p><strong>Estado:</strong> ${estadoConfig[viewingFactura.estado_pago]?.label || viewingFactura.estado_pago}</p>
+                                <p><strong>Observaciones:</strong> ${viewingFactura.observaciones || '---'}</p>
+                                <p class="total">Monto Total: $${formatearDinero(viewingFactura.precio_total)}</p>
+                                <p class="total" style="color: #b91c1c;">Monto Adeudado: $${formatearDinero(viewingFactura.monto_adeudado)}</p>
+                              </div>
+                            </body>
+                            </html>
+                          `);
+                          ventana.document.close();
+                          ventana.focus();
+                          setTimeout(() => ventana.print(), 250);
+                        } else {
+                          alert("Por favor, permite ventanas emergentes para imprimir.");
+                        }
+                      }}
+                      className="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Printer size={16} />
+                      Imprimir
+                    </button>
+
                     <button
                       type="button"
                       onClick={() =>

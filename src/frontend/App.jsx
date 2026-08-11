@@ -8,7 +8,6 @@ import { Proveedores } from "./pages/Proveedores.jsx";
 import { Movimientos } from "./pages/Movimientos.jsx";
 import Pagos from "./pages/Pagos.jsx";
 import { Pedidos } from "./pages/Pedidos.jsx";
-import { Facturas } from "./pages/Facturas.jsx";
 import { Precios } from "./pages/Precios.jsx";
 import { Saldos } from "./pages/Saldos.jsx";
 
@@ -102,6 +101,7 @@ function App() {
       proveedores: "Proveedores",
       movimientos: "Historial de movimientos",
       pagos: "Gestión de Pagos",
+      pedidos: "Gestión de Pedidos",
     };
 
     return titulos[seccion] || "Dashboard";
@@ -132,9 +132,6 @@ function App() {
 
       case "pedidos":
         return <Pedidos />;
-
-      case "facturas":
-        return <Facturas />;
 
       case "precios":
         return <Precios />;

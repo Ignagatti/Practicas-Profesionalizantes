@@ -235,7 +235,73 @@ function Productos() {
 
     const handleEnviarAProduccion = async () => {
         if (seleccionados.length === 0) return;
+        
         try {
+            // Recolectar datos para la impresión
+            const productosAImprimir = seleccionados.map(id => 
+                productos.find(prod => (prod.id_producto || prod.Id_Producto) === id)
+            );
+            
+            // Generar HTML para imprimir
+            const productosHTML = productosAImprimir.map(p => `
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ccc; text-align: center;">${p.cantidad || p.Cantidad}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${p.cliente || 'Sin cliente'}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;"><strong>${p.modelo || p.Modelo}</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${p.tela || p.Tela || '-'} ${p.tipo_tela || p.Tipo_Tela ? `(${p.tipo_tela || p.Tipo_Tela})` : ''}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${p.color_lustre || p.Color_Lustre || '-'}</td>
+                </tr>
+            `).join("");
+            
+            const ventana = window.open("", "_blank");
+            if (ventana) {
+                ventana.document.write(`
+                    <html>
+                    <head>
+                        <title>Planilla de Producción</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                            h2 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                            table { width: 100%; border-collapse: collapse; }
+                            th { background-color: #f5f5f5; padding: 12px; border: 1px solid #ccc; text-align: left; }
+                            td { font-size: 14px; }
+                            @media print { 
+                                @page { margin: 1.5cm; }
+                                body { padding: 0; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>Planilla de Producción - ${new Date().toLocaleDateString('es-AR')}</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px; text-align: center;">Cant.</th>
+                                    <th>Cliente</th>
+                                    <th>Modelo</th>
+                                    <th>Tela</th>
+                                    <th>Lustre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${productosHTML}
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `);
+                ventana.document.close();
+                ventana.focus();
+                
+                // Esperar un momento para asegurar que carguen estilos
+                setTimeout(() => {
+                    ventana.print();
+                }, 250);
+            } else {
+                alert("Por favor, permite las ventanas emergentes (pop-ups) para imprimir la planilla.");
+            }
+
+            // Actualizar el estado en el backend
             const promesas = seleccionados.map(id => {
                 const p = productos.find(prod => (prod.id_producto || prod.Id_Producto) === id);
                 return actualizarProducto(id, { ...p, estado: 'en_produccion' });
@@ -609,7 +675,11 @@ function Productos() {
                                                 const id = p.id_producto || p.Id_Producto;
                                                 const isSelected = seleccionadosTerminar.includes(id);
                                                 return (
-                                                    <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-green-50/20' : ''}`}>
+                                                    <tr 
+                                                        key={id} 
+                                                        className={`hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-green-50/20' : ''}`}
+                                                        onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}
+                                                    >
                                                         <td className="px-6 py-4 text-center">
                                                             <input
                                                                 type="checkbox"
@@ -618,11 +688,11 @@ function Productos() {
                                                                 readOnly
                                                             />
                                                         </td>
-                                                        <td className="px-4 py-4 text-sm text-gray-600" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.cliente || 'Sin cliente'}</td>
-                                                        <td className="px-4 py-4 text-sm font-bold text-gray-800" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.modelo || p.Modelo}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-800 font-bold text-center" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.cantidad || p.Cantidad}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-400" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.tela || p.Tela || '-'}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-600" onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}>{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
+                                                        <td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
+                                                        <td className="px-4 py-4 text-sm font-bold text-gray-800">{p.modelo || p.Modelo}</td>
+                                                        <td className="px-4 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td>
+                                                        <td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
+                                                        <td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
                                                     </tr>
                                                 );
                                             })

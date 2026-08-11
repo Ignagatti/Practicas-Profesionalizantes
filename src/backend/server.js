@@ -27,7 +27,10 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 
+const path = require("path");
+
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // =====================================================
 // RUTAS
@@ -68,39 +71,18 @@ app.use(
 );
 
 // =====================================================
-// COMPROBAR CONEXIÓN CON POSTGRESQL
+// COMPROBAR CONEXIÓN CON POSTGRESQL E INICIAR SERVIDOR
 // =====================================================
 
 pool.query("SELECT NOW()")
     .then(() => {
-
-        console.log("---");
-        console.log("🚀 SERVIDOR ACTUALIZADO E INICIADO");
-        console.log("✅ Ruta /api/facturasProveedor LISTA");
-        console.log("✅ Ruta /api/pagos LISTA");
-        console.log("✅ Ruta /api/estados-pago LISTA");
-        console.log("✅ Ruta /api/saldos LISTA");
-        console.log("---");
-
+        app.listen(PORT, () => {
+            console.log(`El servidor se conectó a la Base de Datos correctamente en el puerto ${PORT}`);
+        });
     })
     .catch((error) => {
-
         console.error(
-            "Error al conectar a la base de datos:",
+            "Error general: No se pudo conectar a la base de datos PostgreSQL:",
             error
         );
-
     });
-
-
-// =====================================================
-// INICIAR SERVIDOR
-// =====================================================
-
-app.listen(PORT, () => {
-
-    console.log(
-        `Servidor backend corriendo en el puerto ${PORT}`
-    );
-
-});

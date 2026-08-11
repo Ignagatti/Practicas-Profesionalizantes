@@ -96,7 +96,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   const productosTerminados    = productos.filter((p) => p.estado === "terminado").length;
   const productosEnProduccion  = productos.filter((p) => p.estado === "en-produccion").length;
   const totalFacturacion       = productos.reduce(
-    (sum, p) => sum + p.precio_unitario * p.cantidad, 0
+    (sum, p) => sum + (Number(p.precio || p.Precio || 0) * Number(p.cantidad || p.Cantidad || 0)), 0
   );
 
   // ── Filtrar productos por rango de fechas ────────────────────────────────────

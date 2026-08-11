@@ -520,7 +520,7 @@ function Productos() {
                                 </div>
                                 <div className="col-span-2">
                                     <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex justify-between items-center shadow-inner">
-                                        <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Costo Total (Insumos x Cantidad)</span>
+                                        <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Costo Total</span>
                                         <span className="text-xl font-black text-green-700">$ {(Number(formData.precio) * Number(formData.cantidad || 1)).toLocaleString()}</span>
                                     </div>
                                 </div>
@@ -566,7 +566,7 @@ function Productos() {
                                 <div><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Cant.</p><p className="font-bold text-gray-800 text-lg">{selectedProducto.cantidad || selectedProducto.Cantidad}</p></div>
                                 <div className="col-span-2"><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Tela (Tipo - Nombre)</p><p className="text-gray-800 font-bold">{(selectedProducto.tipo_tela || selectedProducto.Tipo_Tela || 'Sin tipo')} - {(selectedProducto.tela || selectedProducto.Tela || 'Sin nombre')}</p></div>
                                 <div><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Lustre</p><p className="text-gray-800 font-medium">{selectedProducto.color_lustre || selectedProducto.Color_Lustre || '-'}</p></div>
-                                <div className="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p className="text-[10px] text-gray-400 font-bold uppercase mb-1 text-center">Costo Total (Insumos x Cantidad)</p><p className="text-xl font-black text-gray-800 text-center">$ {(Number(selectedProducto.precio || selectedProducto.Precio || 0) * Number(selectedProducto.cantidad || selectedProducto.Cantidad || 1)).toLocaleString()}</p></div>
+                                <div className="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p className="text-[10px] text-gray-400 font-bold uppercase mb-1 text-center">Costo Total </p><p className="text-xl font-black text-gray-800 text-center">$ {(Number(selectedProducto.precio || selectedProducto.Precio || 0) * Number(selectedProducto.cantidad || selectedProducto.Cantidad || 1)).toLocaleString()}</p></div>
                             </div>
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
                                 <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 font-bold shadow-md"><Edit size={16} /> Editar</button>

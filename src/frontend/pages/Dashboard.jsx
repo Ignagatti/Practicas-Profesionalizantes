@@ -191,7 +191,6 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         <StatCard
           title="Productos Pendientes"
           value={productosPendientes.toString()}
-          change={`${productosEnProduccion} en producción`}
           icon={AlertCircle}
           color="bg-red-700"
         />
@@ -205,7 +204,6 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         <StatCard
           title="Productos en Producción"
           value={productosEnProduccion.toString()}
-          change={`${productosPendientes} pendientes`}
           icon={Package}
           color="bg-blue-500"
         />

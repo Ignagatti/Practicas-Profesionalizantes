@@ -10,6 +10,7 @@ import {
   Trash2,
   Download,
   FileText,
+  Calendar,
 } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api";
@@ -223,6 +224,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterEstado, setFilterEstado] = useState("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
@@ -976,13 +978,17 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     ventana.print();
   };
 
+  const pedidosFiltrados = pedidos.filter(
+    (p) => filterEstado === "todos" || p.estado_pago === filterEstado
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Ventas (Pedidos de Clientes)</h2>
           <p className="text-gray-500 text-sm mt-1">
-            {pedidos.length} pedidos registrados
+            {pedidosFiltrados.length} pedidos registrados
           </p>
         </div>
 
@@ -1024,43 +1030,66 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex flex-col lg:flex-row gap-4 items-center">
+      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 space-y-4">
+        {/* Filtros de fecha primero */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex items-center gap-2">
+            <Calendar size={20} className="text-gray-400" />
+            <span className="text-sm text-gray-600">Filtrar por fecha:</span>
+          </div>
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <label className="text-sm text-gray-700 whitespace-nowrap">Desde:</label>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(e) => setFechaDesde(e.target.value)}
+              className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+            />
+          </div>
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <label className="text-sm text-gray-700 whitespace-nowrap">Hasta:</label>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(e) => setFechaHasta(e.target.value)}
+              className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+            />
+          </div>
+          {(fechaDesde || fechaHasta) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFechaDesde("");
+                setFechaHasta("");
+              }}
+              className="text-sm text-blue-600 hover:text-blue-700 underline"
+            >
+              Limpiar fechas
+            </button>
+          )}
+        </div>
+
+        {/* Filtro de coincidencia y estado abajo */}
+        <div className="flex flex-col lg:flex-row gap-4 pt-4 border-t border-gray-100">
           <div className="relative flex-1 w-full">
             <input
               type="text"
               placeholder="Buscar por número de pedido o cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
             />
           </div>
-
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <label className="text-sm text-gray-700 whitespace-nowrap">
-              Desde:
-            </label>
-
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-              className="w-full lg:w-40 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <label className="text-sm text-gray-700 whitespace-nowrap">
-              Hasta:
-            </label>
-
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-              className="w-full lg:w-40 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
-            />
-          </div>
+          <select
+            value={filterEstado}
+            onChange={(event) => setFilterEstado(event.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+          >
+            <option value="todos">Todos los estados de pago</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="parcial">Pago parcial</option>
+            <option value="pagado">Pagado</option>
+          </select>
         </div>
       </div>
 
@@ -1098,7 +1127,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     Cargando pedidos...
                   </td>
                 </tr>
-              ) : pedidos.length === 0 ? (
+              ) : pedidosFiltrados.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="px-4 py-10 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -1113,7 +1142,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   </td>
                 </tr>
               ) : (
-                pedidos.map((pedido) => {
+                pedidosFiltrados.map((pedido) => {
                   const pagoInfo = getEstadoPagoInfo(pedido.estado_pago);
                   const facturaInfo = getEstadoFacturaInfo(pedido);
 

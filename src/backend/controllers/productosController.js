@@ -73,6 +73,13 @@ const eliminarProducto = async (req, res) => {
         res.json({ mensaje: 'Producto eliminado correctamente' });
     } catch (error) {
         console.error('Error en eliminarProducto:', error.message);
+        
+        if (error.code === '23503') {
+            return res.status(400).json({ 
+                error: 'No se puede eliminar este producto porque ya forma parte de un pedido existente.' 
+            });
+        }
+
         res.status(500).json({ error: 'Error al intentar eliminar el producto.' });
     }
 };

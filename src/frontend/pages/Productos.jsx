@@ -108,6 +108,11 @@ function Productos() {
         setShowFormModal(true);
     };
 
+    const handleOpenDetail = (p) => {
+        setSelectedProducto(p);
+        setShowDetailModal(true);
+    };
+
     const handleOpenEdit = (p) => {
         setSelectedProducto(p);
         setFormData({
@@ -420,7 +425,7 @@ function Productos() {
                                         }`}>{ (p.estado || p.Estado || "pendiente").replace('_',' ') }</span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button onClick={() => handleOpenEdit(p)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Editar / Ver"><Eye size={18} /></button>
+                                        <button onClick={() => handleOpenDetail(p)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Visualizar detalles"><Eye size={18} /></button>
                                     </td>
                                 </tr>
                             ))}
@@ -530,15 +535,6 @@ function Productos() {
                                     <>
                                         <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">Guardar Cambios</button>
                                         <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
-                                        {selectedProducto && (
-                                            <button 
-                                                type="button" 
-                                                onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} 
-                                                className="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-lg shadow-red-100 whitespace-nowrap"
-                                            >
-                                                Borrar
-                                            </button>
-                                        )}
                                     </>
                                 ) : (
                                     <>
@@ -557,7 +553,7 @@ function Productos() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6 text-left">
                     <div className="bg-white rounded-xl shadow-xl max-w-md w-full animate-in zoom-in duration-200">
                         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h3 className="text-xl text-gray-800 font-bold">Detalle del Producto</h3>
+                            <h3 className="text-xl text-gray-800 font-bold">Detalle del Producto — #{String(selectedProducto.id_producto || selectedProducto.Id_Producto).padStart(3, '0')}</h3>
                             <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-gray-100 rounded-lg font-bold"><X size={20} /></button>
                         </div>
                         <div className="p-6 space-y-4">
@@ -569,8 +565,8 @@ function Productos() {
                                 <div className="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p className="text-[10px] text-gray-400 font-bold uppercase mb-1 text-center">Costo Total </p><p className="text-xl font-black text-gray-800 text-center">$ {(Number(selectedProducto.precio || selectedProducto.Precio || 0) * Number(selectedProducto.cantidad || selectedProducto.Cantidad || 1)).toLocaleString()}</p></div>
                             </div>
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 font-bold shadow-md"><Edit size={16} /> Editar</button>
-                                <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={20} /></button>
+                                <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-bold"><Edit size={16} /> Editar</button>
+                                <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 font-bold"><Trash2 size={16} /> Eliminar</button>
                             </div>
                         </div>
                     </div>

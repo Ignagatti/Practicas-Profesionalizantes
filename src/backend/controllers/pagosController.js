@@ -179,7 +179,6 @@ const crearPago = async (req, res) => {
         if (
             !Fecha_Pago ||
             Monto === undefined ||
-            !Id_Medio_Pago ||
             !facturas ||
             !Array.isArray(facturas) ||
             facturas.length === 0
@@ -201,6 +200,12 @@ const crearPago = async (req, res) => {
                 mensaje: "Debe ingresar un monto de pago o aplicar saldo a favor."
             });
         }
+        
+        if (montoPago > 0 && !Id_Medio_Pago) {
+            return res.status(400).json({
+                mensaje: "Debe seleccionar un método de pago si el monto es mayor a cero."
+            });
+        }
 
         // =============================================
         // INICIAR TRANSACCIÓN
@@ -210,17 +215,19 @@ const crearPago = async (req, res) => {
         // =============================================
         // VERIFICAR MÉTODO DE PAGO
         // =============================================
-        const metodoPago = await client.query(
-            `
-            SELECT *
-            FROM Metodo_Pago
-            WHERE Id_Medio_Pago = $1
-            `,
-            [Id_Medio_Pago]
-        );
+        if (montoPago > 0) {
+            const metodoPago = await client.query(
+                `
+                SELECT *
+                FROM Metodo_Pago
+                WHERE Id_Medio_Pago = $1
+                `,
+                [Id_Medio_Pago]
+            );
 
-        if (metodoPago.rows.length === 0) {
-            throw new Error("El método de pago seleccionado no existe.");
+            if (metodoPago.rows.length === 0) {
+                throw new Error("El método de pago seleccionado no existe.");
+            }
         }
 
         // =============================================

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Search,
   Plus,
@@ -623,6 +623,35 @@ export default function Pagos() {
     (Number(newPago.monto || 0) + Number(newPago.monto_favor_usado || 0)) -
     montoAplicadoFormulario;
 
+  const previos = useRef({ montoAplicado: 0, idProveedor: "" });
+
+  useEffect(() => {
+    if (previos.current.montoAplicado !== montoAplicadoFormulario || previos.current.idProveedor !== newPago.id_proveedor) {
+      previos.current.montoAplicado = montoAplicadoFormulario;
+      previos.current.idProveedor = newPago.id_proveedor;
+
+      if (!newPago.id_proveedor) {
+        setNewPago(prev => ({ ...prev, monto_favor_usado: "" }));
+        return;
+      }
+      
+      const lista = tipoVista === "proveedor" ? proveedoresTotales : clientesTotales;
+      const entidadSeleccionada = lista.find(e => 
+        String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
+      );
+      const totalCredito = entidadSeleccionada ? Number(entidadSeleccionada.total_a_favor || 0) : 0;
+      
+      const favorUsar = Math.min(totalCredito, montoAplicadoFormulario);
+      const restanteAPagar = montoAplicadoFormulario > totalCredito ? (montoAplicadoFormulario - totalCredito) : 0;
+
+      setNewPago(prev => ({
+        ...prev,
+        monto_favor_usado: favorUsar > 0 ? favorUsar : "",
+        monto: restanteAPagar > 0 ? restanteAPagar : ""
+      }));
+    }
+  }, [montoAplicadoFormulario, newPago.id_proveedor, tipoVista, proveedoresTotales, clientesTotales]);
+
 
   // =====================================================
   // MENSAJES
@@ -792,7 +821,7 @@ export default function Pagos() {
       return;
     }
 
-    if (!newPago.id_medio_pago) {
+    if (!newPago.id_medio_pago && montoEfectivo > 0) {
       setErrorForm(
         "Seleccioná un método de pago."
       );
@@ -1648,49 +1677,7 @@ export default function Pagos() {
                   </div>
                 </div>
 
-                {(() => {
-                  const lista = tipoVista === "proveedor" ? proveedoresTotales : clientesTotales;
-                  const entidadSeleccionada = lista.find(e => 
-                    String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
-                  );
-                  const totalCredito = entidadSeleccionada ? Number(entidadSeleccionada.total_a_favor || 0) : 0;
-                  
-                  if (totalCredito > 0) {
-                    return (
-                      <div className="col-span-1 sm:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-3.5 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-semibold text-blue-800 flex items-center gap-1.5">
-                            <Wallet className="h-4 w-4 shrink-0" />
-                            Saldo a favor disponible: ${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </p>
-                          <p className="text-xs text-blue-600">
-                            Podés aplicar este saldo para pagar las facturas/pedidos seleccionados.
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <label className="text-xs font-medium text-blue-700 whitespace-nowrap">Usar saldo a favor ($):</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max={totalCredito}
-                            step="0.01"
-                            value={newPago.monto_favor_usado || ""}
-                            onChange={(event) => {
-                              const val = event.target.value;
-                              setNewPago((prev) => ({
-                                ...prev,
-                                monto_favor_usado: val
-                              }));
-                            }}
-                            className="w-full sm:w-32 px-3 py-1.5 border border-blue-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                            placeholder="0,00"
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
+
               </div>
 
 
@@ -1875,13 +1862,13 @@ export default function Pagos() {
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-600">
-                    Monto aplicado
+                    Total a pagar
                   </p>
 
                   <p className="text-xl text-blue-800">
                     $
                     {formatearDinero(
-                      montoAplicadoFormulario
+                      Math.max(0, montoAplicadoFormulario - Number(newPago.monto_favor_usado || 0))
                     )}
                   </p>
                 </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import logoAcuaber from './assets/logo-acuaber.png';
 import { 
     LayoutGrid, 
     Package, 
@@ -21,12 +22,12 @@ const Sidebar = ({ seccionActual, setSeccion }) => {
     ];
 
     return (
-        <div className="w-64 min-h-screen bg-[#8b0000] text-white flex flex-col fixed left-0 top-0">
+        <div className="w-64 min-h-screen bg-[#8b0000] text-white flex flex-col fixed left-0 top-0 border-r border-black">
             {/* Logo y Título */}
-            <div className="p-6 border-b border-red-900">
-                <h1 className="text-2xl font-bold">AcuApp</h1>
-                <p className="text-xs text-red-200">Sistema de Gestión</p>
-                <p className="text-[10px] text-red-300 mt-1">Acuaber - Esperanza, Santa Fe</p>
+            <div className="p-6 bg-white border-b border-gray-200 flex flex-col items-center text-center shadow-sm">
+                <img src={logoAcuaber} alt="Acuaber Logo" className="h-16 w-auto object-contain mb-3" />
+                <p className="text-xs text-gray-700 font-medium">Sistema de Gestión</p>
+                <p className="text-[10px] text-gray-500 mt-1">Esperanza, Santa Fe</p>
             </div>
 
             {/* Menú de Navegación */}

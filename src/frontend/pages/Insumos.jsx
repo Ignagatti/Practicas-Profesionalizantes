@@ -107,11 +107,11 @@ function Insumos() {
     });
 
     return (
-        <div className="space-y-8 px-8 py-6">
+        <div className="space-y-6">
             {/* Header Principal */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl text-gray-800 font-bold tracking-tight">Lista de Precios</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Lista de Precios</h2>
                     <p className="text-gray-500 text-sm mt-1">{filteredInsumos.length} insumos registrados</p>
                 </div>
                 <div className="flex gap-2">
@@ -157,11 +157,11 @@ function Insumos() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr className="text-xs text-gray-500 uppercase tracking-tight font-bold">
-                                <th className="px-6 py-4">CATEGORÍA</th>
-                                <th className="px-6 py-4">NOMBRE DEL INSUMO</th>
-                                <th className="px-6 py-4">PRECIO UNITARIO</th>
-                                <th className="px-6 py-4 text-right">ACCIONES</th>
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CATEGORÍA</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">NOMBRE DEL INSUMO</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PRECIO UNITARIO</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -176,10 +176,10 @@ function Insumos() {
                                             {i.categoria || i.Categoria}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold">
+                                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
                                         {i.nombre || i.Nombre}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold">
+                                    <td className="px-6 py-4 text-sm text-gray-800">
                                         $ {(Number(i.precio_unitario || i.Precio_Unitario) || 0).toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 text-right">

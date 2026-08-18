@@ -1127,7 +1127,7 @@ export default function Pagos() {
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800">
             Pagos a {tipoVista === "proveedor" ? "proveedores" : "clientes"}
           </h2>
 
@@ -1314,35 +1314,35 @@ export default function Pagos() {
             <table className="w-full">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     N.º pago
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Fecha
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Monto
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Aplicado
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Restante
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Método
                   </th>
 
-                  <th className="text-left p-3">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
 
-                  <th className="text-right p-3">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -1371,38 +1371,38 @@ export default function Pagos() {
                       key={pago.id_pago_insumo}
                       className="border-t hover:bg-gray-50"
                     >
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         P-
                         {String(
                           pago.id_pago_insumo
                         ).padStart(4, "0")}
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatearFecha(
                           pago.fecha_pago
                         )}
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${formatearDinero(
                           pago.monto
                         )}
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${formatearDinero(
                           montoAplicado
                         )}
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${formatearDinero(
                           pago.monto_restante
                         )}
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
                             configMetodo?.color ||
@@ -1415,7 +1415,7 @@ export default function Pagos() {
                         </span>
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
                             configEstado?.color ||
@@ -1427,7 +1427,7 @@ export default function Pagos() {
                         </span>
                       </td>
 
-                      <td className="p-3">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex justify-end gap-2">
                           <button
                             type="button"
@@ -1473,7 +1473,7 @@ export default function Pagos() {
           <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-2xl text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800">
                   Registrar pago
                 </h2>
 
@@ -1709,23 +1709,23 @@ export default function Pagos() {
                       <table className="w-full">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Seleccionar
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               {tipoVista === "proveedor" ? "Factura" : "Pedido"}
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Estado
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Adeudado
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Monto a aplicar
                             </th>
                           </tr>
@@ -1757,7 +1757,7 @@ export default function Pagos() {
                                   }
                                   className="border-t"
                                 >
-                                  <td className="p-3">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <input
                                       type="checkbox"
                                       checked={
@@ -1772,13 +1772,13 @@ export default function Pagos() {
                                     />
                                   </td>
 
-                                  <td className="p-3">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {
                                       factura.nro_factura_proveedor
                                     }
                                   </td>
 
-                                  <td className="p-3">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <span
                                       className={`px-2 py-1 rounded-full text-xs ${
                                         estadoPagoConfig[
@@ -1794,14 +1794,14 @@ export default function Pagos() {
                                     </span>
                                   </td>
 
-                                  <td className="p-3">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     $
                                     {formatearDinero(
                                       factura.monto_adeudado
                                     )}
                                   </td>
 
-                                  <td className="p-3">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <input
                                       type="number"
                                       min="0.01"
@@ -1948,7 +1948,7 @@ export default function Pagos() {
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div>
-                <h2 className="text-2xl text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800">
                   Pago P-
                   {String(
                     viewingPago.id_pago_insumo
@@ -2070,19 +2070,19 @@ export default function Pagos() {
                       <table className="w-full">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Factura
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Monto usado
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Saldo actual
                             </th>
 
-                            <th className="p-3 text-left">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Estado actual
                             </th>
                           </tr>
@@ -2095,27 +2095,27 @@ export default function Pagos() {
                                 key={`${viewingPago.id_pago_insumo}-${detalle.id_factura_proveedor}`}
                                 className="border-t"
                               >
-                                <td className="p-3">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   {
                                     detalle.nro_factura_proveedor
                                   }
                                 </td>
 
-                                <td className="p-3">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   $
                                   {formatearDinero(
                                     detalle.monto_usado
                                   )}
                                 </td>
 
-                                <td className="p-3">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   $
                                   {formatearDinero(
                                     detalle.monto_adeudado
                                   )}
                                 </td>
 
-                                <td className="p-3">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs ${
                                       estadoPagoConfig[

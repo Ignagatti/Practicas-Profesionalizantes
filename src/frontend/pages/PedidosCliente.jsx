@@ -957,10 +957,10 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           <table>
             <thead>
               <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio Unit.</th>
-                <th>Subtotal</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Producto</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cantidad</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Precio Unit.</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subtotal</th>
               </tr>
             </thead>
             <tbody>
@@ -1098,25 +1098,25 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Nº Pedido
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Fecha
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Pago
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Factura
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Total
                 </th>
-                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase"></th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"></th>
               </tr>
             </thead>
 
@@ -1151,19 +1151,19 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       key={pedido.id_pedido}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                         PED-{String(pedido.id_pedido).padStart(3, "0")}
                       </td>
 
-                      <td className="px-3 py-3 text-sm text-gray-800">
+                      <td className="px-6 py-4 text-sm text-gray-800">
                         {getNombreCliente(pedido)}
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {formatearFecha(pedido.fecha_generacion)}
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${pagoInfo.color}`}
                         >
@@ -1171,7 +1171,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         </span>
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${facturaInfo.color}`}
                         >
@@ -1179,11 +1179,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         </span>
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                         ${formatearPrecio(pedido.precio_total)}
                       </td>
 
-                      <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           onClick={() => handleView(pedido)}
                           className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
@@ -1854,20 +1854,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs text-gray-500">
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Producto
                         </th>
-                        <th className="px-4 py-2 text-left text-xs text-gray-500">
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Cantidad
                         </th>
-                        <th className="px-4 py-2 text-left text-xs text-gray-500">
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Precio Unit.
                         </th>
-                        <th className="px-4 py-2 text-right text-xs text-gray-500">
+                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                           Subtotal
                         </th>
                         {isEditingPedido && (
-                          <th className="px-4 py-2 text-right text-xs text-gray-500">
+                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Acción
                           </th>
                         )}
@@ -1877,25 +1877,25 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     <tbody className="divide-y divide-gray-200">
                       {selectedPedido.productos?.map((producto) => (
                         <tr key={producto.id_producto}>
-                          <td className="px-4 py-2 text-sm text-gray-800">
+                          <td className="px-6 py-4 text-sm text-gray-800">
                             PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
                             {getDescripcionProducto(producto)}
                           </td>
 
-                          <td className="px-4 py-2 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-gray-600">
                             {producto.cantidad}
                           </td>
 
-                          <td className="px-4 py-2 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-gray-600">
                             ${formatearPrecio(producto.precio)}
                           </td>
 
-                          <td className="px-4 py-2 text-sm text-right text-gray-800">
+                          <td className="px-6 py-4 text-sm text-right text-gray-800">
                             ${formatearPrecio(getSubtotalProducto(producto))}
                           </td>
 
                           {isEditingPedido && (
-                            <td className="px-4 py-2 text-right">
+                            <td className="px-6 py-4 text-right">
                               <button
                                 onClick={() =>
                                   quitarProductoDelPedido(producto.id_producto)
@@ -1924,19 +1924,19 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     <table className="w-full bg-white">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs text-gray-500 font-semibold">
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Fecha
                           </th>
-                          <th className="px-4 py-2 text-left text-xs text-gray-500 font-semibold">
+                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Medio de Pago
                           </th>
-                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Monto Anterior
                           </th>
-                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Monto Abonado
                           </th>
-                          <th className="px-4 py-2 text-right text-xs text-gray-500 font-semibold">
+                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Monto Restante
                           </th>
                         </tr>
@@ -1951,19 +1951,19 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             const montoRestante = balanceAcumulado;
                             return (
                               <tr key={pago.id_pago_pedido || idx}>
-                                <td className="px-4 py-2 text-sm text-gray-800">
+                                <td className="px-6 py-4 text-sm text-gray-800">
                                   {formatearFecha(pago.fecha_pago)}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-gray-600 capitalize">
+                                <td className="px-6 py-4 text-sm text-gray-600 capitalize">
                                   {pago.medio_pago || "Efectivo"}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-right text-gray-600">
+                                <td className="px-6 py-4 text-sm text-right text-gray-600">
                                   ${formatearPrecio(montoAnterior)}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-right text-green-600 font-medium">
+                                <td className="px-6 py-4 text-sm text-right text-green-600 font-medium">
                                   ${formatearPrecio(pago.monto_usado)}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-right text-gray-800 font-semibold">
+                                <td className="px-6 py-4 text-sm text-right text-gray-800 font-semibold">
                                   ${formatearPrecio(Math.max(0, montoRestante))}
                                 </td>
                               </tr>

@@ -662,7 +662,7 @@ export function Saldos() {
 
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800">
             Saldos de proveedores
           </h2>
 
@@ -885,27 +885,27 @@ export function Saldos() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Proveedor
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Facturas pendientes
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Saldo guardado
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Saldo calculado
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Verificación
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
 
@@ -926,12 +926,12 @@ export function Saldos() {
                       className="hover:bg-gray-50 transition-colors"
                     >
 
-                      <td className="px-4 py-3 text-sm text-gray-800">
+                      <td className="px-6 py-4 text-sm text-gray-800">
                         {saldo.proveedor}
                       </td>
 
 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {saldo.cantidad_facturas_pendientes >
                         0 ? (
                           <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
@@ -952,7 +952,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         $
                         {formatearDinero(
                           saldo.saldo_guardado
@@ -960,7 +960,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div
                           className={`flex items-center gap-1 ${
                             saldo.saldo_calculado > 0
@@ -979,7 +979,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {coincide ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                             <CheckCircle size={13} />
@@ -996,7 +996,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                         <button
                           type="button"
                           onClick={() =>
@@ -1236,27 +1236,27 @@ export function Saldos() {
                         <thead className="bg-gray-50 border-b border-gray-200">
                           <tr>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Factura
                             </th>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Emisión
                             </th>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Vencimiento
                             </th>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Total
                             </th>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Adeudado
                             </th>
 
-                            <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                               Estado
                             </th>
 
@@ -1275,14 +1275,14 @@ export function Saldos() {
                                 className="hover:bg-gray-50 transition-colors"
                               >
 
-                                <td className="px-4 py-3 text-sm text-gray-800">
+                                <td className="px-6 py-4 text-sm text-gray-800">
                                   {
                                     factura.nro_factura_proveedor
                                   }
                                 </td>
 
 
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   <div className="flex items-center gap-1">
                                     <Calendar size={14} />
 
@@ -1293,14 +1293,14 @@ export function Saldos() {
                                 </td>
 
 
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   {formatearFecha(
                                     factura.vencimiento
                                   )}
                                 </td>
 
 
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                                   $
                                   {formatearDinero(
                                     factura.precio_total
@@ -1308,7 +1308,7 @@ export function Saldos() {
                                 </td>
 
 
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-red-700">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-700">
                                   $
                                   {formatearDinero(
                                     factura.monto_adeudado
@@ -1316,7 +1316,7 @@ export function Saldos() {
                                 </td>
 
 
-                                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
                                   <span
                                     className={`px-2 py-1 rounded-full text-xs ${
                                       estadoConfig[

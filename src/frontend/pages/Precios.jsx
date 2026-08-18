@@ -125,7 +125,7 @@ export function Precios() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800">
             Lista de Precios - Insumos
           </h2>
         </div>
@@ -197,16 +197,16 @@ export function Precios() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Categoría
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Nombre del Insumo
                 </th>
-                <th className="px-3 py-3 text-left text-xs text-gray-500 uppercase">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Precio Unitario
                 </th>
-                <th className="px-3 py-3 text-right text-xs text-gray-500 uppercase"></th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -225,7 +225,7 @@ export function Precios() {
                     key={insumo.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-3 py-3 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           CATEGORIA_COLORS[insumo.categoria] || "bg-gray-100 text-gray-700"
@@ -234,16 +234,16 @@ export function Precios() {
                         {insumo.categoria}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                       {insumo.nombre}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-800">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                       <div className="flex items-center gap-1">
                         <DollarSign size={16} className="text-green-600" />
                         {insumo.precioUnitario.toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-right text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => {

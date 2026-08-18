@@ -522,7 +522,7 @@ export function Movimientos() {
 
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
         <div>
-          <h2 className="text-2xl text-gray-800">
+          <h2 className="text-2xl font-bold text-gray-800">
             Historial de movimientos
           </h2>
 
@@ -847,35 +847,35 @@ export function Movimientos() {
 
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Fecha
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Tipo
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Proveedor
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Referencia
                   </th>
 
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Monto
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Impacto
                   </th>
 
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -899,14 +899,14 @@ export function Movimientos() {
                         key={`${movimiento.tipo_movimiento}-${movimiento.id_movimiento}-${movimiento.id_proveedor}`}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {formatearFecha(
                             movimiento.fecha_movimiento
                           )}
                         </td>
 
 
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                               esFactura
@@ -927,7 +927,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-4 py-3 text-sm text-gray-800">
+                        <td className="px-6 py-4 text-sm text-gray-800">
                           <div className="flex items-center gap-2">
                             <Building2
                               size={15}
@@ -939,12 +939,12 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-4 py-3 text-sm text-gray-700">
+                        <td className="px-6 py-4 text-sm text-gray-700">
                           {movimiento.referencia || "—"}
                         </td>
 
 
-                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span
                             className={`px-2 py-1 rounded-full text-xs ${estado.clase}`}
                           >
@@ -953,7 +953,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium text-gray-800">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-800">
                           $
                           {formatearDinero(
                             movimiento.monto
@@ -961,7 +961,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                           <span
                             className={`inline-flex items-center justify-end gap-1 ${
                               movimiento.impacto_saldo > 0
@@ -995,7 +995,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-4 py-3 whitespace-nowrap text-right">
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
                           <button
                             type="button"
                             onClick={() =>

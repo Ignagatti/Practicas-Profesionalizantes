@@ -282,10 +282,10 @@ function Productos() {
                             <thead>
                                 <tr>
                                     <th style="width: 80px; text-align: center;">Cant.</th>
-                                    <th>Cliente</th>
-                                    <th>Modelo</th>
-                                    <th>Tela</th>
-                                    <th>Lustre</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Modelo</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tela</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Lustre</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -355,10 +355,10 @@ function Productos() {
     const lustresRegistrados = listaPrecios.filter(lp => lp.categoria === 'Lustre').map(lp => lp.nombre);
 
     return (
-        <div className="space-y-8 px-8 py-6">
+        <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl text-gray-800 font-bold">Gestión de Productos</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">Gestión de Productos</h2>
                     <p className="text-gray-500 text-sm mt-1">{filteredProductos.length} productos registrados</p>
                 </div>
                 <div className="flex gap-2">
@@ -392,15 +392,15 @@ function Productos() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr className="text-xs text-gray-500 uppercase tracking-tight font-bold">
-                                <th className="px-6 py-4">ID</th>
-                                <th className="px-6 py-4">CLIENTE</th>
-                                <th className="px-6 py-4">MODELO</th>
-                                <th className="px-6 py-4 text-center">CANT.</th>
-                                <th className="px-6 py-4">TELA / TIPO</th>
-                                <th className="px-6 py-4">LUSTRE</th>
-                                <th className="px-6 py-4">ESTADO</th>
-                                <th className="px-6 py-4 text-right">ACCIONES</th>
+                            <tr>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA / TIPO</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
+                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ESTADO</th>
+                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -408,10 +408,10 @@ function Productos() {
                                 <tr key={p.id_producto || p.Id_Producto} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 text-sm text-gray-400 font-medium">#00{idx+1}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Sin cliente'}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold">{p.modelo || p.Modelo}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">{p.modelo || p.Modelo}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-800 text-center">{p.cantidad || p.Cantidad}</td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm text-gray-800 font-bold">{p.tela || p.Tela || '-'}</div>
+                                        <div className="text-sm text-gray-800 font-medium">{p.tela || p.Tela || '-'}</div>
                                         <div className="text-[10px] text-gray-400 font-bold uppercase">{p.tipo_tela || p.Tipo_Tela || '-'}</div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.color_lustre || p.Color_Lustre || '-'}</td>
@@ -586,7 +586,7 @@ function Productos() {
                                 <table className="w-full text-left">
                                     <thead className="bg-[#f8f9fa] border-b border-gray-200">
                                         <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                            <th className="px-6 py-4 w-12 text-center">
+                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12">
                                                 <input 
                                                     type="checkbox" 
                                                     className="w-4 h-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
@@ -600,11 +600,11 @@ function Productos() {
                                                     }}
                                                 />
                                             </th>
-                                            <th className="px-4 py-4">CLIENTE</th>
-                                            <th className="px-4 py-4">MODELO</th>
-                                            <th className="px-4 py-4">CANT.</th>
-                                            <th className="px-4 py-4">TELA</th>
-                                            <th className="px-4 py-4">LUSTRE</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -612,7 +612,7 @@ function Productos() {
                                             const id = p.id_producto || p.Id_Producto;
                                             const isSelected = seleccionados.includes(id);
                                             return (
-                                                <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/20' : ''}`}><td className="px-6 py-4 text-center"><input type="checkbox" className="w-4 h-4" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td><td className="px-4 py-4 text-sm font-bold text-gray-800">{p.modelo || p.Modelo}</td><td className="px-4 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td><td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td><td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
+                                                <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/20' : ''}`}><td className="px-6 py-4 text-center"><input type="checkbox" className="w-4 h-4" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="px-6 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td><td className="px-6 py-4 text-sm font-medium text-gray-900">{p.modelo || p.Modelo}</td><td className="px-6 py-4 text-sm text-gray-800 text-center">{p.cantidad || p.Cantidad}</td><td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td><td className="px-6 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
                                             );
                                         })}
                                     </tbody>
@@ -640,7 +640,7 @@ function Productos() {
                                 <table className="w-full text-left">
                                     <thead className="bg-[#f8f9fa] border-b border-gray-200">
                                         <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                            <th className="px-6 py-4 w-12 text-center">
+                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12">
                                                 <input 
                                                     type="checkbox" 
                                                     className="w-4 h-4 rounded border-gray-300 accent-green-600 cursor-pointer"
@@ -654,11 +654,11 @@ function Productos() {
                                                     }}
                                                 />
                                             </th>
-                                            <th className="px-4 py-4">CLIENTE</th>
-                                            <th className="px-4 py-4">MODELO</th>
-                                            <th className="px-4 py-4 text-center">CANT.</th>
-                                            <th className="px-4 py-4">TELA</th>
-                                            <th className="px-4 py-4">LUSTRE</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
+                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA</th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -684,11 +684,11 @@ function Productos() {
                                                                 readOnly
                                                             />
                                                         </td>
-                                                        <td className="px-4 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
-                                                        <td className="px-4 py-4 text-sm font-bold text-gray-800">{p.modelo || p.Modelo}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-800 font-bold text-center">{p.cantidad || p.Cantidad}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
-                                                        <td className="px-4 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
+                                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.modelo || p.Modelo}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-800 text-center">{p.cantidad || p.Cantidad}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
                                                     </tr>
                                                 );
                                             })

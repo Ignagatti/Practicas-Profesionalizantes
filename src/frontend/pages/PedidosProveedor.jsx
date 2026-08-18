@@ -977,39 +977,39 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Tipo
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Nro. Comprobante
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Proveedor
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Emisión
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Vencimiento
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Total
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Adeudado
                   </th>
 
-                  <th className="px-6 py-3 text-left text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
 
-                  <th className="px-6 py-3 text-right text-xs text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>

@@ -115,23 +115,27 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   const histogramaModelos = useMemo(() => {
     const modelosMap = new Map();
     productosFiltrados.forEach((producto) => {
-      const cantidad = modelosMap.get(producto.modelo_id) || 0;
-      modelosMap.set(producto.modelo_id, cantidad + producto.cantidad);
+      const nombreModelo = producto.modelo || "Desconocido";
+      const cantidad = modelosMap.get(nombreModelo) || 0;
+      modelosMap.set(nombreModelo, cantidad + (Number(producto.cantidad) || 0));
     });
     return Array.from(modelosMap.entries())
-      .map(([modeloId, cantidad]) => ({
-        name: `${getInsumoNombre(modeloId)}-${modeloId}`,
-        modelo: getInsumoNombre(modeloId),
+      .map(([modeloName, cantidad]) => ({
+        name: modeloName,
+        modelo: modeloName,
         cantidad,
       }))
       .sort((a, b) => b.cantidad - a.cantidad);
-  }, [productosFiltrados, insumos]);
+  }, [productosFiltrados]);
 
   // ── Productos por período ────────────────────────────────────────────────────
   const productosPorMes = useMemo(() => {
     const mesesMap = new Map();
     productosFiltrados.forEach((producto) => {
+      if (!producto.fecha_pedido) return; // Ignorar productos sin fecha
       const fecha = new Date(producto.fecha_pedido);
+      if (isNaN(fecha)) return; // Ignorar fechas inválidas
+      
       let key;
       if (periodo === "diario") {
         key = fecha.toISOString().split("T")[0];
@@ -141,7 +145,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         key = String(fecha.getFullYear());
       }
       const cantidad = mesesMap.get(key) || 0;
-      mesesMap.set(key, cantidad + producto.cantidad);
+      mesesMap.set(key, cantidad + (Number(producto.cantidad) || 0));
     });
     return Array.from(mesesMap.entries())
       .map(([periodoKey, cantidad], index) => ({

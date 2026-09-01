@@ -4,8 +4,8 @@ const path = require('path');
 // Silenciar advertencias de consola no deseadas
 process.removeAllListeners('warning');
 
-// Cargar backend Node.js en el mismo proceso de la app
-require('../backend/server.js');
+// Cargar backend Node.js
+require(path.join(__dirname, '../backend/server.js'));
 
 let mainWindow;
 
@@ -22,12 +22,13 @@ function createWindow() {
     }
   });
 
-  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  const isDev = Boolean(process.env.NODE_ENV === 'development' && !app.isPackaged);
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../frontend/dist/index.html'));
+    const indexPath = path.join(app.getAppPath(), 'dist/index.html');
+    mainWindow.loadFile(indexPath);
   }
 
   mainWindow.on('closed', () => {

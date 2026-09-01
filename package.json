@@ -18,7 +18,7 @@
       "output": "dist-electron"
     },
     "files": [
-      "src/frontend/dist/**/*",
+      "dist/**/*",
       "src/backend/**/*",
       "src/electron/**/*",
       "package.json",
@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.5.0",
     "electron": "^41.3.0",
     "electron-builder": "^26.15.3",

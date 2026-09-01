@@ -1,20 +1,20 @@
 const { Pool } = require('pg');
+const path = require('path');
+const dotenv = require('dotenv');
 
-require('dotenv').config();
+// Cargar variables de entorno desde multiples ubicaciones posibles (local y empaquetado)
+dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../../.env') });
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-const pool = new Pool(
-    process.env.DATABASE_URL
-        ? {
-            connectionString: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false }
-          }
-        : {
-            user: process.env.DB_USER,
-            host: process.env.DB_HOST,
-            database: process.env.DB_NAME,
-            password: process.env.DB_PASSWORD,
-            port: process.env.DB_PORT,
-          }
-);
+// URL por defecto de la base de datos en la nube (Neon Postgres)
+const NEON_DEFAULT_URL = "postgresql://neondb_owner:npg_qDz2RFItbiA8@ep-steep-smoke-ay5b02jw-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=verify-full";
 
-module.exports = pool;
+const connectionString = process.env.DATABASE_URL || NEON_DEFAULT_URL;
+
+const pool = new Pool({
+    connectionString: connectionString,
+    ssl: { rejectUnauthorized: false }
+});
+
+module.exports = pool;

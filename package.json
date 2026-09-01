@@ -1,29 +1,60 @@
 {
   "name": "practicas-profesionalizantes",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Sistema de Gestión Administrativa - Fábrica de Sillas y Sillones",
+  "main": "src/electron/main.js",
   "scripts": {
     "backend": "node src/backend/server.js",
     "frontend": "vite src/frontend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "build:vite": "vite build src/frontend",
+    "build:exe": "npm run build:vite && electron-builder --win portable nsis",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.acuaber.gestion",
+    "productName": "SistemaGestionAcuaber",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "src/frontend/dist/**/*",
+      "src/backend/**/*",
+      "src/electron/**/*",
+      "package.json",
+      ".env"
+    ],
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ]
+    },
+    "portable": {
+      "artifactName": "SistemaGestionAcuaber-Portable.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "SistemaGestionAcuaber-Instalador.exe"
+    }
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ignagatti/Practicas-Profesionalizantes.git"
   },
-  "author": "",
+  "author": "Acuaber",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Ignagatti/Practicas-Profesionalizantes/issues"
   },
   "homepage": "https://github.com/Ignagatti/Practicas-Profesionalizantes#readme",
   "dependencies": {
+    "@neon/config": "^1.1.0",
+    "@neon/env": "^1.1.6",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "electron": "^41.3.0",
     "express": "^5.2.1",
     "lucide-react": "^1.20.0",
     "multer": "^2.2.0",
@@ -35,6 +66,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
     "autoprefixer": "^10.5.0",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.15.3",
     "nodemon": "^3.1.14",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",

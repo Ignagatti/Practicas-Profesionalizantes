@@ -12,7 +12,15 @@ thumbs.db
 
 # Datos sensibles / Variables de entorno
 .env
+.env.*
+!.env.example
 
 # Build / Salida de compilación 
 dist/
 build/
+dist-electron/
+.neon/
+
+# Agent skills & lockfiles
+.agents/
+skills-lock.json

@@ -26,8 +26,14 @@
       ".env"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        "portable",
+        "nsis"
+      ],
       "icon": "assets/logo-acuaber.ico"
+    },
+    "portable": {
+      "artifactName": "Acuaber-Portable.exe"
     },
     "nsis": {
       "oneClick": false,

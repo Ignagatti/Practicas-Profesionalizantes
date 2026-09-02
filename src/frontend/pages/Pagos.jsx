@@ -22,6 +22,19 @@ import {
 
 const API_URL = "http://localhost:4000/api";
 
+function parseNum(val) {
+  if (typeof val === "number") return isNaN(val) ? 0 : val;
+  if (!val) return 0;
+  let str = String(val).trim();
+  if (str.includes(",") && str.includes(".")) {
+    str = str.replace(/\./g, "").replace(",", ".");
+  } else if (str.includes(",")) {
+    str = str.replace(",", ".");
+  }
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
 /*
   Estos identificadores deben coincidir con los registros
   existentes en la tabla Metodo_Pago.
@@ -158,29 +171,12 @@ function formatearFecha(fecha) {
 
 
 function obtenerNombreProveedor(datos) {
-  const razonSocial =
-    datos.razon_social ??
-    datos.Razon_Social ??
-    "";
+  const nombre = (datos.nombre ?? datos.Nombre ?? "").trim();
+  const apellido = (datos.apellido ?? datos.Apellido ?? "").trim();
+  const contacto = `${nombre} ${apellido}`.trim();
+  const razonSocial = (datos.razon_social ?? datos.Razon_Social ?? "").trim();
 
-  if (normalizarTexto(razonSocial)) {
-    return normalizarTexto(razonSocial);
-  }
-
-  const nombre =
-    datos.nombre ??
-    datos.Nombre ??
-    "";
-
-  const apellido =
-    datos.apellido ??
-    datos.Apellido ??
-    "";
-
-  const nombreCompleto =
-    `${nombre} ${apellido}`.trim();
-
-  return nombreCompleto || "Proveedor no disponible";
+  return contacto || razonSocial || "Desconocido";
 }
 
 
@@ -610,18 +606,22 @@ export default function Pagos() {
   // MONTO DEL FORMULARIO
   // =====================================================
 
-  const montoAplicadoFormulario =
+  const montoAplicadoFormulario = Math.round(
     newPago.facturas.reduce(
       (total, factura) =>
         total +
-        Number(factura.monto_usado || 0),
+        parseNum(factura.monto_usado),
       0
-    );
+    ) * 100
+  ) / 100;
 
 
-  const montoRestanteFormulario =
-    (Number(newPago.monto || 0) + Number(newPago.monto_favor_usado || 0)) -
-    montoAplicadoFormulario;
+  const montoEfectivoFormulario = Math.round(parseNum(newPago.monto) * 100) / 100;
+  const montoFavorFormulario = Math.round(parseNum(newPago.monto_favor_usado) * 100) / 100;
+
+  const montoRestanteFormulario = Math.round(
+    (montoEfectivoFormulario + montoFavorFormulario - montoAplicadoFormulario) * 100
+  ) / 100;
 
   const previos = useRef({ montoAplicado: 0, idProveedor: "" });
 
@@ -802,8 +802,8 @@ export default function Pagos() {
       return;
     }
 
-    const montoEfectivo = Number(newPago.monto || 0);
-    const montoFavor = Number(newPago.monto_favor_usado || 0);
+    const montoEfectivo = Math.round(parseNum(newPago.monto) * 100) / 100;
+    const montoFavor = Math.round(parseNum(newPago.monto_favor_usado) * 100) / 100;
 
     if (montoEfectivo < 0) {
       setErrorForm(
@@ -848,9 +848,9 @@ export default function Pagos() {
     const entidadSeleccionada = lista.find(e => 
       String(e.id_proveedor || e.id_cliente || e.Id_Proveedor || e.Id_Cliente) === String(newPago.id_proveedor)
     );
-    const totalCredito = entidadSeleccionada ? Number(entidadSeleccionada.total_a_favor || 0) : 0;
+    const totalCredito = entidadSeleccionada ? parseNum(entidadSeleccionada.total_a_favor) : 0;
     
-    if (montoFavor > totalCredito) {
+    if (montoFavor > totalCredito + 0.01) {
       setErrorForm(
         `El saldo a favor utilizado ($${montoFavor.toLocaleString('es-AR', { minimumFractionDigits: 2 })}) supera el disponible ($${totalCredito.toLocaleString('es-AR', { minimumFractionDigits: 2 })}).`
       );
@@ -870,9 +870,7 @@ export default function Pagos() {
             )
         );
 
-      const montoUsado = Number(
-        facturaSeleccionada.monto_usado
-      );
+      const montoUsado = Math.round(parseNum(facturaSeleccionada.monto_usado) * 100) / 100;
 
       if (montoUsado <= 0) {
         setErrorForm(
@@ -884,10 +882,7 @@ export default function Pagos() {
 
       if (
         facturaOriginal &&
-        montoUsado >
-          Number(
-            facturaOriginal.monto_adeudado
-          )
+        montoUsado > Math.round(parseNum(facturaOriginal.monto_adeudado) * 100) / 100 + 0.01
       ) {
         setErrorForm(
           `El monto aplicado a ${tipoVista === "proveedor" ? "la factura " + facturaOriginal.nro_factura_proveedor : "el pedido N° " + facturaOriginal.id_factura_proveedor} supera su saldo adeudado.`
@@ -897,10 +892,10 @@ export default function Pagos() {
       }
     }
 
-    const totalDisponible = montoEfectivo + montoFavor;
+    const totalDisponible = Math.round((montoEfectivo + montoFavor) * 100) / 100;
     if (
       montoAplicadoFormulario >
-      totalDisponible
+      totalDisponible + 0.01
     ) {
       setErrorForm(
         "El monto aplicado a las facturas no puede superar la suma del monto total del pago y el saldo a favor utilizado."
@@ -923,7 +918,7 @@ export default function Pagos() {
             [tipoVista === "cliente" ? "Id_Pedido" : "Id_Factura_Proveedor"]:
               Number(factura.id_factura_proveedor),
             Monto_Usado:
-              Number(factura.monto_usado),
+              Math.round(parseNum(factura.monto_usado) * 100) / 100,
           })
         ),
       };
@@ -1469,15 +1464,15 @@ export default function Pagos() {
       {/* MODAL REGISTRAR PAGO */}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200 bg-gray-50/80">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-lg font-bold text-gray-800">
                   Registrar pago
                 </h2>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   Aplicá el pago a una o varias facturas del mismo proveedor.
                 </p>
               </div>
@@ -1485,20 +1480,21 @@ export default function Pagos() {
               <button
                 type="button"
                 onClick={cerrarAdd}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
-                <X />
+                <X size={18} />
               </button>
             </div>
 
             <form
               onSubmit={handleAddPago}
-              className="p-6 space-y-6"
+              className="flex flex-col flex-1 overflow-hidden min-h-0"
             >
+              <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-left">
               {errorForm && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+                <div className="bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded-xl text-xs font-medium flex items-start gap-2">
                   <AlertCircle
-                    size={18}
+                    size={16}
                     className="mt-0.5 shrink-0"
                   />
 
@@ -1506,9 +1502,9 @@ export default function Pagos() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                 <div>
-                  <label className="block mb-2 text-sm text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Fecha del pago *
                   </label>
 
@@ -1523,12 +1519,12 @@ export default function Pagos() {
                           event.target.value,
                       }))
                     }
-                    className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Método de pago *
                   </label>
 
@@ -1544,7 +1540,7 @@ export default function Pagos() {
                           event.target.value,
                       }))
                     }
-                    className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   >
                     <option value="">
                       Seleccionar método
@@ -1564,7 +1560,7 @@ export default function Pagos() {
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     {tipoVista === "proveedor" ? "Proveedor *" : "Cliente *"}
                   </label>
 
@@ -1586,16 +1582,19 @@ export default function Pagos() {
                     {(tipoVista === "proveedor" ? proveedoresTotales : clientesTotales).map(
                       (entidad) => {
                         const idEntidad = entidad.id_proveedor || entidad.id_cliente || entidad.Id_Proveedor || entidad.Id_Cliente;
-                        const razonSocial = entidad.razon_social || entidad.Razon_Social;
-                        const nombre = entidad.nombre || entidad.Nombre || "";
-                        const apellido = entidad.apellido || entidad.Apellido || "";
+                        const razonSocial = (entidad.razon_social || entidad.Razon_Social || "").trim();
+                        const nombre = (entidad.nombre || entidad.Nombre || "").trim();
+                        const apellido = (entidad.apellido || entidad.Apellido || "").trim();
+                        const contacto = `${nombre} ${apellido}`.trim();
                         
+                        const labelMostrar = contacto || razonSocial || `ID #${idEntidad}`;
+
                         return (
                           <option
                             key={idEntidad}
                             value={idEntidad}
                           >
-                            {razonSocial ? razonSocial : `${nombre} ${apellido}`.trim()}
+                            {labelMostrar}
                           </option>
                         );
                       }
@@ -1913,14 +1912,12 @@ export default function Pagos() {
                   </p>
                 </div>
               </div>
-
-
-              <div className="flex gap-4">
+              </div>
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={cerrarAdd}
-                  disabled={guardando}
-                  className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1928,7 +1925,7 @@ export default function Pagos() {
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="flex-1 bg-red-700 text-white py-3 rounded-lg hover:bg-red-800 disabled:opacity-50"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm"
                 >
                   {guardando
                     ? "Guardando..."
@@ -1944,18 +1941,18 @@ export default function Pagos() {
       {/* MODAL DETALLE */}
 
       {showViewModal && viewingPago && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-xl font-bold text-gray-800">
                   Pago P-
                   {String(
                     viewingPago.id_pago_insumo
                   ).padStart(4, "0")}
                 </h2>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   Detalle de facturas asociadas
                 </p>
               </div>
@@ -1963,9 +1960,9 @@ export default function Pagos() {
               <button
                 type="button"
                 onClick={cerrarDetalle}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
-                <X />
+                <X size={20} />
               </button>
             </div>
 

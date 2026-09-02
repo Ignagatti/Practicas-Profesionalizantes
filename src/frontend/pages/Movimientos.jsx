@@ -1038,16 +1038,15 @@ export function Movimientos() {
       {/* MODAL DE DETALLE */}
 
       {showDetalleModal && movimientoDetalle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full">
-
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
               <div>
-                <h3 className="text-xl text-gray-800">
+                <h3 className="text-xl font-bold text-gray-800">
                   Detalle del movimiento
                 </h3>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   {movimientoDetalle.tipo_movimiento ===
                   "factura"
                     ? "Factura de proveedor"
@@ -1058,68 +1057,27 @@ export function Movimientos() {
               <button
                 type="button"
                 onClick={cerrarDetalle}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-
-            <div className="p-6">
-
+            <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 bg-white">
               {cargandoDetalle ? (
-                <div className="py-10 text-center text-gray-500">
+                <div className="p-8 text-center text-gray-500 font-medium">
                   Cargando detalle...
                 </div>
               ) : (
-                <div className="space-y-5">
-
+                <div className="space-y-6">
                   {errorDetalle && (
-                    <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                    <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
                       <AlertCircle size={18} />
-
-                      {errorDetalle}
+                      <span>{errorDetalle}</span>
                     </div>
                   )}
 
-
-                  <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-                    <div
-                      className={`p-3 rounded-lg ${
-                        movimientoDetalle.tipo_movimiento ===
-                        "factura"
-                          ? "bg-blue-100"
-                          : "bg-green-100"
-                      }`}
-                    >
-                      {movimientoDetalle.tipo_movimiento ===
-                      "factura" ? (
-                        <FileText
-                          size={24}
-                          className="text-blue-600"
-                        />
-                      ) : (
-                        <CreditCard
-                          size={24}
-                          className="text-green-600"
-                        />
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        Proveedor
-                      </p>
-
-                      <p className="text-lg text-gray-800">
-                        {movimientoDetalle.proveedor}
-                      </p>
-                    </div>
-                  </div>
-
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
                     <DetalleCampo
                       etiqueta="Identificador"
                       valor={
@@ -1187,35 +1145,30 @@ export function Movimientos() {
 
                   </div>
 
-
                   {movimientoDetalle.observaciones && (
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">
+                    <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50">
+                      <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                         Observaciones
                       </p>
-
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-800">
+                      <p className="text-sm text-gray-800">
                         {
                           movimientoDetalle.observaciones
                         }
-                      </div>
+                      </p>
                     </div>
                   )}
 
-
-                  <div className="flex justify-end pt-4 border-t border-gray-200">
+                  <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end -mx-5 -mb-5 sm:-mx-6 sm:-mb-6">
                     <button
                       type="button"
                       onClick={cerrarDetalle}
-                      className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-5 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors"
                     >
                       Cerrar
                     </button>
                   </div>
-
                 </div>
               )}
-
             </div>
 
           </div>
@@ -1233,12 +1186,12 @@ export function Movimientos() {
 
 function DetalleCampo({ etiqueta, valor }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-3">
-      <p className="text-xs text-gray-500 mb-1">
+    <div className="border border-gray-200 rounded-xl p-3 bg-gray-50/40">
+      <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
         {etiqueta}
       </p>
 
-      <p className="text-sm text-gray-800">
+      <p className="text-sm font-semibold text-gray-800">
         {valor}
       </p>
     </div>

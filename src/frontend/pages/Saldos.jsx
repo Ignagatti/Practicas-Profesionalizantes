@@ -47,29 +47,12 @@ function obtenerNombreProveedor(proveedor) {
     return "Proveedor no disponible";
   }
 
-  const razonSocial =
-    proveedor.razon_social ??
-    proveedor.Razon_Social ??
-    "";
+  const nombre = (proveedor.nombre ?? proveedor.Nombre ?? "").trim();
+  const apellido = (proveedor.apellido ?? proveedor.Apellido ?? "").trim();
+  const contacto = `${nombre} ${apellido}`.trim();
+  const razonSocial = (proveedor.razon_social ?? proveedor.Razon_Social ?? "").trim();
 
-  if (String(razonSocial).trim()) {
-    return String(razonSocial).trim();
-  }
-
-  const nombre =
-    proveedor.nombre ??
-    proveedor.Nombre ??
-    "";
-
-  const apellido =
-    proveedor.apellido ??
-    proveedor.Apellido ??
-    "";
-
-  const nombreCompleto =
-    `${nombre} ${apellido}`.trim();
-
-  return nombreCompleto || "Proveedor sin nombre";
+  return contacto || razonSocial || "Proveedor sin nombre";
 }
 
 
@@ -1039,331 +1022,162 @@ export function Saldos() {
 
 
       {/* MODAL DETALLE */}
-
       {showDetalleModal && proveedorDetalle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-
-          <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
               <div>
-                <h3 className="text-xl text-gray-800">
+                <h3 className="text-xl font-bold text-gray-800">
                   Detalle de saldo
                 </h3>
-
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   {proveedorDetalle.proveedor}
                 </p>
               </div>
 
-
               <button
                 type="button"
                 onClick={cerrarDetalle}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
-
             </div>
 
-
-            <div className="p-6 space-y-6">
-
+            <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 bg-white">
               {errorDetalle && (
-                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-medium">
                   <AlertCircle size={18} />
-
                   <span>{errorDetalle}</span>
                 </div>
               )}
 
-
               {/* RESUMEN DETALLE */}
-
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-700 mb-1">
+                <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">
                     Total facturado
                   </p>
-
-                  <p className="text-xl text-blue-800">
-                    $
-                    {formatearDinero(
-                      totalFacturadoDetalle
-                    )}
+                  <p className="text-2xl font-black text-blue-900">
+                    ${formatearDinero(totalFacturadoDetalle)}
                   </p>
                 </div>
 
-
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-700 mb-1">
+                <div className="bg-green-50/70 border border-green-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">
                     Total pagado
                   </p>
-
-                  <p className="text-xl text-green-800">
-                    $
-                    {formatearDinero(
-                      totalPagadoDetalle
-                    )}
+                  <p className="text-2xl font-black text-green-900">
+                    ${formatearDinero(totalPagadoDetalle)}
                   </p>
                 </div>
 
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-700 mb-1">
-                    Total adeudado
+                <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">
+                    Saldo pendiente
                   </p>
-
-                  <p className="text-xl text-red-800">
-                    $
-                    {formatearDinero(
-                      totalAdeudadoDetalle
-                    )}
+                  <p className="text-2xl font-black text-amber-900">
+                    ${formatearDinero(saldoPendienteDetalle)}
                   </p>
                 </div>
 
-
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <p className="text-sm text-purple-700 mb-1">
-                    Facturas pendientes
+                <div className="bg-purple-50/70 border border-purple-100 rounded-xl p-4">
+                  <p className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">
+                    Facturas registradas
                   </p>
-
-                  <p className="text-xl text-purple-800">
-                    {
-                      proveedorDetalle.cantidad_facturas_pendientes
-                    }
+                  <p className="text-2xl font-black text-purple-900">
+                    {cantidadFacturasDetalle}
                   </p>
                 </div>
-
               </div>
 
-
-              {/* COMPARACIÓN DE SALDOS */}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Saldo guardado
-                  </p>
-
-                  <p className="text-xl text-gray-800 mt-1">
-                    $
-                    {formatearDinero(
-                      proveedorDetalle.saldo_guardado
-                    )}
-                  </p>
-                </div>
-
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <p className="text-sm text-gray-500">
-                    Saldo calculado
-                  </p>
-
-                  <p className="text-xl text-gray-800 mt-1">
-                    $
-                    {formatearDinero(
-                      proveedorDetalle.saldo_calculado
-                    )}
-                  </p>
-                </div>
-
-              </div>
-
-
-              {/* FACTURAS */}
-
+              {/* TABLA FACTURAS */}
               <div>
-
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-3">
-
-                  <div>
-                    <h4 className="text-lg text-gray-800">
-                      Facturas del proveedor
-                    </h4>
-
-                    <p className="text-sm text-gray-500">
-                      Historial completo de facturación y saldos.
-                    </p>
-                  </div>
-
-
-                  <button
-                    type="button"
-                    onClick={recalcularProveedor}
-                    disabled={
-                      recalculandoProveedor ||
-                      cargandoDetalle
-                    }
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    <RefreshCw
-                      size={17}
-                      className={
-                        recalculandoProveedor
-                          ? "animate-spin"
-                          : ""
-                      }
-                    />
-
-                    {recalculandoProveedor
-                      ? "Recalculando..."
-                      : "Recalcular saldo"}
-                  </button>
-
-                </div>
-
+                <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-3">
+                  Facturas asociadas
+                </h4>
 
                 {cargandoDetalle ? (
-                  <div className="p-8 text-center text-gray-500">
+                  <div className="p-8 text-center text-gray-500 font-medium">
                     Cargando detalle...
                   </div>
                 ) : facturasDetalle.length === 0 ? (
-                  <div className="p-8 text-center text-gray-400 border border-dashed border-gray-300 rounded-lg">
+                  <div className="p-8 text-center text-gray-400 border border-dashed border-gray-300 rounded-xl">
                     Este proveedor no tiene facturas registradas.
                   </div>
                 ) : (
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-
+                  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
-
-                      <table className="w-full">
-
-                        <thead className="bg-gray-50 border-b border-gray-200">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-[11px] font-bold tracking-wider">
                           <tr>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Factura
-                            </th>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Emisión
-                            </th>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Vencimiento
-                            </th>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Total
-                            </th>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Adeudado
-                            </th>
-
-                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Estado
-                            </th>
-
+                            <th className="p-3">Factura</th>
+                            <th className="p-3">Emisión</th>
+                            <th className="p-3">Vencimiento</th>
+                            <th className="p-3 text-right">Total</th>
+                            <th className="p-3 text-right">Adeudado</th>
+                            <th className="p-3 text-center">Estado</th>
                           </tr>
                         </thead>
 
+                        <tbody className="divide-y divide-gray-200 bg-white">
+                          {facturasDetalle.map((factura) => (
+                            <tr
+                              key={factura.id_factura_proveedor}
+                              className="hover:bg-gray-50 transition-colors"
+                            >
+                              <td className="p-3 font-semibold text-gray-800">
+                                {factura.nro_factura_proveedor}
+                              </td>
 
-                        <tbody className="divide-y divide-gray-200">
+                              <td className="p-3 text-gray-600">
+                                {formatearFecha(factura.fecha_emision)}
+                              </td>
 
-                          {facturasDetalle.map(
-                            (factura) => (
-                              <tr
-                                key={
-                                  factura.id_factura_proveedor
-                                }
-                                className="hover:bg-gray-50 transition-colors"
-                              >
+                              <td className="p-3 text-gray-600">
+                                {formatearFecha(factura.fecha_vencimiento)}
+                              </td>
 
-                                <td className="px-6 py-4 text-sm text-gray-800">
-                                  {
-                                    factura.nro_factura_proveedor
-                                  }
-                                </td>
+                              <td className="p-3 text-right font-semibold text-gray-800">
+                                ${formatearDinero(factura.precio_total)}
+                              </td>
 
+                              <td className="p-3 text-right font-bold text-gray-900">
+                                ${formatearDinero(factura.monto_adeudado)}
+                              </td>
 
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar size={14} />
-
-                                    {formatearFecha(
-                                      factura.fecha_emision
-                                    )}
-                                  </div>
-                                </td>
-
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                  {formatearFecha(
-                                    factura.vencimiento
-                                  )}
-                                </td>
-
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                                  $
-                                  {formatearDinero(
-                                    factura.precio_total
-                                  )}
-                                </td>
-
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-700">
-                                  $
-                                  {formatearDinero(
-                                    factura.monto_adeudado
-                                  )}
-                                </td>
-
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                  <span
-                                    className={`px-2 py-1 rounded-full text-xs ${
-                                      estadoConfig[
-                                        factura.estado_pago
-                                      ]?.color ||
-                                      "bg-gray-100 text-gray-700"
-                                    }`}
-                                  >
-                                    {estadoConfig[
-                                      factura.estado_pago
-                                    ]?.label ||
-                                      factura.estado_pago}
-                                  </span>
-                                </td>
-
-                              </tr>
-                            )
-                          )}
-
+                              <td className="p-3 text-center">
+                                <span
+                                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                    estadoConfig[factura.estado_pago]?.color ||
+                                    "bg-gray-100 text-gray-700"
+                                  }`}
+                                >
+                                  {estadoConfig[factura.estado_pago]?.label ||
+                                    factura.estado_pago}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
-
                     </div>
                   </div>
                 )}
-
               </div>
-
-
-              {/* BOTÓN CERRAR */}
-
-              <div className="flex justify-end pt-4 border-t border-gray-200">
-
-                <button
-                  type="button"
-                  onClick={cerrarDetalle}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cerrar
-                </button>
-
-              </div>
-
             </div>
 
+            {/* BOTÓN CERRAR */}
+            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button
+                type="button"
+                onClick={cerrarDetalle}
+                className="px-5 py-2.5 bg-gray-800 text-white rounded-xl text-sm font-semibold hover:bg-gray-900 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
-
         </div>
       )}
 

@@ -76,8 +76,11 @@ app.use(
 // COMPROBAR CONEXIÓN CON POSTGRESQL E INICIAR SERVIDOR
 // =====================================================
 
+const migrate = require("./scripts/migrate");
+
 pool.query("SELECT NOW()")
-    .then(() => {
+    .then(async () => {
+        await migrate();
         app.listen(PORT, () => {
             console.log(`El servidor se conectó a la Base de Datos correctamente en el puerto ${PORT}`);
         });

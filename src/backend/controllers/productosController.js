@@ -5,7 +5,11 @@ const obtenerProductos = async (req, res) => {
     try {
         const query = `
             SELECT p.*, p.Observaciones as observaciones, 
-                   COALESCE(c.Razon_Social, c.Nombre || ' ' || c.Apellido) as cliente 
+                   CASE 
+                       WHEN NULLIF(TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, '')), '') IS NOT NULL 
+                       THEN TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, ''))
+                       ELSE c.Razon_Social 
+                   END as cliente 
             FROM Producto p 
             LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
             ORDER BY p.Id_Producto ASC

@@ -4,16 +4,16 @@
   "description": "Sistema de Gestión Administrativa - Fábrica de Sillas y Sillones",
   "main": "src/electron/main.js",
   "scripts": {
-    "backend": "node src/backend/server.js",
+    "backend": "nodemon src/backend/server.js",
     "frontend": "vite src/frontend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "build:vite": "vite build src/frontend",
-    "build:exe": "npm run build:vite && electron-builder --win portable nsis",
+    "build:exe": "powershell -Command \"Remove-Item -Recurse -Force dist-electron -ErrorAction SilentlyContinue\" && npm run build:vite && electron-builder --win",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
-    "appId": "com.acuaber.gestion",
-    "productName": "SistemaGestionAcuaber",
+    "appId": "com.tuempresa.acuaber",
+    "productName": "Acuaber",
     "directories": {
       "output": "dist-electron"
     },
@@ -21,22 +21,18 @@
       "dist/**/*",
       "src/backend/**/*",
       "src/electron/**/*",
+      "assets/**/*",
       "package.json",
       ".env"
     ],
     "win": {
-      "target": [
-        "portable",
-        "nsis"
-      ]
-    },
-    "portable": {
-      "artifactName": "SistemaGestionAcuaber-Portable.exe"
+      "target": "nsis",
+      "icon": "assets/logo-acuaber.ico"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "SistemaGestionAcuaber-Instalador.exe"
+      "artifactName": "Acuaber-Instalador.exe"
     }
   },
   "repository": {

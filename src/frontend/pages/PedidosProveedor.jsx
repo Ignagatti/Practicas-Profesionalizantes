@@ -67,28 +67,12 @@ function obtenerNombreProveedor(proveedor) {
     return "Proveedor no disponible";
   }
 
-  const razonSocial =
-    proveedor.razon_social ??
-    proveedor.Razon_Social ??
-    "";
+  const nombre = (proveedor.nombre ?? proveedor.Nombre ?? "").trim();
+  const apellido = (proveedor.apellido ?? proveedor.Apellido ?? "").trim();
+  const contacto = `${nombre} ${apellido}`.trim();
+  const razonSocial = (proveedor.razon_social ?? proveedor.Razon_Social ?? "").trim();
 
-  if (razonSocial.trim()) {
-    return razonSocial;
-  }
-
-  const nombre =
-    proveedor.nombre ??
-    proveedor.Nombre ??
-    "";
-
-  const apellido =
-    proveedor.apellido ??
-    proveedor.Apellido ??
-    "";
-
-  const nombreCompleto = `${nombre} ${apellido}`.trim();
-
-  return nombreCompleto || "Proveedor sin nombre";
+  return contacto || razonSocial || "Proveedor sin nombre";
 }
 
 
@@ -1143,17 +1127,17 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       {/* MODAL AGREGAR */}
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">
                 Agregar factura de proveedor
               </h3>
 
               <button
                 type="button"
                 onClick={cerrarAdd}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -1161,8 +1145,9 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
             <form
               onSubmit={handleAddFactura}
-              className="p-6 space-y-4"
+              className="flex flex-col flex-1 overflow-hidden min-h-0"
             >
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
               {errorForm && (
                 <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
                   {errorForm}
@@ -1242,7 +1227,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Tipo de comprobante *
                   </label>
                   <select
@@ -1254,7 +1239,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                         nro_factura_proveedor: event.target.value === 'remito' ? '' : prev.nro_factura_proveedor
                       }))
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   >
                     <option value="factura">Factura</option>
                     <option value="remito">Remito</option>
@@ -1263,7 +1248,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
                 {newFactura.tipo_comprobante === 'factura' && (
                   <div>
-                    <label className="block text-sm mb-2 text-gray-700">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                       Número de factura *
                     </label>
 
@@ -1280,14 +1265,14 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                             event.target.value,
                         }))
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                       placeholder="Ej.: A-0001-00001234"
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Precio total *
                   </label>
 
@@ -1302,13 +1287,13 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                         precio_total: event.target.value,
                       }))
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     placeholder="$ 0.00"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Fecha de emisión *
                   </label>
 
@@ -1325,12 +1310,12 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                           event.target.value,
                       }))
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
                     Fecha de vencimiento *
                   </label>
 
@@ -1394,12 +1379,13 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              </div>
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={cerrarAdd}
                   disabled={guardando}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
@@ -1407,7 +1393,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 <button
                   type="submit"
                   disabled={guardando}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm"
                 >
                   {guardando
                     ? "Guardando..."
@@ -1423,10 +1409,10 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       {/* MODAL VER / EDITAR */}
 
       {showViewModal && viewingFactura && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">
                 {isEditandoFactura
                   ? "Editar factura"
                   : "Detalle de factura"}{" "}
@@ -1439,13 +1425,13 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               <button
                 type="button"
                 onClick={cerrarVer}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-4">
               {errorForm && (
                 <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
                   {errorForm}
@@ -1742,7 +1728,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4 border-t border-gray-200">
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 {isEditandoFactura ? (
                   <>
                     <button
@@ -1752,77 +1738,34 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                         setErrorForm("");
                       }}
                       disabled={guardando}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
                     >
                       Cancelar
                     </button>
 
                     <button
                       type="button"
-                      onClick={
-                        handleSaveFacturaChanges
-                      }
+                      onClick={handleSaveFacturaChanges}
                       disabled={guardando}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm"
                     >
-                      {guardando
-                        ? "Guardando..."
-                        : "Guardar cambios"}
+                      {guardando ? "Guardando..." : "Guardar cambios"}
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       type="button"
-                      onClick={() => {
-                        const ventana = window.open("", "_blank");
-                        if (ventana) {
-                          ventana.document.write(`
-                            <html>
-                            <head>
-                              <title>Comprobante de Proveedor</title>
-                              <style>
-                                body { font-family: Arial, sans-serif; padding: 32px; color: #111827; }
-                                h1 { margin-bottom: 4px; color: #1e3a8a; }
-                                p { margin: 8px 0; font-size: 14px; }
-                                .box { border: 1px solid #d1d5db; padding: 20px; border-radius: 8px; margin-top: 20px; }
-                                .total { margin-top: 20px; font-size: 18px; font-weight: bold; }
-                              </style>
-                            </head>
-                            <body>
-                              <h1>${viewingFactura.tipo_comprobante === 'remito' ? 'Remito' : 'Factura'} de Proveedor</h1>
-                              <div class="box">
-                                <p><strong>Proveedor:</strong> ${viewingFactura.proveedor}</p>
-                                ${viewingFactura.tipo_comprobante !== 'remito' ? `<p><strong>Nro. Factura:</strong> ${viewingFactura.nro_factura_proveedor || '-'}</p>` : ''}
-                                <p><strong>Fecha de Emisión:</strong> ${formatearFecha(viewingFactura.fecha_emision)}</p>
-                                <p><strong>Vencimiento:</strong> ${formatearFecha(viewingFactura.vencimiento)}</p>
-                                <p><strong>Estado:</strong> ${estadoConfig[viewingFactura.estado_pago]?.label || viewingFactura.estado_pago}</p>
-                                <p><strong>Observaciones:</strong> ${viewingFactura.observaciones || '---'}</p>
-                                <p class="total">Monto Total: $${formatearDinero(viewingFactura.precio_total)}</p>
-                                <p class="total" style="color: #b91c1c;">Monto Adeudado: $${formatearDinero(viewingFactura.monto_adeudado)}</p>
-                              </div>
-                            </body>
-                            </html>
-                          `);
-                          ventana.document.close();
-                          ventana.focus();
-                          setTimeout(() => ventana.print(), 250);
-                        } else {
-                          alert("Por favor, permite ventanas emergentes para imprimir.");
-                        }
-                      }}
-                      className="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                      onClick={cerrarVer}
+                      className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                     >
-                      <Printer size={16} />
-                      Imprimir
+                      Cerrar
                     </button>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setIsEditandoFactura(true)
-                      }
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                      onClick={() => setIsEditandoFactura(true)}
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
                     >
                       <Edit size={16} />
                       Editar
@@ -1830,11 +1773,9 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowConfirmDeleteModal(true)
-                      }
+                      onClick={() => setShowConfirmDeleteModal(true)}
                       disabled={guardando}
-                      className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Trash2 size={16} />
                       Eliminar
@@ -1844,39 +1785,39 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Modal Confirmar Eliminación Factura */}
-          {showConfirmDeleteModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
-                  Confirmar Eliminación
-                </h3>
-                <p className="text-gray-600 text-sm mb-6">
-                  ¿Está seguro que desea eliminar este comprobante? 
-                  <br /><br />
-                  <strong>Atención:</strong> Si esta factura posee pagos registrados, el sistema impedirá su borrado de forma automática.
-                </p>
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmDeleteModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(viewingFactura.id_factura_proveedor)}
-                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    Confirmar
-                  </button>
-                </div>
-              </div>
+      {/* Modal Confirmar Eliminación Factura */}
+      {showConfirmDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-left border border-gray-100 animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-gray-800 mb-2 border-b pb-2 border-gray-100">
+              Confirmar Eliminación
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              ¿Está seguro que desea eliminar este comprobante? 
+              <br /><br />
+              <strong>Atención:</strong> Si esta factura posee pagos registrados, el sistema impedirá su borrado de forma automática.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowConfirmDeleteModal(false)}
+                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(viewingFactura?.id_factura_proveedor)}
+                className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                Eliminar
+              </button>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

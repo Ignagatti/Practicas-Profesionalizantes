@@ -344,8 +344,63 @@ const obtenerMovimientosProveedor = async (req, res) => {
             valores
         );
 
+        const resumenQuery = await db.query(
+            `
+            SELECT
+                COALESCE(
+                    (SELECT SUM(Precio_Total)
+                     FROM Factura_Proveedor
+                     WHERE Id_Proveedor = $1),
+                    0
+                ) AS total_facturado,
+
+                COALESCE(
+                    (SELECT SUM(dpc.Monto_Usado)
+                     FROM Detalle_Pago_Compra dpc
+                     JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor
+                     WHERE fp.Id_Proveedor = $1),
+                    0
+                ) AS total_pagado,
+
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado)
+                     FROM Factura_Proveedor
+                     WHERE Id_Proveedor = $1 AND Estado_Pago <> 'pagado'),
+                    0
+                ) AS saldo_pendiente,
+
+                COALESCE(
+                    (SELECT SUM(Monto_Restante)
+                     FROM Pago_Insumo
+                     WHERE Id_Pago_Insumo IN (
+                         SELECT DISTINCT dpc.Id_Pago_Insumo
+                         FROM Detalle_Pago_Compra dpc
+                         JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor
+                         WHERE fp.Id_Proveedor = $1
+                     )),
+                    0
+                ) AS saldo_a_favor,
+
+                (SELECT COUNT(*) FROM Factura_Proveedor WHERE Id_Proveedor = $1) AS cantidad_facturas,
+
+                (SELECT COUNT(DISTINCT dpc.Id_Pago_Insumo)
+                 FROM Detalle_Pago_Compra dpc
+                 JOIN Factura_Proveedor fp ON fp.Id_Factura_Proveedor = dpc.Id_Factura_Proveedor
+                 WHERE fp.Id_Proveedor = $1) AS cantidad_pagos
+            `,
+            [id]
+        );
+
         res.json({
             proveedor: proveedorExiste.rows[0],
+            resumen: resumenQuery.rows[0] || {
+                total_facturado: 0,
+                total_pagado: 0,
+                saldo_pendiente: 0,
+                saldo_a_favor: 0,
+                cantidad_facturas: 0,
+                cantidad_pagos: 0
+            },
             movimientos: movimientos.rows
         });
 
@@ -359,6 +414,221 @@ const obtenerMovimientosProveedor = async (req, res) => {
         res.status(500).json({
             mensaje:
                 "Error al obtener los movimientos del proveedor."
+        });
+
+    }
+
+};
+
+
+// =====================================================
+// OBTENER MOVIMIENTOS DE UN CLIENTE
+// =====================================================
+
+const obtenerMovimientosCliente = async (req, res) => {
+
+    const { id } = req.params;
+
+    try {
+
+        if (!Number.isInteger(Number(id))) {
+
+            return res.status(400).json({
+                mensaje: "El identificador del cliente no es válido."
+            });
+
+        }
+
+        const clienteExiste = await db.query(
+            `
+            SELECT
+                Id_Cliente,
+                Nombre,
+                Apellido,
+                Razon_Social,
+                CUIT_CUIL,
+                Telefono,
+                Email,
+                Saldo
+
+            FROM Cliente
+
+            WHERE Id_Cliente = $1
+            `,
+            [id]
+        );
+
+        if (clienteExiste.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "El cliente no existe."
+            });
+
+        }
+
+        const resumenQuery = await db.query(
+            `
+            SELECT
+                COALESCE(
+                    (SELECT SUM(Precio_Total)
+                     FROM Pedido
+                     WHERE Id_Cliente = $1),
+                    0
+                ) AS total_facturado,
+
+                COALESCE(
+                    (SELECT SUM(dpp.Monto_Usado)
+                     FROM Detalle_Pago_Pedido dpp
+                     JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido
+                     WHERE p.Id_Cliente = $1),
+                    0
+                ) AS total_pagado,
+
+                COALESCE(
+                    (SELECT SUM(Monto_Adeudado)
+                     FROM Pedido
+                     WHERE Id_Cliente = $1 AND Estado_Pago <> 'pagado'),
+                    0
+                ) AS saldo_pendiente,
+
+                COALESCE(
+                    (SELECT SUM(Monto_Restante)
+                     FROM PagoPedido
+                     WHERE Id_Pago_Pedido IN (
+                         SELECT DISTINCT dpp.Id_Pago_Pedido
+                         FROM Detalle_Pago_Pedido dpp
+                         JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido
+                         WHERE p.Id_Cliente = $1
+                     )),
+                    0
+                ) AS saldo_a_favor,
+
+                (SELECT COUNT(*) FROM Pedido WHERE Id_Cliente = $1) AS cantidad_pedidos,
+
+                (SELECT COUNT(DISTINCT dpp.Id_Pago_Pedido)
+                 FROM Detalle_Pago_Pedido dpp
+                 JOIN Pedido p ON p.Id_Pedido = dpp.Id_Pedido
+                 WHERE p.Id_Cliente = $1) AS cantidad_pagos
+            `,
+            [id]
+        );
+
+        const movimientosQuery = await db.query(
+            `
+            WITH movimientos AS (
+
+                SELECT
+                    'pedido'::text AS tipo_movimiento,
+                    p.Id_Pedido AS id_movimiento,
+                    p.Fecha_Generacion::date AS fecha_movimiento,
+                    p.Id_Cliente AS id_cliente,
+                    COALESCE(
+                        NULLIF(TRIM(c.Razon_Social), ''),
+                        CONCAT_WS(' ', c.Nombre, c.Apellido)
+                    ) AS cliente,
+                    p.Precio_Total AS monto,
+                    p.Precio_Total AS impacto_saldo,
+                    p.Estado_Pago::text AS estado_pago,
+                    CONCAT('Pedido N° ', p.Id_Pedido) AS referencia,
+                    p.Observaciones AS observaciones,
+                    NULL::integer AS id_medio_pago
+
+                FROM Pedido p
+
+                INNER JOIN Cliente c
+                    ON c.Id_Cliente = p.Id_Cliente
+
+                WHERE p.Id_Cliente = $1
+
+
+                UNION ALL
+
+
+                SELECT
+                    'pago'::text AS tipo_movimiento,
+                    pp.Id_Pago_Pedido AS id_movimiento,
+                    pp.Fecha_Pago AS fecha_movimiento,
+                    p.Id_Cliente AS id_cliente,
+                    COALESCE(
+                        NULLIF(TRIM(c.Razon_Social), ''),
+                        CONCAT_WS(' ', c.Nombre, c.Apellido)
+                    ) AS cliente,
+                    SUM(dpp.Monto_Usado) AS monto,
+                    SUM(dpp.Monto_Usado) * -1 AS impacto_saldo,
+                    pp.Estado_Pago::text AS estado_pago,
+                    STRING_AGG(
+                        DISTINCT CONCAT('Pedido N° ', p.Id_Pedido),
+                        ', '
+                    ) AS referencia,
+                    NULL::text AS observaciones,
+                    pp.Id_Medio_Pago AS id_medio_pago
+
+                FROM PagoPedido pp
+
+                INNER JOIN Detalle_Pago_Pedido dpp
+                    ON dpp.Id_Pago_Pedido = pp.Id_Pago_Pedido
+
+                INNER JOIN Pedido p
+                    ON p.Id_Pedido = dpp.Id_Pedido
+
+                INNER JOIN Cliente c
+                    ON c.Id_Cliente = p.Id_Cliente
+
+                WHERE p.Id_Cliente = $1
+
+                GROUP BY
+                    pp.Id_Pago_Pedido,
+                    pp.Fecha_Pago,
+                    pp.Estado_Pago,
+                    pp.Id_Medio_Pago,
+                    p.Id_Cliente,
+                    c.Id_Cliente,
+                    c.Razon_Social,
+                    c.Nombre,
+                    c.Apellido
+            )
+
+            SELECT
+                tipo_movimiento,
+                id_movimiento,
+                fecha_movimiento,
+                id_cliente,
+                cliente,
+                monto,
+                impacto_saldo,
+                estado_pago,
+                referencia,
+                observaciones,
+                id_medio_pago
+
+            FROM movimientos
+
+            ORDER BY
+                fecha_movimiento DESC,
+                id_movimiento DESC
+            `,
+            [id]
+        );
+
+        res.json({
+            cliente: clienteExiste.rows[0],
+            resumen: resumenQuery.rows[0] || {
+                total_facturado: 0,
+                total_pagado: 0,
+                saldo_pendiente: 0,
+                saldo_a_favor: 0,
+                cantidad_pedidos: 0,
+                cantidad_pagos: 0
+            },
+            movimientos: movimientosQuery.rows
+        });
+
+    } catch (error) {
+
+        console.error("Error al obtener movimientos del cliente:", error);
+
+        res.status(500).json({
+            mensaje: "Error al obtener los movimientos del cliente."
         });
 
     }
@@ -546,6 +816,7 @@ const obtenerMovimientoPorId = async (req, res) => {
 module.exports = {
     obtenerMovimientos,
     obtenerMovimientosProveedor,
+    obtenerMovimientosCliente,
     obtenerResumenMovimientos,
     obtenerMovimientoPorId
 };

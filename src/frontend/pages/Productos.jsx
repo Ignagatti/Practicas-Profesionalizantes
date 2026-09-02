@@ -436,20 +436,20 @@ function Productos() {
 
             {/* MODAL FORMULARIO */}
             {showFormModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200 text-left">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left border border-gray-100">
+                        <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
                             <h3 className="text-xl text-gray-800 font-bold">{isEditing ? 'Editar Producto' : 'Nuevo Producto'}</h3>
-                            <button onClick={() => setShowFormModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+                            <button onClick={() => setShowFormModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={20} /></button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Estado Selector (SOLO EDICIÓN) */}
                                 {isEditing && (
                                     <div className="col-span-2">
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Estado actual del Producto *</label>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Estado actual del Producto <span className="text-red-600 font-bold">*</span></label>
                                         <select 
-                                            className="w-full px-4 py-2 border border-blue-300 bg-blue-50/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm font-bold text-blue-800"
+                                            className="w-full px-4 py-2.5 border border-blue-300 bg-blue-50/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm font-bold text-blue-800"
                                             value={formData.estado} 
                                             onChange={(e) => setFormData({...formData, estado: e.target.value})}
                                         >
@@ -462,23 +462,31 @@ function Productos() {
                                 )}
 
                                 <div className="col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cliente *</label>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cliente <span className="text-red-600 font-bold">*</span></label>
                                     <select 
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm"
+                                        required
+                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                                         value={formData.id_cliente || ''}
                                         onChange={(e) => setFormData({...formData, id_cliente: e.target.value})}
                                     >
-                                        <option value="">Seleccionar Cliente ...</option>
-                                        {clientes.map(c => (
-                                            <option key={c.id_cliente || c.Id_Cliente} value={c.id_cliente || c.Id_Cliente}>
-                                                {c.razon_social || c.Razon_Social || `${c.nombre || c.Nombre} ${c.apellido || c.Apellido}`}
-                                            </option>
-                                        ))}
+                                        <option value="">Seleccionar Cliente...</option>
+                                        {clientes.map(c => {
+                                             const nombre = (c.nombre || c.Nombre || "").trim();
+                                             const apellido = (c.apellido || c.Apellido || "").trim();
+                                             const contacto = `${nombre} ${apellido}`.trim();
+                                             const razonSocial = (c.razon_social || c.Razon_Social || "").trim();
+                                             const label = contacto || razonSocial || `Cliente #${c.id_cliente || c.Id_Cliente}`;
+                                             return (
+                                                 <option key={c.id_cliente || c.Id_Cliente} value={c.id_cliente || c.Id_Cliente}>
+                                                     {label}
+                                                 </option>
+                                             );
+                                         })}
                                     </select>
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Modelo *</label>
-                                    <select required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm" value={formData.modelo} onChange={(e) => {
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Modelo <span className="text-red-600 font-bold">*</span></label>
+                                    <select required className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" value={formData.modelo} onChange={(e) => {
                                         const val = e.target.value;
                                         setFormData({...formData, modelo: val, precio: calcularPrecioTotal(val, formData.tipo_tela, formData.lustre)});
                                     }}>
@@ -490,8 +498,8 @@ function Productos() {
                                     </select>
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tipo de Tela *</label>
-                                    <select required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm" value={formData.tipo_tela} onChange={(e) => {
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Tipo de Tela <span className="text-red-600 font-bold">*</span></label>
+                                    <select required className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" value={formData.tipo_tela} onChange={(e) => {
                                         const val = e.target.value;
                                         setFormData({...formData, tipo_tela: val, precio: calcularPrecioTotal(formData.modelo, val, formData.lustre)});
                                     }}>
@@ -503,12 +511,12 @@ function Productos() {
                                     </select>
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nombre de Tela (Estampado/Color)</label>
-                                    <input type="text" placeholder="Ej: Pana Gris 04" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm font-medium" value={formData.nombre_tela} onChange={(e) => setFormData({...formData, nombre_tela: e.target.value})} />
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Nombre de Tela (Estampado/Color)</label>
+                                    <input type="text" placeholder="Ej: Pana Gris 04" className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" value={formData.nombre_tela} onChange={(e) => setFormData({...formData, nombre_tela: e.target.value})} />
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Lustre *</label>
-                                    <select required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm" value={formData.lustre} onChange={(e) => {
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Lustre <span className="text-red-600 font-bold">*</span></label>
+                                    <select required className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" value={formData.lustre} onChange={(e) => {
                                         const val = e.target.value;
                                         setFormData({...formData, lustre: val, precio: calcularPrecioTotal(formData.modelo, formData.tipo_tela, val)});
                                     }}>
@@ -520,28 +528,21 @@ function Productos() {
                                     </select>
                                 </div>
                                 <div className="col-span-1">
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Cantidad</label>
-                                    <input type="number" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm" value={formData.cantidad} onChange={(e) => setFormData({...formData, cantidad: e.target.value})} />
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cantidad</label>
+                                    <input type="number" required className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" value={formData.cantidad} onChange={(e) => setFormData({...formData, cantidad: e.target.value})} />
                                 </div>
                                 <div className="col-span-2">
-                                    <div className="p-4 bg-green-50 border border-green-200 rounded-xl flex justify-between items-center shadow-inner">
-                                        <span className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Costo Total</span>
+                                    <div className="p-3 bg-green-50 border border-green-200 rounded-xl flex justify-between items-center shadow-inner">
+                                        <span className="text-xs font-bold text-green-600 uppercase tracking-wider">Costo Total</span>
                                         <span className="text-xl font-black text-green-700">$ {(Number(formData.precio) * Number(formData.cantidad || 1)).toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                {isEditing ? (
-                                    <>
-                                        <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">Guardar Cambios</button>
-                                        <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg font-bold text-gray-500 whitespace-nowrap">Cancelar</button>
-                                        <button type="submit" className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-100 whitespace-nowrap">Crear Producto</button>
-                                    </>
-                                )}
+                            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
+                                <button type="button" onClick={() => setShowFormModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                                <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
+                                    {isEditing ? 'Guardar Cambios' : 'Crear Producto'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -550,24 +551,24 @@ function Productos() {
 
             {/* MODAL DETALLE */}
             {showDetailModal && selectedProducto && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6 text-left">
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h3 className="text-xl text-gray-800 font-bold">Detalle del Producto — #{String(selectedProducto.id_producto || selectedProducto.Id_Producto).padStart(3, '0')}</h3>
-                            <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-gray-100 rounded-lg font-bold"><X size={20} /></button>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-200 text-left border border-gray-100 overflow-hidden">
+                        <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+                            <h3 className="text-xl text-gray-800 font-bold">Detalle del Producto</h3>
+                            <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={20} /></button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-5 sm:p-6 space-y-4 bg-white">
                             <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Modelo</p><p className="font-bold text-gray-800">{selectedProducto.modelo || selectedProducto.Modelo}</p></div>
-                                <div><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Cant.</p><p className="font-bold text-gray-800 text-lg">{selectedProducto.cantidad || selectedProducto.Cantidad}</p></div>
-                                <div className="col-span-2"><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Tela (Tipo - Nombre)</p><p className="text-gray-800 font-bold">{(selectedProducto.tipo_tela || selectedProducto.Tipo_Tela || 'Sin tipo')} - {(selectedProducto.tela || selectedProducto.Tela || 'Sin nombre')}</p></div>
-                                <div><p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Lustre</p><p className="text-gray-800 font-medium">{selectedProducto.color_lustre || selectedProducto.Color_Lustre || '-'}</p></div>
-                                <div className="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100"><p className="text-[10px] text-gray-400 font-bold uppercase mb-1 text-center">Costo Total </p><p className="text-xl font-black text-gray-800 text-center">$ {(Number(selectedProducto.precio || selectedProducto.Precio || 0) * Number(selectedProducto.cantidad || selectedProducto.Cantidad || 1)).toLocaleString()}</p></div>
+                                <div><p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Modelo</p><p className="font-bold text-gray-800">{selectedProducto.modelo || selectedProducto.Modelo}</p></div>
+                                <div><p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Cant.</p><p className="font-bold text-gray-800 text-lg">{selectedProducto.cantidad || selectedProducto.Cantidad}</p></div>
+                                <div className="col-span-2"><p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Tela (Tipo - Nombre)</p><p className="text-gray-800 font-bold">{(selectedProducto.tipo_tela || selectedProducto.Tipo_Tela || 'Sin tipo')} - {(selectedProducto.tela || selectedProducto.Tela || 'Sin nombre')}</p></div>
+                                <div><p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Lustre</p><p className="text-gray-800 font-medium">{selectedProducto.color_lustre || selectedProducto.Color_Lustre || '-'}</p></div>
+                                <div className="col-span-2 bg-gray-50 p-4 rounded-xl border border-gray-200"><p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1 text-center">Costo Total</p><p className="text-2xl font-black text-gray-800 text-center">$ {(Number(selectedProducto.precio || selectedProducto.Precio || 0) * Number(selectedProducto.cantidad || selectedProducto.Cantidad || 1)).toLocaleString()}</p></div>
                             </div>
-                            <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                <button onClick={() => handleOpenEdit(selectedProducto)} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-bold"><Edit size={16} /> Editar</button>
-                                <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 font-bold"><Trash2 size={16} /> Eliminar</button>
-                            </div>
+                        </div>
+                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
+                            <button onClick={() => handleOpenEdit(selectedProducto)} className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm"><Edit size={16} /> Editar</button>
+                            <button onClick={() => handleEliminar(selectedProducto.id_producto || selectedProducto.Id_Producto)} className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-sm"><Trash2 size={16} /> Eliminar</button>
                         </div>
                     </div>
                 </div>
@@ -575,21 +576,21 @@ function Productos() {
 
             {/* MODAL SELECCIÓN PARA IMPRESIÓN / PRODUCCIÓN */}
             {showSelectionModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6">
-                    <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200 text-left">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
+                        <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between text-left">
                             <div><h3 className="text-xl text-gray-800 font-bold">Seleccionar Productos para Producción</h3></div>
-                            <button onClick={() => setShowSelectionModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400"><X size={24} /></button>
+                            <button onClick={() => setShowSelectionModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={20} /></button>
                         </div>
-                        <div className="p-6">
+                        <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white">
                             <div className="border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
-                                <table className="w-full text-left">
-                                    <thead className="bg-[#f8f9fa] border-b border-gray-200">
-                                        <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12">
+                                <table className="w-full text-left border-collapse text-sm">
+                                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-[11px] font-bold tracking-wider">
+                                        <tr>
+                                            <th className="p-3 text-center w-12">
                                                 <input 
                                                     type="checkbox" 
-                                                    className="w-4 h-4 rounded border-gray-300 accent-blue-600 cursor-pointer"
+                                                    className="w-4 h-4 rounded border-gray-300 accent-red-700 cursor-pointer"
                                                     checked={seleccionados.length === pendientes.length && pendientes.length > 0}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
@@ -600,11 +601,11 @@ function Productos() {
                                                     }}
                                                 />
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
+                                            <th className="p-3">CLIENTE</th>
+                                            <th className="p-3">MODELO</th>
+                                            <th className="p-3 text-center">CANT.</th>
+                                            <th className="p-3">TELA</th>
+                                            <th className="p-3">LUSTRE</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -612,35 +613,38 @@ function Productos() {
                                             const id = p.id_producto || p.Id_Producto;
                                             const isSelected = seleccionados.includes(id);
                                             return (
-                                                <tr key={id} className={`hover:bg-gray-50 ${isSelected ? 'bg-blue-50/20' : ''}`}><td className="px-6 py-4 text-center"><input type="checkbox" className="w-4 h-4" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="px-6 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td><td className="px-6 py-4 text-sm font-medium text-gray-900">{p.modelo || p.Modelo}</td><td className="px-6 py-4 text-sm text-gray-800 text-center">{p.cantidad || p.Cantidad}</td><td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td><td className="px-6 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
+                                                <tr key={id} className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-red-50/20' : ''}`}><td className="p-3 text-center"><input type="checkbox" className="w-4 h-4 accent-red-700" checked={isSelected} onChange={() => setSeleccionados(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])} /></td><td className="p-3 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td><td className="p-3 text-sm font-semibold text-gray-900">{p.modelo || p.Modelo}</td><td className="p-3 text-sm text-gray-800 text-center font-bold">{p.cantidad || p.Cantidad}</td><td className="p-3 text-sm text-gray-500">{p.tela || p.Tela || '-'}</td><td className="p-3 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td></tr>
                                             );
                                         })}
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="flex justify-end gap-4"><button onClick={() => setShowSelectionModal(false)} className="px-8 py-3 border border-gray-200 rounded-xl font-bold">Cancelar</button><button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className="px-8 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold">Imprimir y Producción</button></div>
+                        </div>
+                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
+                            <button onClick={() => setShowSelectionModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                            <button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-sm">Imprimir y Producción</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* NUEVA VENTANA MODAL: SELECCIONAR PARA PASAR A TERMINADO */}
+            {/* MODAL SELECCIONAR PARA PASAR A TERMINADO */}
             {showTerminarModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6">
-                    <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200 text-left">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
+                        <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between text-left">
                             <div>
                                 <h3 className="text-xl text-gray-800 font-bold">Seleccionar Productos para Terminar</h3>
-                                <p className="text-xs text-gray-400 font-medium mt-0.5">Marcá los productos actualmente en taller para pasarlos a terminados</p>
+                                <p className="text-xs text-gray-500 font-medium mt-0.5">Marcá los productos actualmente en taller para pasarlos a terminados</p>
                             </div>
-                            <button onClick={() => setShowTerminarModal(false)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-400"><X size={24} /></button>
+                            <button onClick={() => setShowTerminarModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={20} /></button>
                         </div>
-                        <div className="p-6 text-left">
+                        <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white text-left">
                             <div className="border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm">
-                                <table className="w-full text-left">
-                                    <thead className="bg-[#f8f9fa] border-b border-gray-200">
-                                        <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
-                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12">
+                                <table className="w-full text-left border-collapse text-sm">
+                                    <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-[11px] font-bold tracking-wider">
+                                        <tr>
+                                            <th className="p-3 text-center w-12">
                                                 <input 
                                                     type="checkbox" 
                                                     className="w-4 h-4 rounded border-gray-300 accent-green-600 cursor-pointer"
@@ -654,17 +658,17 @@ function Productos() {
                                                     }}
                                                 />
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
-                                            <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA</th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
+                                            <th className="p-3">CLIENTE</th>
+                                            <th className="p-3">MODELO</th>
+                                            <th className="p-3 text-center">CANT.</th>
+                                            <th className="p-3">TELA</th>
+                                            <th className="p-3">LUSTRE</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {enProduccion.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" className="px-6 py-8 text-center text-sm font-medium text-gray-400">No hay productos en producción actualmente.</td>
+                                                <td colSpan="6" className="p-6 text-center text-sm font-medium text-gray-400">No hay productos en producción actualmente.</td>
                                             </tr>
                                         ) : (
                                             enProduccion.map(p => {
@@ -673,10 +677,10 @@ function Productos() {
                                                 return (
                                                     <tr 
                                                         key={id} 
-                                                        className={`hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-green-50/20' : ''}`}
+                                                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-green-50/30' : ''}`}
                                                         onClick={() => setSeleccionadosTerminar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}
                                                     >
-                                                        <td className="px-6 py-4 text-center">
+                                                        <td className="p-3 text-center">
                                                             <input
                                                                 type="checkbox"
                                                                 className="w-4 h-4 accent-green-600 pointer-events-none"
@@ -684,11 +688,11 @@ function Productos() {
                                                                 readOnly
                                                             />
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
-                                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.modelo || p.Modelo}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-800 text-center">{p.cantidad || p.Cantidad}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-400">{p.tela || p.Tela || '-'}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
+                                                        <td className="p-3 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
+                                                        <td className="p-3 text-sm font-semibold text-gray-900">{p.modelo || p.Modelo}</td>
+                                                        <td className="p-3 text-sm text-gray-800 text-center font-bold">{p.cantidad || p.Cantidad}</td>
+                                                        <td className="p-3 text-sm text-gray-500">{p.tela || p.Tela || '-'}</td>
+                                                        <td className="p-3 text-sm text-gray-600">{p.color_lustre || p.Color_Lustre || 'Natural'}</td>
                                                     </tr>
                                                 );
                                             })
@@ -696,51 +700,56 @@ function Productos() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="flex justify-end gap-4">
-                                <button onClick={() => setShowTerminarModal(false)} className="px-8 py-3 border border-gray-200 rounded-xl font-bold text-gray-500">Cancelar</button>
-                                <button
-                                    onClick={handlePasarATerminadosMasivo}
-                                    disabled={seleccionadosTerminar.length === 0}
-                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-md"
-                                >
-                                    Pasar a Terminado ({seleccionadosTerminar.length})
-                                </button>
-                            </div>
+                        </div>
+                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
+                            <button onClick={() => setShowTerminarModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                            <button
+                                onClick={handlePasarATerminadosMasivo}
+                                disabled={seleccionadosTerminar.length === 0}
+                                className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                Pasar a Terminado ({seleccionadosTerminar.length})
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* POPUP DE CONFIRMACIÓN / ALERTA PERSONALIZADO */}
+            {/* POPUP DE CONFIRMACIÓN ALERTA */}
             {confirmModal.show && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-[10000] p-6">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in duration-150 text-left border border-gray-100">
-                        <h3 className={`text-lg font-bold mb-2 ${confirmModal.color === 'red' ? 'text-red-700' : 'text-blue-700'}`}>
-                            {confirmModal.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-6 font-medium leading-relaxed">
-                            {confirmModal.message}
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            {confirmModal.type === 'confirm' && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-left border border-gray-100 animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
+                        <p className="text-sm text-gray-600 mb-6">{confirmModal.message}</p>
+                        <div className="flex justify-end gap-3">
+                            {confirmModal.type === 'confirm' ? (
+                                <>
+                                    <button 
+                                        onClick={() => setConfirmModal({ ...confirmModal, show: false })}
+                                        className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            if (confirmModal.onConfirm) confirmModal.onConfirm();
+                                            setConfirmModal({ ...confirmModal, show: false });
+                                        }}
+                                        className={`px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm ${
+                                            confirmModal.color === 'red' ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-600 hover:bg-blue-700'
+                                        }`}
+                                    >
+                                        Confirmar
+                                    </button>
+                                </>
+                            ) : (
                                 <button 
                                     onClick={() => setConfirmModal({ ...confirmModal, show: false })}
-                                    className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                                    className="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-bold transition-colors"
                                 >
-                                    Cancelar
+                                    Entendido
                                 </button>
                             )}
-                            <button 
-                                onClick={() => {
-                                    if (confirmModal.onConfirm) confirmModal.onConfirm();
-                                    setConfirmModal({ ...confirmModal, show: false });
-                                }}
-                                className={`px-5 py-2 rounded-lg text-sm font-bold text-white shadow-sm transition-transform active:scale-[98%] ${
-                                    confirmModal.color === 'red' ? 'bg-red-600 hover:bg-red-700 shadow-red-100' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-100'
-                                }`}
-                            >
-                                Aceptar
-                            </button>
                         </div>
                     </div>
                 </div>

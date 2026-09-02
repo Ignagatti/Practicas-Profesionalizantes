@@ -209,44 +209,44 @@ function Insumos() {
 
             {/* MODAL FORMULARIO INSUMO */}
             {showFormModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full animate-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                            <h3 className="text-xl text-gray-800 font-bold">{isEditing ? 'Editar Insumo' : 'Nuevo Insumo'}</h3>
-                            <button onClick={() => setShowFormModal(false)} className="p-2 hover:bg-gray-100 rounded-lg font-bold"><X size={20} /></button>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 text-left border border-gray-100">
+                        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+                            <h3 className="text-lg text-gray-800 font-bold">{isEditing ? 'Editar Insumo' : 'Nuevo Insumo'}</h3>
+                            <button onClick={() => setShowFormModal(false)} className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={18} /></button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="space-y-4 text-left">
+                        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-3.5 overflow-y-auto flex-1 bg-white">
+                            <div className="space-y-3.5 text-left">
                                 <div>
-                                    <label className="block text-sm mb-1 text-gray-500 font-medium tracking-tight">Categoría *</label>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Categoría <span className="text-red-600 font-bold">*</span></label>
                                     <select 
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm"
+                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                                         required value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})}
                                     >
                                         <option value="">Seleccionar...</option>
                                         {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
                                 </div>
-                                <div >
-                                    <label className="block text-sm mb-1 text-gray-500 font-medium tracking-tight">Nombre del Insumo *</label>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Nombre del Insumo <span className="text-red-600 font-bold">*</span></label>
                                     <input 
                                         type="text" required placeholder="Ej: Pana Gris Importada"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm"
+                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                                         value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                                     />
                                 </div>
-                                <div >
-                                    <label className="block text-sm mb-1 text-gray-500 font-medium tracking-tight">Precio Unitario ($) *</label>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Precio Unitario ($) <span className="text-red-600 font-bold">*</span></label>
                                     <input 
                                         type="number" required step="0.01"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm font-bold"
+                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                                         value={formData.precio_unitario} onChange={(e) => setFormData({...formData, precio_unitario: e.target.value})}
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                <button type="button" onClick={() => setShowFormModal(false)} className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-bold">Cancelar</button>
-                                <button type="submit" className="flex-1 py-3 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors text-sm font-bold shadow-lg shadow-red-100">
+                            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
+                                <button type="button" onClick={() => setShowFormModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                                <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
                                     {isEditing ? 'Guardar Cambios' : 'Crear Insumo'}
                                 </button>
                             </div>

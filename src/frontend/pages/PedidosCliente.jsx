@@ -99,13 +99,12 @@ function formatearEstado(texto) {
 }
 
 function getNombreCliente(pedido) {
-  if (pedido.razon_social) return pedido.razon_social;
-  if (pedido.Razon_Social) return pedido.Razon_Social;
+  const nombre = (pedido.nombre || pedido.Nombre || "").trim();
+  const apellido = (pedido.apellido || pedido.Apellido || "").trim();
+  const contacto = `${nombre} ${apellido}`.trim();
+  const razonSocial = (pedido.razon_social || pedido.Razon_Social || "").trim();
 
-  const nombre = pedido.nombre || pedido.Nombre || "";
-  const apellido = pedido.apellido || pedido.Apellido || "";
-
-  return `${nombre} ${apellido}`.trim();
+  return contacto || razonSocial || "-";
 }
 
 function getDescripcionProducto(producto) {
@@ -1229,302 +1228,311 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       </div>
 
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">
                   Agregar Nuevo Pedido
                 </h3>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   Seleccioná un cliente y los productos ya cargados para ese cliente.
                 </p>
               </div>
 
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleCreatePedido} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm mb-2 text-gray-700">
-                    Cliente *
-                  </label>
+            <form onSubmit={handleCreatePedido} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Cliente *
+                    </label>
 
-                  <select
-                    value={newPedido.Id_Cliente}
-                    onChange={(e) => handleSeleccionarCliente(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
-                    required
-                  >
-                    <option value="">Seleccionar cliente...</option>
+                    <select
+                      value={newPedido.Id_Cliente}
+                      onChange={(e) => handleSeleccionarCliente(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                      required
+                    >
+                      <option value="">Seleccionar cliente...</option>
 
-                    {clientes.map((cliente) => (
-                      <option key={cliente.id_cliente} value={cliente.id_cliente}>
-                        {cliente.razon_social ||
-                          `${cliente.nombre} ${cliente.apellido}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2 text-gray-700">
-                    Fecha de generación
-                  </label>
-
-                  <input
-                    type="date"
-                    value={newPedido.Fecha_Generacion}
-                    onChange={(e) => handleCambiarFechaGeneracion(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2 text-gray-700">
-                    Vencimiento
-                  </label>
-
-                  <input
-                    type="date"
-                    value={newPedido.Vencimiento}
-                    onChange={(e) =>
-                      setNewPedido({
-                        ...newPedido,
-                        Vencimiento: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm mb-2 text-gray-700">
-                    Estado de Pago
-                  </label>
-
-                  <select
-                    disabled
-                    value={newPedido.Estado_Pago}
-                    onChange={(e) =>
-                      setNewPedido({
-                        ...newPedido,
-                        Estado_Pago: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-gray-100 cursor-not-allowed"
-                  >
-                    {ESTADOS_PAGO.map((estado) => (
-                      <option key={estado} value={estado}>
-                        {formatearEstado(estado)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm mb-2 text-gray-700">
-                    Estado de Facturación
-                  </label>
-
-                  <select
-                    value={newPedido.Estado_Facturacion}
-                    onChange={(e) =>
-                      actualizarFacturacionNuevoPedido(e.target.value)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
-                  >
-                    {ESTADOS_FACTURACION.map((estado) => (
-                      <option key={estado} value={estado}>
-                        {formatearEstado(estado)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {newPedido.Estado_Facturacion !== "no_se_factura" && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FileText size={18} className="text-blue-600" />
-
-                    <h4 className="text-sm font-semibold text-gray-800">
-                      Información de factura
-                    </h4>
+                      {clientes.map((cliente) => {
+                        const nombre = (cliente.nombre || cliente.Nombre || "").trim();
+                        const apellido = (cliente.apellido || cliente.Apellido || "").trim();
+                        const contacto = `${nombre} ${apellido}`.trim();
+                        const razonSocial = (cliente.razon_social || cliente.Razon_Social || "").trim();
+                        const label = contacto || razonSocial || `Cliente #${cliente.id_cliente}`;
+                        
+                        return (
+                          <option key={cliente.id_cliente} value={cliente.id_cliente}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm mb-2 text-gray-700">
-                      Número de Factura
-                      {newPedido.Estado_Facturacion === "facturado" ? " *" : ""}
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Fecha de generación
                     </label>
 
                     <input
-                      type="text"
-                      value={newPedido.Nro_Factura}
+                      type="date"
+                      value={newPedido.Fecha_Generacion}
+                      onChange={(e) => handleCambiarFechaGeneracion(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Vencimiento
+                    </label>
+
+                    <input
+                      type="date"
+                      value={newPedido.Vencimiento}
                       onChange={(e) =>
                         setNewPedido({
                           ...newPedido,
-                          Nro_Factura: e.target.value,
+                          Vencimiento: e.target.value,
                         })
                       }
-                      placeholder="Ej: FC-001"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     />
+                  </div>
+                </div>
 
-                    {newPedido.Estado_Facturacion === "pendiente" && (
-                      <p className="text-xs text-blue-700 mt-1">
-                        Podés dejarlo vacío y cargarlo más adelante.
-                      </p>
-                    )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Estado de Pago
+                    </label>
+
+                    <select
+                      disabled
+                      value={newPedido.Estado_Pago}
+                      onChange={(e) =>
+                        setNewPedido({
+                          ...newPedido,
+                          Estado_Pago: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-gray-100 cursor-not-allowed"
+                    >
+                      {ESTADOS_PAGO.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {formatearEstado(estado)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm mb-2 text-gray-700">
-                      PDF de Factura
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                      Estado de Facturación
                     </label>
 
-                    <input
-                      type="file"
-                      accept="application/pdf"
+                    <select
+                      value={newPedido.Estado_Facturacion}
                       onChange={(e) =>
-                        handleArchivoFacturaNuevo(e.target.files?.[0])
+                        actualizarFacturacionNuevoPedido(e.target.value)
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white"
-                    />
-
-                    {newPedido.Pdf_Factura_Nombre ? (
-                      <p className="text-xs text-blue-700 mt-2">
-                        Archivo cargado: {newPedido.Pdf_Factura_Nombre}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-500 mt-2">
-                        No hay archivo cargado.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Observaciones
-                </label>
-
-                <textarea
-                  value={newPedido.Observaciones}
-                  onChange={(e) =>
-                    setNewPedido({
-                      ...newPedido,
-                      Observaciones: e.target.value,
-                    })
-                  }
-                  rows="3"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700"
-                  placeholder="Observaciones del pedido..."
-                />
-              </div>
-
-              <div className="border border-gray-300 rounded-lg overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <Package size={18} className="text-red-700" />
-
-                    <span className="text-sm text-gray-700">
-                      Productos disponibles del cliente
-                    </span>
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                    >
+                      {ESTADOS_FACTURACION.map((estado) => (
+                        <option key={estado} value={estado}>
+                          {formatearEstado(estado)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                {newPedido.Id_Cliente ? (
-                  productosDisponibles.length > 0 ? (
-                    <div className="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-                      {productosDisponibles.map((producto) => {
-                        const seleccionado = newPedido.productos.includes(
-                          producto.id_producto
-                        );
+                {newPedido.Estado_Facturacion !== "no_se_factura" && (
+                  <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FileText size={18} className="text-blue-600" />
 
-                        return (
-                          <label
-                            key={producto.id_producto}
-                            className={`flex items-start gap-3 p-4 cursor-pointer ${
-                              seleccionado ? "bg-red-50" : "hover:bg-gray-50"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={seleccionado}
-                              onChange={() => toggleProducto(producto.id_producto)}
-                              className="mt-1"
-                            />
-
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-800">
-                                PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
-                                {getDescripcionProducto(producto)}
-                              </p>
-
-                              <p className="text-xs text-gray-500 mt-1">
-                                Cantidad: {producto.cantidad} | Precio Unit.: $
-                                {formatearPrecio(producto.precio)} | Subtotal: $
-                                {formatearPrecio(getSubtotalProducto(producto))}
-                              </p>
-                            </div>
-                          </label>
-                        );
-                      })}
+                      <h4 className="text-sm font-bold text-gray-800">
+                        Información de factura
+                      </h4>
                     </div>
-                  ) : (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No hay productos disponibles para este cliente.
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                          Número de Factura
+                          {newPedido.Estado_Facturacion === "facturado" ? " *" : ""}
+                        </label>
+
+                        <input
+                          type="text"
+                          value={newPedido.Nro_Factura}
+                          onChange={(e) =>
+                            setNewPedido({
+                              ...newPedido,
+                              Nro_Factura: e.target.value,
+                            })
+                          }
+                          placeholder="Ej: FC-001"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                        />
+
+                        {newPedido.Estado_Facturacion === "pendiente" && (
+                          <p className="text-xs text-blue-700 mt-1">
+                            Podés dejarlo vacío y cargarlo más adelante.
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                          PDF de Factura
+                        </label>
+
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={(e) =>
+                            handleArchivoFacturaNuevo(e.target.files?.[0])
+                          }
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-xs bg-white text-gray-700"
+                        />
+
+                        {newPedido.Pdf_Factura_Nombre ? (
+                          <p className="text-xs text-blue-700 mt-1 font-medium">
+                            Archivo cargado: {newPedido.Pdf_Factura_Nombre}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-500 mt-1">
+                            No hay archivo cargado.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )
-                ) : (
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    Primero seleccioná un cliente.
                   </div>
                 )}
-              </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Precio Total:</span>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Observaciones
+                  </label>
 
-                  <div className="flex items-center gap-1">
-                    <DollarSign size={20} className="text-green-600" />
+                  <textarea
+                    value={newPedido.Observaciones}
+                    onChange={(e) =>
+                      setNewPedido({
+                        ...newPedido,
+                        Observaciones: e.target.value,
+                      })
+                    }
+                    rows="2"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all resize-none"
+                    placeholder="Observaciones del pedido..."
+                  />
+                </div>
 
-                    <span className="text-xl text-green-700">
-                      {formatearPrecio(calcularTotalNuevoPedido())}
-                    </span>
+                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <Package size={18} className="text-red-700" />
+
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Productos disponibles del cliente
+                      </span>
+                    </div>
+                  </div>
+
+                  {newPedido.Id_Cliente ? (
+                    productosDisponibles.length > 0 ? (
+                      <div className="divide-y divide-gray-200 max-h-52 overflow-y-auto bg-white">
+                        {productosDisponibles.map((producto) => {
+                          const seleccionado = newPedido.productos.includes(
+                            producto.id_producto
+                          );
+
+                          return (
+                            <label
+                              key={producto.id_producto}
+                              className={`flex items-start gap-3 p-3.5 cursor-pointer transition-colors ${
+                                seleccionado ? "bg-red-50/60" : "hover:bg-gray-50"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={seleccionado}
+                                onChange={() => toggleProducto(producto.id_producto)}
+                                className="mt-1 accent-red-700"
+                              />
+
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-gray-800">
+                                  PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
+                                  {getDescripcionProducto(producto)}
+                                </p>
+
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  Cantidad: <span className="font-semibold text-gray-700">{producto.cantidad}</span> | Precio Unit.: <span className="font-semibold text-gray-700">${formatearPrecio(producto.precio)}</span> | Subtotal: <span className="font-bold text-gray-800">${formatearPrecio(getSubtotalProducto(producto))}</span>
+                                </p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500 text-sm">
+                        No hay productos disponibles para este cliente.
+                      </div>
+                    )
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Primero seleccioná un cliente.
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-green-50/70 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-green-800 uppercase tracking-wider">Precio Total:</span>
+
+                    <div className="flex items-center gap-1">
+                      <DollarSign size={20} className="text-green-700" />
+
+                      <span className="text-2xl font-black text-green-800">
+                        {formatearPrecio(calcularTotalNuevoPedido())}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                 >
-                  Cerrar
+                  Cancelar
                 </button>
 
                 <button
                   type="submit"
                   disabled={newPedido.productos.length === 0}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all ${
                     newPedido.productos.length > 0
-                      ? "bg-red-700 text-white hover:bg-red-800"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
                   }`}
                 >
                   {newPedido.productos.length > 0
@@ -1538,44 +1546,44 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       )}
 
       {showViewModal && selectedPedido && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">
                   Detalle del Pedido - PED-
                   {String(selectedPedido.id_pedido).padStart(3, "0")}
                 </h3>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
                   Información general, productos incluidos y facturación.
                 </p>
               </div>
 
               <button
                 onClick={cerrarModalDetalle}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-6 text-left">
               {mensajeErrorModal && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
                   {mensajeErrorModal}
                 </div>
               )}
 
               {mensajeExitoModal && (
-                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-medium">
                   {mensajeExitoModal}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Cliente</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Cliente</p>
 
                   <p className="text-base text-gray-800 font-semibold">
                     {getNombreCliente(selectedPedido)}
@@ -1601,31 +1609,31 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500">Fecha de Generación</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Fecha de Generación</p>
 
-                  <p className="text-base text-gray-800">
+                  <p className="text-base text-gray-800 font-medium">
                     {formatearFecha(selectedPedido.fecha_generacion)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500">Vencimiento</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Vencimiento</p>
 
-                  <p className="text-base text-gray-800">
+                  <p className="text-base text-gray-800 font-medium">
                     {formatearFecha(selectedPedido.vencimiento)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500">Precio Total</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Precio Total</p>
 
-                  <p className="text-lg text-green-700 font-semibold">
+                  <p className="text-lg text-green-700 font-bold">
                     ${formatearPrecio(selectedPedido.precio_total)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500">Monto Adeudado</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Monto Adeudado</p>
 
                   <p className={`text-lg font-bold ${
                     Number(selectedPedido.monto_adeudado) > 0 ? "text-red-700" : "text-green-700"
@@ -1637,7 +1645,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Estado de Pago</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Estado de Pago</p>
 
                   {isEditingPedido ? (
                     <select
@@ -1649,7 +1657,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                           estado_pago: e.target.value,
                         })
                       }
-                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-gray-100 cursor-not-allowed"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-gray-100 cursor-not-allowed"
                     >
                       {ESTADOS_PAGO.map((estado) => (
                         <option key={estado} value={estado}>
@@ -1659,7 +1667,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     </select>
                   ) : (
                     <span
-                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
+                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
                         getEstadoPagoInfo(selectedPedido.estado_pago).color
                       }`}
                     >
@@ -1669,7 +1677,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500">Facturación</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Facturación</p>
 
                   {isEditingPedido ? (
                     <select
@@ -1678,7 +1686,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       onChange={(e) =>
                         actualizarFacturacionPedidoSeleccionado(e.target.value)
                       }
-                      className="mt-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-gray-100 cursor-not-allowed"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-gray-100 cursor-not-allowed"
                     >
                       {ESTADOS_FACTURACION.map((estado) => (
                         <option key={estado} value={estado}>
@@ -1688,26 +1696,22 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     </select>
                   ) : (
                     <span
-                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
-                        getEstadoFacturaInfo(selectedPedido)
-                          .color
+                      className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
+                        getEstadoFacturaInfo(selectedPedido).color
                       }`}
                     >
-                      {
-                        getEstadoFacturaInfo(selectedPedido)
-                          .label
-                      }
+                      {getEstadoFacturaInfo(selectedPedido).label}
                     </span>
                   )}
                 </div>
               </div>
 
               {selectedPedido.estado_facturacion !== "no_se_factura" && (
-                <div className="border border-gray-200 rounded-lg p-4 space-y-4">
+                <div className="border border-gray-200 rounded-xl p-4 space-y-4 bg-gray-50/50">
                   <div className="flex items-center gap-2">
                     <FileText size={18} className="text-blue-600" />
 
-                    <h4 className="text-sm font-semibold text-gray-800">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Información de factura
                     </h4>
                   </div>
@@ -1715,7 +1719,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   {isEditingPedido ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm mb-2 text-gray-700">
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                           Número de Factura
                           {selectedPedido.estado_facturacion === "facturado"
                             ? " *"
@@ -1732,7 +1736,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             })
                           }
                           placeholder="Ej: FC-001"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                         />
 
                         {selectedPedido.estado_facturacion === "pendiente" && (
@@ -1743,7 +1747,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       </div>
 
                       <div>
-                        <label className="block text-sm mb-2 text-gray-700">
+                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                           PDF de Factura
                         </label>
 
@@ -1753,7 +1757,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                           onChange={(e) =>
                             handleArchivoFacturaSeleccionado(e.target.files?.[0])
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-xl text-xs bg-white text-gray-700"
                         />
 
                         {selectedPedido.pdf_factura_nombre ? (
@@ -1765,7 +1769,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             <button
                               type="button"
                               onClick={eliminarPdfFacturaPedido}
-                              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs"
+                              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-xs font-semibold"
                             >
                               <Trash2 size={14} />
                               Eliminar PDF
@@ -1779,7 +1783,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4">
                       <p className="text-sm text-blue-900">
                         <strong>Número de factura:</strong>{" "}
                         {selectedPedido.nro_factura || "Sin número cargado"}
@@ -1788,9 +1792,9 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       <button
                         onClick={() => descargarFactura(selectedPedido)}
                         disabled={!selectedPedido.pdf_factura_url}
-                        className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm ${
+                        className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl transition-colors text-sm font-semibold ${
                           selectedPedido.pdf_factura_url
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
+                            ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                             : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }`}
                       >
@@ -1811,25 +1815,25 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-800">
+                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Productos del pedido
                     </h4>
                   </div>
 
-                  <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                  <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-bold">
                     {selectedPedido.productos?.length || 0} producto(s)
                   </span>
                 </div>
 
                 {isEditingPedido && selectedPedido.productos?.some(p => (p.estado || "").toLowerCase() === 'enviado') ? (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-orange-800">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-amber-800 font-medium">
                       <strong>Atención:</strong> Este pedido contiene productos enviados. No podés agregar nuevos productos.
                     </p>
                   </div>
                 ) : isEditingPedido && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                    <label className="block text-sm mb-2 text-gray-700">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
+                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">
                       Agregar producto disponible del cliente
                     </label>
 
@@ -1839,7 +1843,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         onChange={(e) =>
                           setProductoEdicionSeleccionado(e.target.value)
                         }
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                        className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                       >
                         <option value="">Seleccionar producto...</option>
 
@@ -1859,10 +1863,10 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         type="button"
                         onClick={agregarProductoAlPedido}
                         disabled={!productoEdicionSeleccionado}
-                        className={`px-4 py-2 rounded-lg transition-colors ${
+                        className={`px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all ${
                           productoEdicionSeleccionado
                             ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }`}
                       >
                         Agregar
@@ -1877,52 +1881,42 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   </div>
                 )}
 
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
+                <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50 text-gray-600 uppercase text-[11px] font-bold tracking-wider border-b border-gray-200">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Producto
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Cantidad
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Precio Unit.
-                        </th>
-                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          Subtotal
-                        </th>
+                        <th className="p-3.5">Producto</th>
+                        <th className="p-3.5">Cantidad</th>
+                        <th className="p-3.5">Precio Unit.</th>
+                        <th className="p-3.5 text-right">Subtotal</th>
                         {isEditingPedido && (
-                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Acción
-                          </th>
+                          <th className="p-3.5 text-right">Acción</th>
                         )}
                       </tr>
                     </thead>
 
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 bg-white text-sm">
                       {selectedPedido.productos?.map((producto) => (
-                        <tr key={producto.id_producto}>
-                          <td className="px-6 py-4 text-sm text-gray-800">
+                        <tr key={producto.id_producto} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-3.5 font-bold text-gray-800">
                             PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
                             {getDescripcionProducto(producto)}
                           </td>
 
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="p-3.5 text-gray-700 font-semibold">
                             {producto.cantidad}
                           </td>
 
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="p-3.5 text-gray-700 font-medium">
                             ${formatearPrecio(producto.precio)}
                           </td>
 
-                          <td className="px-6 py-4 text-sm text-right text-gray-800">
+                          <td className="p-3.5 text-right font-bold text-gray-900">
                             ${formatearPrecio(getSubtotalProducto(producto))}
                           </td>
 
                           {isEditingPedido && (
-                            <td className="px-6 py-4 text-right">
+                            <td className="p-3.5 text-right">
                               <button
                                 onClick={() =>
                                   quitarProductoDelPedido(producto.id_producto)
@@ -1942,34 +1936,24 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">
                   Historial de Pagos del Pedido
                 </h4>
 
                 {selectedPedido.pagos && selectedPedido.pagos.length > 0 ? (
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <table className="w-full bg-white">
-                      <thead className="bg-gray-50">
+                  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full bg-white text-left border-collapse">
+                      <thead className="bg-gray-50 text-gray-600 uppercase text-[11px] font-bold tracking-wider border-b border-gray-200">
                         <tr>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Fecha
-                          </th>
-                          <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Medio de Pago
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Monto Anterior
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Monto Abonado
-                          </th>
-                          <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Monto Restante
-                          </th>
+                          <th className="p-3.5">Fecha</th>
+                          <th className="p-3.5">Medio de Pago</th>
+                          <th className="p-3.5 text-right">Monto Anterior</th>
+                          <th className="p-3.5 text-right">Monto Abonado</th>
+                          <th className="p-3.5 text-right">Monto Restante</th>
                         </tr>
                       </thead>
 
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 text-sm">
                         {(() => {
                           let balanceAcumulado = Number(selectedPedido.precio_total);
                           return selectedPedido.pagos.map((pago, idx) => {
@@ -1977,20 +1961,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             balanceAcumulado -= Number(pago.monto_usado);
                             const montoRestante = balanceAcumulado;
                             return (
-                              <tr key={pago.id_pago_pedido || idx}>
-                                <td className="px-6 py-4 text-sm text-gray-800">
+                              <tr key={pago.id_pago_pedido || idx} className="hover:bg-gray-50 transition-colors">
+                                <td className="p-3.5 font-medium text-gray-800">
                                   {formatearFecha(pago.fecha_pago)}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600 capitalize">
+                                <td className="p-3.5 text-gray-700 capitalize font-medium">
                                   {pago.medio_pago || "Efectivo"}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-right text-gray-600">
+                                <td className="p-3.5 text-right text-gray-600">
                                   ${formatearPrecio(montoAnterior)}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-right text-green-600 font-medium">
+                                <td className="p-3.5 text-right text-green-600 font-bold">
                                   ${formatearPrecio(pago.monto_usado)}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-right text-gray-800 font-semibold">
+                                <td className="p-3.5 text-right text-gray-900 font-bold">
                                   ${formatearPrecio(Math.max(0, montoRestante))}
                                 </td>
                               </tr>
@@ -2001,14 +1985,14 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     </table>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center text-sm text-gray-500">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center text-sm text-gray-500 font-medium">
                     No se registran abonos para este pedido.
                   </div>
                 )}
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 mb-1">Observaciones</p>
+                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Observaciones</p>
 
                 {isEditingPedido ? (
                   <textarea
@@ -2020,71 +2004,84 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       })
                     }
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                   />
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                     <p className="text-sm text-gray-800">
                       {selectedPedido.observaciones || "Sin observaciones."}
                     </p>
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                {isEditingPedido ? (
-                  <>
-                    <button
-                      onClick={cancelarEdicionPedido}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancelar
-                    </button>
+            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
+              {isEditingPedido ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicionPedido}
+                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Cancelar
+                  </button>
 
-                    <button
-                      onClick={guardarCambiosPedido}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Edit size={16} />
-                      Guardar cambios
-                    </button>
-                    
-                    <button
-                      onClick={() => setShowConfirmDeleteModal(true)}
-                      className="flex-1 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-                      title="Eliminar Pedido"
-                    >
-                      <Trash2 size={16} />
-                      Eliminar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => descargarPdfPedido(selectedPedido)}
-                      className="flex-1 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Download size={16} />
-                      Descargar PDF del pedido
-                    </button>
+                  <button
+                    type="button"
+                    onClick={guardarCambiosPedido}
+                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    Guardar Cambios
+                  </button>
 
-                    <button
-                      onClick={cerrarModalDetalle}
-                      className="flex-1 px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
-                    >
-                      Cerrar
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmDeleteModal(true)}
+                    className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={cerrarModalDetalle}
+                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Cerrar
+                  </button>
 
-                    <button
-                      onClick={abrirEdicionPedido}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Edit size={16} />
-                      Editar pedido
-                    </button>
-                  </>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => descargarPdfPedido(selectedPedido)}
+                    className="px-4 py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Download size={16} />
+                    Descargar PDF
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={abrirEdicionPedido}
+                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Edit size={16} />
+                    Editar pedido
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmDeleteModal(true)}
+                    className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -2092,27 +2089,27 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
       {/* Modal de Confirmación de Eliminación */}
       {showConfirmDeleteModal && selectedPedido && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-left border border-gray-100 animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-gray-800 mb-2 border-b pb-2 border-gray-100">
               Confirmar Eliminación
             </h3>
             <p className="text-gray-600 text-sm mb-6">
               ¿Está seguro que desea eliminar este pedido? Esta acción no se puede deshacer. Los productos asociados quedarán libres y el saldo adeudado del cliente se revertirá si corresponde.
             </p>
-            <div className="flex gap-4">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmDeleteModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleEliminarPedido}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 <Trash2 size={16} />
-                Confirmar
+                Eliminar
               </button>
             </div>
           </div>

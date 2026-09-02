@@ -274,29 +274,29 @@ export function Precios() {
 
       {/* ── Modal: Agregar Insumo ── */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">Agregar Nuevo Insumo</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 text-left animate-in zoom-in-95 duration-200">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">Agregar Nuevo Insumo</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleAddInsumo} className="p-6 space-y-4">
+            <form onSubmit={handleAddInsumo} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Categoría *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Categoría <span className="text-red-600 font-bold">*</span>
                 </label>
                 <select
                   value={newInsumo.categoria}
                   onChange={(e) =>
                     setNewInsumo({ ...newInsumo, categoria: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   required
                 >
                   <option value="Modelo">Modelo</option>
@@ -306,8 +306,8 @@ export function Precios() {
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Nombre del Insumo *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Nombre del Insumo <span className="text-red-600 font-bold">*</span>
                 </label>
                 <input
                   type="text"
@@ -315,15 +315,15 @@ export function Precios() {
                   onChange={(e) =>
                     setNewInsumo({ ...newInsumo, nombre: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   placeholder="Ej: Silla Moderna, Tela Premium, Lustre Natural"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Precio Unitario *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Precio Unitario <span className="text-red-600 font-bold">*</span>
                 </label>
                 <div className="relative">
                   <DollarSign
@@ -339,7 +339,7 @@ export function Precios() {
                         precioUnitario: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     placeholder="0"
                     min="0"
                     step="0.01"
@@ -351,17 +351,17 @@ export function Precios() {
                 </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
                 >
                   Agregar Insumo
                 </button>
@@ -373,22 +373,22 @@ export function Precios() {
 
       {/* ── Modal: Editar Insumo ── */}
       {showEditModal && editingInsumo && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">Editar Insumo</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 text-left animate-in zoom-in-95 duration-200">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">Editar Insumo</h3>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleEditInsumo} className="p-6 space-y-4">
+            <form onSubmit={handleEditInsumo} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Categoría *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Categoría <span className="text-red-600 font-bold">*</span>
                 </label>
                 <select
                   value={editingInsumo.categoria}
@@ -398,7 +398,7 @@ export function Precios() {
                       categoria: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   required
                 >
                   <option value="Modelo">Modelo</option>
@@ -408,8 +408,8 @@ export function Precios() {
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Nombre del Insumo *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Nombre del Insumo <span className="text-red-600 font-bold">*</span>
                 </label>
                 <input
                   type="text"
@@ -420,14 +420,14 @@ export function Precios() {
                       nombre: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm mb-2 text-gray-700">
-                  Precio Unitario *
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Precio Unitario <span className="text-red-600 font-bold">*</span>
                 </label>
                 <div className="relative">
                   <DollarSign
@@ -443,7 +443,7 @@ export function Precios() {
                         precioUnitario: parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     min="0"
                     step="0.01"
                     required
@@ -451,17 +451,17 @@ export function Precios() {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
                 >
                   Guardar Cambios
                 </button>
@@ -473,20 +473,29 @@ export function Precios() {
 
       {/* ── Modal: Ajuste por Porcentaje ── */}
       {showAjusteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <h3 className="text-xl text-gray-800 mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-100 text-left animate-in zoom-in-95 duration-200">
+            <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800">
                 Ajuste de Precios por Porcentaje
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <button
+                onClick={() => setShowAjusteModal(false)}
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
+              <p className="text-sm text-gray-600">
                 Ingrese el porcentaje de aumento o descuento. Use valores
                 positivos para aumentos y negativos para descuentos. El ajuste
                 se aplicará solo a los {filteredInsumos.length} insumo(s)
                 visible(s) según los filtros aplicados.
               </p>
-              <div className="mb-6">
-                <label className="block text-sm mb-2 text-gray-700">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                   Porcentaje (%)
                 </label>
                 <div className="relative">
@@ -494,7 +503,7 @@ export function Precios() {
                     type="number"
                     value={porcentaje}
                     onChange={(e) => setPorcentaje(e.target.value)}
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     placeholder="Ej: 15 o -10"
                     step="0.01"
                   />
@@ -507,23 +516,23 @@ export function Precios() {
                   Se aplicará a todos los insumos visibles en la lista
                 </p>
               </div>
+            </div>
 
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAjusteModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAjustePorcentaje}
-                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  Aplicar Ajuste
-                </button>
-              </div>
+            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
+              <button
+                type="button"
+                onClick={() => setShowAjusteModal(false)}
+                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleAjustePorcentaje}
+                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
+              >
+                Aplicar Ajuste
+              </button>
             </div>
           </div>
         </div>

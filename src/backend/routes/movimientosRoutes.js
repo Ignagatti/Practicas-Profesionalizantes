@@ -5,6 +5,7 @@ const router = express.Router();
 const {
     obtenerMovimientos,
     obtenerMovimientosProveedor,
+    obtenerMovimientosCliente,
     obtenerResumenMovimientos,
     obtenerMovimientoPorId
 } = require("../controllers/movimientosController");
@@ -27,6 +28,13 @@ router.get(
 router.get(
     "/proveedor/:id",
     obtenerMovimientosProveedor
+);
+
+
+// Obtener movimientos de un cliente.
+router.get(
+    "/cliente/:id",
+    obtenerMovimientosCliente
 );
 
 

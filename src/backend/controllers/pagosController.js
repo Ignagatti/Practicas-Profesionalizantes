@@ -1,5 +1,20 @@
 const db = require("../config/db");
 
+const parseNum = (val) => {
+    if (typeof val === "number") return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    let str = String(val).trim();
+    if (str.includes(",") && str.includes(".")) {
+        str = str.replace(/\./g, "").replace(",", ".");
+    } else if (str.includes(",")) {
+        str = str.replace(",", ".");
+    }
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+};
+
+const redondear = (val) => Math.round((parseNum(val) + Number.EPSILON) * 100) / 100;
+
 // =====================================================
 // OBTENER TODOS LOS PAGOS
 // =====================================================
@@ -171,7 +186,21 @@ const crearPago = async (req, res) => {
             monto_favor_usado
         } = req.body;
 
-        const montoFavorUsado = Number(monto_favor_usado || 0);
+        const parseNum = (val) => {
+            if (typeof val === "number") return isNaN(val) ? 0 : val;
+            if (!val) return 0;
+            let str = String(val).trim();
+            if (str.includes(",") && str.includes(".")) {
+                str = str.replace(/\./g, "").replace(",", ".");
+            } else if (str.includes(",")) {
+                str = str.replace(",", ".");
+            }
+            const num = parseFloat(str);
+            return isNaN(num) ? 0 : num;
+        };
+
+        const montoFavorUsado = Math.round(parseNum(monto_favor_usado) * 100) / 100;
+        const montoPago = Math.round(parseNum(Monto) * 100) / 100;
 
         // =============================================
         // VALIDACIONES BÁSICAS
@@ -188,7 +217,6 @@ const crearPago = async (req, res) => {
             });
         }
 
-        const montoPago = Number(Monto);
         if (montoPago < 0) {
             return res.status(400).json({
                 mensaje: "El monto del pago debe ser mayor o igual a cero."
@@ -234,14 +262,16 @@ const crearPago = async (req, res) => {
         // VERIFICAR QUE EL MONTO TOTAL DISPONIBLE
         // COINCIDA CON LOS MONTOS APLICADOS
         // =============================================
-        const montoAplicado = facturas.reduce(
-            (total, factura) => total + Number(factura.Monto_Usado),
-            0
-        );
+        const montoAplicado = Math.round(
+            facturas.reduce(
+                (total, factura) => total + parseNum(factura.Monto_Usado),
+                0
+            ) * 100
+        ) / 100;
 
-        const totalDisponible = montoPago + montoFavorUsado;
+        const totalDisponible = Math.round((montoPago + montoFavorUsado) * 100) / 100;
 
-        if (montoAplicado > totalDisponible) {
+        if (montoAplicado > totalDisponible + 0.01) {
             throw new Error(
                 "El monto aplicado a las facturas no puede superar el monto total del pago más el saldo a favor."
             );
@@ -404,10 +434,10 @@ const crearPago = async (req, res) => {
                 }
 
                 const datosPedido = pedido.rows[0];
-                const montoTotalDeFactura = Number(Monto_Usado);
-                const montoAdeudado = Number(datosPedido.monto_adeudado);
+                const montoTotalDeFactura = redondear(parseNum(Monto_Usado));
+                const montoAdeudado = redondear(parseNum(datosPedido.monto_adeudado));
 
-                if (montoTotalDeFactura > montoAdeudado) {
+                if (montoTotalDeFactura > montoAdeudado + 0.01) {
                     throw new Error(`El monto aplicado supera el saldo adeudado del pedido ${Id_Pedido}.`);
                 }
 
@@ -415,10 +445,10 @@ const crearPago = async (req, res) => {
 
                 // Consumir de los sources
                 for (const source of sources) {
-                    if (montoFaltaPagar <= 0) break;
-                    if (source.disponible <= 0) continue;
+                    if (montoFaltaPagar <= 0.009) break;
+                    if (source.disponible <= 0.009) continue;
 
-                    const tomar = Math.min(source.disponible, montoFaltaPagar);
+                    const tomar = redondear(Math.min(source.disponible, montoFaltaPagar));
                     
                     // Registrar el Detalle_Pago_Pedido
                     await client.query(
@@ -430,8 +460,8 @@ const crearPago = async (req, res) => {
                         [tomar, source.id, Id_Pedido]
                     );
 
-                    source.disponible -= tomar;
-                    montoFaltaPagar -= tomar;
+                    source.disponible = redondear(source.disponible - tomar);
+                    montoFaltaPagar = redondear(montoFaltaPagar - tomar);
 
                     // Si es un pago antiguo, actualizar su Monto_Restante inmediatamente
                     if (source.type === 'old') {
@@ -442,18 +472,18 @@ const crearPago = async (req, res) => {
                     }
                 }
 
-                if (montoFaltaPagar > 0) {
+                if (montoFaltaPagar > 0.01) {
                     throw new Error(`No hay suficientes fondos (efectivo + saldo a favor) para cubrir el monto aplicado al pedido ${Id_Pedido}.`);
                 }
 
-                const nuevoMontoAdeudado = montoAdeudado - montoTotalDeFactura;
+                const nuevoMontoAdeudado = redondear(montoAdeudado - montoTotalDeFactura);
                 if (nuevoMontoAdeudado > 0) {
                     tieneDeudaRestante = true;
                 }
                 let nuevoEstado = "pendiente";
-                if (nuevoMontoAdeudado === 0) {
+                if (nuevoMontoAdeudado <= 0) {
                     nuevoEstado = "pagado";
-                } else if (nuevoMontoAdeudado < Number(datosPedido.precio_total)) {
+                } else if (nuevoMontoAdeudado < redondear(parseNum(datosPedido.precio_total))) {
                     nuevoEstado = "parcial";
                 }
 
@@ -463,7 +493,7 @@ const crearPago = async (req, res) => {
                     SET Monto_Adeudado = $1, Estado_Pago = $2
                     WHERE Id_Pedido = $3
                     `,
-                    [nuevoMontoAdeudado, nuevoEstado, Id_Pedido]
+                    [Math.max(0, nuevoMontoAdeudado), nuevoEstado, Id_Pedido]
                 );
 
             } else {
@@ -483,10 +513,10 @@ const crearPago = async (req, res) => {
                 }
 
                 const datosFactura = factura.rows[0];
-                const montoTotalDeFactura = Number(Monto_Usado);
-                const montoAdeudado = Number(datosFactura.monto_adeudado);
+                const montoTotalDeFactura = redondear(parseNum(Monto_Usado));
+                const montoAdeudado = redondear(parseNum(datosFactura.monto_adeudado));
 
-                if (montoTotalDeFactura > montoAdeudado) {
+                if (montoTotalDeFactura > montoAdeudado + 0.01) {
                     throw new Error(`El monto aplicado supera el saldo adeudado de la factura ${Id_Factura_Proveedor}.`);
                 }
 
@@ -494,10 +524,10 @@ const crearPago = async (req, res) => {
 
                 // Consumir de los sources
                 for (const source of sources) {
-                    if (montoFaltaPagar <= 0) break;
-                    if (source.disponible <= 0) continue;
+                    if (montoFaltaPagar <= 0.009) break;
+                    if (source.disponible <= 0.009) continue;
 
-                    const tomar = Math.min(source.disponible, montoFaltaPagar);
+                    const tomar = redondear(Math.min(source.disponible, montoFaltaPagar));
                     
                     // Registrar el Detalle_Pago_Compra
                     await client.query(
@@ -509,8 +539,8 @@ const crearPago = async (req, res) => {
                         [tomar, source.id, Id_Factura_Proveedor]
                     );
 
-                    source.disponible -= tomar;
-                    montoFaltaPagar -= tomar;
+                    source.disponible = redondear(source.disponible - tomar);
+                    montoFaltaPagar = redondear(montoFaltaPagar - tomar);
 
                     // Si es un pago antiguo, actualizar su Monto_Restante inmediatamente
                     if (source.type === 'old') {
@@ -521,18 +551,18 @@ const crearPago = async (req, res) => {
                     }
                 }
 
-                if (montoFaltaPagar > 0) {
+                if (montoFaltaPagar > 0.01) {
                     throw new Error(`No hay suficientes fondos (efectivo + saldo a favor) para cubrir el monto aplicado a la factura ${Id_Factura_Proveedor}.`);
                 }
 
-                const nuevoMontoAdeudado = montoAdeudado - montoTotalDeFactura;
+                const nuevoMontoAdeudado = redondear(montoAdeudado - montoTotalDeFactura);
                 if (nuevoMontoAdeudado > 0) {
                     tieneDeudaRestante = true;
                 }
                 let nuevoEstado = "pendiente";
-                if (nuevoMontoAdeudado === 0) {
+                if (nuevoMontoAdeudado <= 0) {
                     nuevoEstado = "pagado";
-                } else if (nuevoMontoAdeudado < Number(datosFactura.precio_total)) {
+                } else if (nuevoMontoAdeudado < redondear(parseNum(datosFactura.precio_total))) {
                     nuevoEstado = "parcial";
                 }
 
@@ -542,7 +572,7 @@ const crearPago = async (req, res) => {
                     SET Monto_Adeudado = $1, Estado_Pago = $2
                     WHERE Id_Factura_Proveedor = $3
                     `,
-                    [nuevoMontoAdeudado, nuevoEstado, Id_Factura_Proveedor]
+                    [Math.max(0, nuevoMontoAdeudado), nuevoEstado, Id_Factura_Proveedor]
                 );
             }
         }

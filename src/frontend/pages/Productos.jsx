@@ -301,11 +301,11 @@ function Productos() {
                 // Esperar un momento para asegurar que carguen estilos
                 setTimeout(() => {
                     ventana.print();
+                    ventana.close();
                 }, 250);
             } else {
                 alert("Por favor, permite las ventanas emergentes (pop-ups) para imprimir la planilla.");
             }
-
             // Actualizar el estado en el backend
             const promesas = seleccionados.map(id => {
                 const p = productos.find(prod => (prod.id_producto || prod.Id_Producto) === id);

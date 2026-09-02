@@ -256,6 +256,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
 
   const [viewingFactura, setViewingFactura] = useState(null);
   const [isEditandoFactura, setIsEditandoFactura] =
@@ -749,14 +750,6 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
   // =====================================================
 
   async function handleDelete(id) {
-    const confirmar = window.confirm(
-      "¿Está seguro de que desea eliminar esta factura?"
-    );
-
-    if (!confirmar) {
-      return;
-    }
-
     setGuardando(true);
     setErrorForm("");
 
@@ -779,6 +772,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
         );
       }
 
+      setShowConfirmDeleteModal(false);
       cerrarVer();
 
       mostrarExito(
@@ -794,6 +788,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       );
 
       setErrorForm(err.message);
+      setShowConfirmDeleteModal(false);
     } finally {
       setGuardando(false);
     }
@@ -1836,12 +1831,10 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                     <button
                       type="button"
                       onClick={() =>
-                        handleDelete(
-                          viewingFactura.id_factura_proveedor
-                        )
+                        setShowConfirmDeleteModal(true)
                       }
                       disabled={guardando}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Trash2 size={16} />
                       Eliminar
@@ -1851,6 +1844,39 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               </div>
             </div>
           </div>
+
+          {/* Modal Confirmar Eliminación Factura */}
+          {showConfirmDeleteModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
+                  Confirmar Eliminación
+                </h3>
+                <p className="text-gray-600 text-sm mb-6">
+                  ¿Está seguro que desea eliminar este comprobante? 
+                  <br /><br />
+                  <strong>Atención:</strong> Si esta factura posee pagos registrados, el sistema impedirá su borrado de forma automática.
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmDeleteModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(viewingFactura.id_factura_proveedor)}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

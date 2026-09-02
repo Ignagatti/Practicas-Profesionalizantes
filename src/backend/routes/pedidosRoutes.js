@@ -21,4 +21,7 @@ router.put('/:id/factura', upload.single('Pdf_Factura'), pedidosController.subir
 router.get('/:id/factura/pdf', pedidosController.descargarPdfFactura);
 router.delete('/:id/factura/pdf', pedidosController.eliminarPdfFactura);
 
+// Ruta para eliminar pedido
+router.delete('/:id', pedidosController.eliminarPedido);
+
 module.exports = router;

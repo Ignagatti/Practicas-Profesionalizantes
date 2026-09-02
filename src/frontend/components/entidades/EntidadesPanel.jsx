@@ -9,6 +9,7 @@ import {
   Unlock,
   Users,
   Truck,
+  Trash2,
 } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api";
@@ -140,6 +141,7 @@ export function EntidadesPanel({
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showConfirmDeleteEntidadModal, setShowConfirmDeleteEntidadModal] = useState(false);
 
   const [selectedEntidad, setSelectedEntidad] = useState(null);
   const [isEditando, setIsEditando] = useState(false);
@@ -370,10 +372,10 @@ export function EntidadesPanel({
 
       const endpoint =
         entidad.estado === "activo"
-          ? `${API_URL}${ruta}/${entidad.id}`
+          ? `${API_URL}${ruta}/${entidad.id}/bloquear`
           : `${API_URL}${ruta}/${entidad.id}/desbloquear`;
 
-      const metodo = entidad.estado === "activo" ? "DELETE" : "PUT";
+      const metodo = "PUT";
 
       const res = await fetch(endpoint, { method: metodo });
       const data = await res.json();
@@ -416,6 +418,39 @@ export function EntidadesPanel({
     }
 
     await handleToggleEstado(selectedEntidad);
+  }
+
+  async function handleEliminarEntidad() {
+    if (!selectedEntidad) return;
+
+    try {
+      const ruta = obtenerRuta(tipoVista);
+      const nombreEntidad = obtenerNombreEntidad(tipoVista);
+
+      const res = await fetch(`${API_URL}${ruta}/${selectedEntidad.id}`, { 
+        method: "DELETE" 
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo eliminar.");
+      }
+
+      // Si fue bloqueado en lugar de eliminado físicamente (por tener historial)
+      if (data.bloqueado) {
+        mostrarExito(data.mensaje || `${nombreEntidad} bloqueado por seguridad.`);
+      } else {
+        mostrarExito(data.mensaje || `${nombreEntidad} eliminado permanentemente.`);
+      }
+
+      setShowConfirmDeleteEntidadModal(false);
+      setShowViewModal(false);
+      cargarEntidades();
+
+    } catch (err) {
+      setErrorForm(err.message);
+      setShowConfirmDeleteEntidadModal(false);
+    }
   }
 
   async function guardarDireccion(e) {
@@ -751,6 +786,7 @@ export function EntidadesPanel({
           editarDireccion={editarDireccion}
           cancelarEdicionDireccion={cancelarEdicionDireccion}
           eliminarDireccion={eliminarDireccion}
+          setShowConfirmDeleteEntidadModal={setShowConfirmDeleteEntidadModal}
         />
       )}
 
@@ -769,6 +805,37 @@ export function EntidadesPanel({
           errorForm={errorForm}
           guardar={handleAddEntidad}
         />
+      )}
+
+      {/* Modal Confirmar Eliminación Entidad */}
+      {showConfirmDeleteEntidadModal && selectedEntidad && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
+              Confirmar Eliminación
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              ¿Está seguro que desea eliminar este {obtenerNombreEntidad(tipoVista).toLowerCase()}? 
+              <br /><br />
+              <strong>Atención:</strong> Si el registro posee historial (pedidos, facturas o guita involucrada), el sistema impedirá el borrado para proteger la balanza.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmDeleteEntidadModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEliminarEntidad}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -792,6 +859,7 @@ function EntidadModal({
   editarDireccion,
   cancelarEdicionDireccion,
   eliminarDireccion,
+  setShowConfirmDeleteEntidadModal
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
@@ -930,6 +998,16 @@ function EntidadModal({
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
                   Guardar cambios
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDeleteEntidadModal(true)}
+                  className="flex-1 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"
+                  title="Eliminar permanentemente"
+                >
+                  <Trash2 size={16} />
+                  Eliminar
                 </button>
               </>
             ) : (

@@ -8,7 +8,10 @@ router.get('/', clientesController.obtenerClientes);
 router.get('/:id', clientesController.obtenerClientePorId);
 router.post('/', clientesController.crearCliente);
 router.put('/:id', clientesController.actualizarCliente);
-router.delete('/:id', clientesController.bloquearCliente);
+
+router.put('/:id/bloquear', clientesController.bloquearCliente);
+router.delete('/:id', clientesController.eliminarCliente);
+
 router.put('/:id/desbloquear', clientesController.desbloquearCliente);
 router.get('/:id/direcciones', clientesController.obtenerDireccionesCliente);
 router.post('/:id/direcciones', clientesController.crearDireccionCliente);

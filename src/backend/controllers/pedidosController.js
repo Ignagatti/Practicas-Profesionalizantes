@@ -861,6 +861,72 @@ const eliminarPdfFactura = async (req, res) => {
     }
 };
 
+const eliminarPedido = async (req, res) => {
+    const { id } = req.params;
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+
+        // 1. Verificar si el pedido existe y obtener sus datos clave
+        const pedidoResp = await client.query(
+            "SELECT Id_Cliente, Estado_Pago, Precio_Total FROM Pedido WHERE Id_Pedido = $1 FOR UPDATE",
+            [id]
+        );
+
+        if (pedidoResp.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: "Pedido no encontrado" });
+        }
+
+        const pedido = pedidoResp.rows[0];
+
+        // 2. Prohibir eliminación si ya fue pagado o tiene saldo parcial
+        if (pedido.estado_pago !== 'pendiente' && pedido.estado_pago !== 'no_se_factura') {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ 
+                error: "No se puede eliminar un pedido que registra pagos. Por favor, anule los pagos primero." 
+            });
+        }
+
+        // 3. Devolver los productos asociados para que estén libres
+        await client.query(
+            "DELETE FROM Detalle_Pedido WHERE Id_Pedido = $1",
+            [id]
+        );
+
+        // 4. Revertir el impacto contable en el saldo del cliente
+        if (pedido.id_cliente) {
+            await client.query(
+                "UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2",
+                [pedido.precio_total, pedido.id_cliente]
+            );
+        }
+
+        // 5. Eliminar el pedido
+        await client.query(
+            "DELETE FROM Pedido WHERE Id_Pedido = $1",
+            [id]
+        );
+
+        await client.query('COMMIT');
+
+        res.json({
+            mensaje: "Pedido eliminado correctamente."
+        });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error en eliminarPedido:", error.message);
+        res.status(500).json({
+            error: "Error al eliminar el pedido",
+            detalle: error.message
+        });
+    } finally {
+        client.release();
+    }
+};
+
 module.exports = {
     obtenerPedidos,
     obtenerPedidoPorId,
@@ -871,5 +937,6 @@ module.exports = {
     actualizarPedido,
     subirFactura,
     descargarPdfFactura,
-    eliminarPdfFactura
+    eliminarPdfFactura,
+    eliminarPedido
 };

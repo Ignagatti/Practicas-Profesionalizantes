@@ -237,6 +237,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
 
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [pedidoOriginal, setPedidoOriginal] = useState(null);
@@ -875,6 +876,32 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       await cargarPedidos();
     } catch (error) {
       setMensajeErrorModal(error.message);
+    }
+  };
+
+  const handleEliminarPedido = async () => {
+    if (!selectedPedido) return;
+
+    try {
+      setMensajeErrorModal("");
+      const res = await fetch(`${API_URL}/pedidos/${selectedPedido.id_pedido}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al eliminar pedido");
+      }
+
+      setShowConfirmDeleteModal(false);
+      setShowViewModal(false);
+      setMensajeExito("Pedido eliminado correctamente.");
+      
+      await cargarPedidos();
+    } catch (error) {
+      setMensajeErrorModal(error.message);
+      setShowConfirmDeleteModal(false);
     }
   };
 
@@ -2021,6 +2048,15 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       <Edit size={16} />
                       Guardar cambios
                     </button>
+                    
+                    <button
+                      onClick={() => setShowConfirmDeleteModal(true)}
+                      className="flex-1 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                      title="Eliminar Pedido"
+                    >
+                      <Trash2 size={16} />
+                      Eliminar
+                    </button>
                   </>
                 ) : (
                   <>
@@ -2049,6 +2085,35 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showConfirmDeleteModal && selectedPedido && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
+              Confirmar Eliminación
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              ¿Está seguro que desea eliminar este pedido? Esta acción no se puede deshacer. Los productos asociados quedarán libres y el saldo adeudado del cliente se revertirá si corresponde.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmDeleteModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEliminarPedido}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 size={16} />
+                Confirmar
+              </button>
             </div>
           </div>
         </div>

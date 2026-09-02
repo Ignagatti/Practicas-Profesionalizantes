@@ -6,7 +6,10 @@ router.get('/', proveedoresController.obtenerProveedores);
 router.get('/:id', proveedoresController.obtenerProveedorPorId);
 router.post('/', proveedoresController.crearProveedor);
 router.put('/:id', proveedoresController.actualizarProveedor);
-router.delete('/:id', proveedoresController.bloquearProveedor);
+
+router.put('/:id/bloquear', proveedoresController.bloquearProveedor);
+router.delete('/:id', proveedoresController.eliminarProveedor);
+
 router.put('/:id/desbloquear', proveedoresController.desbloquearProveedor);
 
 router.get('/:id/direcciones', proveedoresController.obtenerDireccionesProveedor);

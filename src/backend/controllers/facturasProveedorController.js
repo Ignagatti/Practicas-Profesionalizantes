@@ -375,9 +375,9 @@ const eliminarFactura = async (req, res) => {
         );
 
         if (pagos.rows.length > 0) {
-            throw new Error(
-                "No se puede eliminar una factura que posee pagos registrados."
-            );
+            return res.status(400).json({
+                error: "No se puede eliminar esta factura porque posee pagos registrados. No comprometas la contabilidad."
+            });
         }
 
         // Actualizar saldo del proveedor

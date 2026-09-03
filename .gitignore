@@ -19,6 +19,7 @@ thumbs.db
 dist/
 build/
 dist-electron/
+src/frontend/dist/
 .neon/
 
 # Agent skills & lockfiles

@@ -303,6 +303,12 @@ const crearPedido = async (req, res) => {
             });
         }
 
+        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            return res.status(400).json({
+                error: 'Debe ingresar el número de factura cuando el pedido se factura'
+            });
+        }
+
         const productosUnicos = [...new Set(productos.map(Number))];
 
         await client.query('BEGIN');
@@ -582,6 +588,12 @@ const actualizarPedido = async (req, res) => {
             });
         }
 
+        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            return res.status(400).json({
+                error: 'Debe ingresar el número de factura cuando el pedido se factura'
+            });
+        }
+
         const productosUnicos = [...new Set(productos.map(Number))];
 
         await client.query('BEGIN');
@@ -743,6 +755,12 @@ const subirFactura = async (req, res) => {
 
         if (!Estado_Facturacion) {
             return res.status(400).json({ error: "Faltan datos obligatorios." });
+        }
+
+        if (Estado_Facturacion === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            return res.status(400).json({
+                error: 'Debe ingresar el número de factura cuando el pedido se factura'
+            });
         }
 
         const pedidoExiste = await pool.query(

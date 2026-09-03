@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Search,
   Plus,
@@ -227,12 +227,31 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const isInitialMount = useRef(true);
   const [mensajeError, setMensajeError] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
 
+  const [mensajeErrorAddModal, setMensajeErrorAddModal] = useState("");
+  const [mensajeExitoAddModal, setMensajeExitoAddModal] = useState("");
+
   const [mensajeErrorModal, setMensajeErrorModal] = useState("");
   const [mensajeExitoModal, setMensajeExitoModal] = useState("");
+
+  const addModalScrollRef = useRef(null);
+  const detailModalScrollRef = useRef(null);
+
+  const scrollToTopAddModal = () => {
+    setTimeout(() => {
+      addModalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
+
+  const scrollToTopDetailModal = () => {
+    setTimeout(() => {
+      detailModalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -300,11 +319,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         throw new Error(data.error || "Error al obtener clientes");
       }
 
-      const clientesActivos = data.filter(
-        (cliente) => cliente.estado !== "bloqueado"
-      );
-
-      setClientes(clientesActivos);
+      setClientes(data);
     } catch (error) {
       setMensajeError(error.message);
     }
@@ -362,6 +377,12 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
   };
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      cargarPedidos();
+      return;
+    }
+
     const timeout = setTimeout(() => {
       cargarPedidos();
     }, 300);
@@ -378,6 +399,8 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
     setMensajeError("");
     setMensajeExito("");
+    setMensajeErrorAddModal("");
+    setMensajeExitoAddModal("");
     setProductosDisponibles([]);
 
     setNewPedido({
@@ -573,28 +596,31 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     e.preventDefault();
 
     if (!newPedido.Id_Cliente) {
-      setMensajeError("Debe seleccionar un cliente.");
+      setMensajeErrorAddModal("Debe seleccionar un cliente.");
+      scrollToTopAddModal();
       return;
     }
 
     if (newPedido.productos.length === 0) {
-      setMensajeError("Debe seleccionar al menos un producto.");
+      setMensajeErrorAddModal("Debe seleccionar al menos un producto.");
+      scrollToTopAddModal();
       return;
     }
 
     if (
-      newPedido.Estado_Facturacion === "facturado" &&
+      newPedido.Estado_Facturacion === "se_factura" &&
       !newPedido.Nro_Factura.trim()
     ) {
-      setMensajeError(
-        "Debe ingresar el número de factura para marcarlo como facturado."
+      setMensajeErrorAddModal(
+        "Debe ingresar el número de factura si el pedido se factura."
       );
+      scrollToTopAddModal();
       return;
     }
 
     try {
-      setMensajeError("");
-      setMensajeExito("");
+      setMensajeErrorAddModal("");
+      setMensajeExitoAddModal("");
 
       const body = {
         Id_Cliente: Number(newPedido.Id_Cliente),
@@ -646,9 +672,12 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
       setMensajeExito("Pedido generado correctamente.");
       setShowAddModal(false);
+      setMensajeErrorAddModal("");
+      setMensajeExitoAddModal("");
       await cargarPedidos();
     } catch (error) {
-      setMensajeError(error.message);
+      setMensajeErrorAddModal(error.message);
+      scrollToTopAddModal();
     }
   };
 
@@ -775,16 +804,18 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
     if (selectedPedido.productos.length === 0) {
       setMensajeErrorModal("El pedido debe tener al menos un producto.");
+      scrollToTopDetailModal();
       return;
     }
 
     if (
-      selectedPedido.estado_facturacion === "facturado" &&
+      selectedPedido.estado_facturacion === "se_factura" &&
       !selectedPedido.nro_factura?.trim()
     ) {
       setMensajeErrorModal(
-        "Debe ingresar el número de factura para marcarlo como facturado."
+        "Debe ingresar el número de factura si el pedido se factura."
       );
+      scrollToTopDetailModal();
       return;
     }
 
@@ -1242,7 +1273,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
               </div>
 
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setMensajeErrorAddModal("");
+                  setMensajeExitoAddModal("");
+                }}
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
               >
                 <X size={20} />
@@ -1250,7 +1285,25 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
             </div>
 
             <form onSubmit={handleCreatePedido} className="flex flex-col flex-1 overflow-hidden min-h-0">
-              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-left">
+              <div ref={addModalScrollRef} className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-left">
+                {mensajeErrorAddModal && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between">
+                    <span>⚠️ {mensajeErrorAddModal}</span>
+                    <button type="button" onClick={() => setMensajeErrorAddModal("")}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+
+                {mensajeExitoAddModal && (
+                  <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between">
+                    <span>✓ {mensajeExitoAddModal}</span>
+                    <button type="button" onClick={() => setMensajeExitoAddModal("")}>
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
@@ -1373,7 +1426,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                           Número de Factura
-                          {newPedido.Estado_Facturacion === "facturado" ? " *" : ""}
+                          {newPedido.Estado_Facturacion === "se_factura" ? " *" : ""}
                         </label>
 
                         <input
@@ -1386,12 +1439,18 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             })
                           }
                           placeholder="Ej: FC-001"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                          className={`w-full px-4 py-2.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
+                            newPedido.Estado_Facturacion === "se_factura" && !newPedido.Nro_Factura.trim()
+                              ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
+                              : "border-gray-300 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                          }`}
                         />
 
-                        {newPedido.Estado_Facturacion === "pendiente" && (
-                          <p className="text-xs text-blue-700 mt-1">
-                            Podés dejarlo vacío y cargarlo más adelante.
+                        {newPedido.Estado_Facturacion === "se_factura" && (
+                          <p className={`text-xs mt-1 font-medium ${!newPedido.Nro_Factura.trim() ? "text-red-600 font-semibold" : "text-gray-500"}`}>
+                            {!newPedido.Nro_Factura.trim()
+                              ? "⚠️ Campo obligatorio al seleccionar \"Se factura\"."
+                              : "Obligatorio al seleccionar \"Se factura\"."}
                           </p>
                         )}
                       </div>
@@ -1568,7 +1627,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-6 text-left">
+            <div ref={detailModalScrollRef} className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-6 text-left">
               {mensajeErrorModal && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
                   {mensajeErrorModal}
@@ -1721,7 +1780,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                           Número de Factura
-                          {selectedPedido.estado_facturacion === "facturado"
+                          {selectedPedido.estado_facturacion === "se_factura"
                             ? " *"
                             : ""}
                         </label>
@@ -1736,12 +1795,18 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                             })
                           }
                           placeholder="Ej: FC-001"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+                          className={`w-full px-4 py-2.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
+                            selectedPedido.estado_facturacion === "se_factura" && !selectedPedido.nro_factura?.trim()
+                              ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
+                              : "border-gray-300 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                          }`}
                         />
 
-                        {selectedPedido.estado_facturacion === "pendiente" && (
-                          <p className="text-xs text-blue-700 mt-1">
-                            Podés cargar el número ahora o completarlo más adelante.
+                        {selectedPedido.estado_facturacion === "se_factura" && (
+                          <p className={`text-xs mt-1 font-medium ${!selectedPedido.nro_factura?.trim() ? "text-red-600 font-semibold" : "text-gray-500"}`}>
+                            {!selectedPedido.nro_factura?.trim()
+                              ? "⚠️ Campo obligatorio al seleccionar \"Se factura\"."
+                              : "Obligatorio al seleccionar \"Se factura\"."}
                           </p>
                         )}
                       </div>
@@ -2070,15 +2135,6 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   >
                     <Edit size={16} />
                     Editar pedido
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmDeleteModal(true)}
-                    className="px-4 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    Eliminar
                   </button>
                 </>
               )}

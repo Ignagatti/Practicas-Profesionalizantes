@@ -145,7 +145,7 @@ export function EntidadesPanel({
 }) {
   const [tipoVista, setTipoVista] = useState(tipoInicial);
   const [entidades, setEntidades] = useState([]);
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -172,6 +172,7 @@ export function EntidadesPanel({
   const [mensajeExito, setMensajeExito] = useState(null);
 
   useEffect(() => {
+    setCargando(true);
     setTipoVista(tipoInicial);
     setSearchTerm("");
     setShowAddModal(false);

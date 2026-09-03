@@ -105,6 +105,12 @@ const crearFactura = async (req, res) => {
             });
         }
 
+        if (tipoComp === 'factura' && (!Nro_Factura_Proveedor || !Nro_Factura_Proveedor.trim())) {
+            return res.status(400).json({
+                mensaje: "El número de factura es obligatorio para los comprobantes tipo factura."
+            });
+        }
+
         await client.query("BEGIN");
 
          // 3️⃣ Verificar que exista el proveedor
@@ -234,6 +240,12 @@ const editarFactura = async (req, res) => {
         if (Number(Precio_Total) <= 0) {
             return res.status(400).json({
                 mensaje: "El precio debe ser mayor que cero."
+            });
+        }
+
+        if (tipoComp === 'factura' && (!Nro_Factura_Proveedor || !Nro_Factura_Proveedor.trim())) {
+            return res.status(400).json({
+                mensaje: "El número de factura es obligatorio para los comprobantes tipo factura."
             });
         }
 

@@ -18,6 +18,7 @@ const INSUMO_VACIO = {
 
 function Insumos() {
     const [insumos, setInsumos] = useState([]);
+    const [cargando, setCargando] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filtroCategoria, setFiltroCategoria] = useState("todos");
     
@@ -35,11 +36,14 @@ function Insumos() {
     }, []);
 
     const cargarInsumos = async () => {
+        setCargando(true);
         try {
             const data = await obtenerInsumos();
             setInsumos(data);
         } catch (error) {
             console.error('Error al cargar insumos:', error);
+        } finally {
+            setCargando(false);
         }
     };
 
@@ -165,7 +169,11 @@ function Insumos() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredInsumos.length === 0 ? (
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan="4" className="px-6 py-10 text-center text-gray-500 font-medium">Cargando insumos...</td>
+                                </tr>
+                            ) : filteredInsumos.length === 0 ? (
                                 <tr>
                                     <td colSpan="4" className="px-6 py-10 text-center text-gray-400 italic">No se encontraron insumos.</td>
                                 </tr>

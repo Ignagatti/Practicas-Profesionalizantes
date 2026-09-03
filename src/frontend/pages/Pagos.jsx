@@ -3,6 +3,7 @@ import {
   Search,
   Plus,
   Eye,
+  Edit,
   Trash2,
   DollarSign,
   X,
@@ -230,11 +231,37 @@ function normalizarFactura(factura) {
 }
 
 
-function normalizarPago(pago) {
+function normalizarPago(pago, clientes = [], proveedores = []) {
   const tipoMedioPago =
     pago.tipo_medio_pago ??
     pago.Tipo_Medio_Pago ??
     "";
+
+  const idCliente = pago.id_cliente ?? pago.Id_Cliente;
+  let nombreCli = (pago.nombre_cliente || pago.Nombre_Cliente || pago.nombre || pago.Nombre || "").trim();
+  let apellidoCli = (pago.apellido_cliente || pago.Apellido_Cliente || pago.apellido || pago.Apellido || "").trim();
+  let razonCli = (pago.razon_social_cliente || pago.Razon_Social_Cliente || pago.razon_social || pago.Razon_Social || "").trim();
+
+  if (!nombreCli && !apellidoCli && !razonCli && idCliente && clientes.length > 0) {
+    const cliEncontrado = clientes.find((c) => Number(c.id_cliente || c.Id_Cliente) === Number(idCliente));
+    if (cliEncontrado) {
+      nombreCli = (cliEncontrado.nombre || cliEncontrado.Nombre || "").trim();
+      apellidoCli = (cliEncontrado.apellido || cliEncontrado.Apellido || "").trim();
+      razonCli = (cliEncontrado.razon_social || cliEncontrado.Razon_Social || "").trim();
+    }
+  }
+
+  const idProv = pago.id_proveedor ?? pago.Id_Proveedor;
+  let nombreProv = (pago.nombre_proveedor || pago.Nombre_Proveedor || "").trim();
+  let razonProv = (pago.razon_social_proveedor || pago.Razon_Social_Proveedor || "").trim();
+
+  if (!nombreProv && !razonProv && idProv && proveedores.length > 0) {
+    const provEncontrado = proveedores.find((p) => Number(p.id_proveedor || p.Id_Proveedor) === Number(idProv));
+    if (provEncontrado) {
+      nombreProv = (provEncontrado.nombre || provEncontrado.Nombre || "").trim();
+      razonProv = (provEncontrado.razon_social || provEncontrado.Razon_Social || "").trim();
+    }
+  }
 
   return {
     ...pago,
@@ -275,7 +302,37 @@ function normalizarPago(pago) {
     tipo_medio_pago: normalizarTipoMedioPago(
       tipoMedioPago
     ),
+
+    id_cliente: idCliente,
+    nombre_cliente: nombreCli,
+    apellido_cliente: apellidoCli,
+    razon_social_cliente: razonCli,
+
+    id_proveedor: idProv,
+    nombre_proveedor: nombreProv,
+    razon_social_proveedor: razonProv,
   };
+}
+
+
+function obtenerNombreEntidadPago(pago, tipoVista) {
+  if (!pago) return "—";
+  if (tipoVista === "cliente") {
+    const nombre = (pago.nombre_cliente || pago.Nombre_Cliente || pago.nombre || pago.Nombre || "").trim();
+    const apellido = (pago.apellido_cliente || pago.Apellido_Cliente || pago.apellido || pago.Apellido || "").trim();
+    const razon = (pago.razon_social_cliente || pago.Razon_Social_Cliente || pago.razon_social || pago.Razon_Social || "").trim();
+    if (nombre || apellido) return `${nombre} ${apellido}`.trim();
+    if (razon) return razon;
+    const idCli = pago.id_cliente || pago.Id_Cliente;
+    return idCli ? `Cliente #${idCli}` : "Sin cliente asignado";
+  } else {
+    const nombre = (pago.nombre_proveedor || pago.Nombre_Proveedor || pago.nombre || pago.Nombre || "").trim();
+    const razon = (pago.razon_social_proveedor || pago.Razon_Social_Proveedor || pago.razon_social || pago.Razon_Social || "").trim();
+    if (nombre) return nombre;
+    if (razon) return razon;
+    const idProv = pago.id_proveedor || pago.Id_Proveedor;
+    return idProv ? `Proveedor #${idProv}` : "Sin proveedor asignado";
+  }
 }
 
 
@@ -368,6 +425,8 @@ export default function Pagos() {
   const [showViewModal, setShowViewModal] =
     useState(false);
 
+  const [isEditandoPago, setIsEditandoPago] = useState(false);
+
   const [viewingPago, setViewingPago] =
     useState(null);
 
@@ -444,7 +503,7 @@ export default function Pagos() {
       const listaProveedores = resProveedores.ok ? await resProveedores.json() : [];
 
       setPagos(
-        listaPagos.map(normalizarPago)
+        listaPagos.map((p) => normalizarPago(p, listaClientes, listaProveedores))
       );
 
       setFacturas(
@@ -548,6 +607,9 @@ export default function Pagos() {
           .toLowerCase()
           .includes(termino) ||
         formatearFecha(pago.fecha_pago)
+          .toLowerCase()
+          .includes(termino) ||
+        obtenerNombreEntidadPago(pago, tipoVista)
           .toLowerCase()
           .includes(termino);
 
@@ -978,6 +1040,7 @@ export default function Pagos() {
     setDetallesPago([]);
     setErrorForm("");
     setCargandoDetalle(true);
+    setIsEditandoPago(false);
     setShowViewModal(true);
 
     try {
@@ -998,7 +1061,9 @@ export default function Pagos() {
 
       setViewingPago(
         normalizarPago(
-          datos.pago || pago
+          datos.pago || pago,
+          clientesTotales,
+          proveedoresTotales
         )
       );
 
@@ -1026,6 +1091,7 @@ export default function Pagos() {
 
   function cerrarDetalle() {
     setShowViewModal(false);
+    setIsEditandoPago(false);
     setViewingPago(null);
     setDetallesPago([]);
     setErrorForm("");
@@ -1086,6 +1152,57 @@ export default function Pagos() {
       } else {
         setError(err.message);
       }
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+
+  // =====================================================
+  // GUARDAR EDICIÓN DE PAGO
+  // =====================================================
+
+  async function handleGuardarEdicionPago() {
+    if (!viewingPago) return;
+
+    setGuardando(true);
+    setErrorForm("");
+
+    try {
+      const idPago =
+        viewingPago.id_pago_insumo ||
+        viewingPago.id_pago_pedido ||
+        viewingPago.Id_Pago_Insumo ||
+        viewingPago.Id_Pago_Pedido;
+
+      const respuesta = await fetch(
+        `${API_URL}/pagos/${idPago}?tipo=${tipoVista}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fecha_pago: viewingPago.fecha_pago,
+            tipo_medio_pago: viewingPago.tipo_medio_pago,
+          }),
+        }
+      );
+
+      const datos = await leerRespuesta(respuesta);
+
+      if (!respuesta.ok) {
+        throw new Error(
+          datos.mensaje ||
+          datos.error ||
+          "No se pudo actualizar el pago."
+        );
+      }
+
+      setIsEditandoPago(false);
+      mostrarExito(datos.mensaje || "Pago actualizado correctamente.");
+      await cargarDatos();
+    } catch (err) {
+      console.error("Error al actualizar el pago:", err);
+      setErrorForm(err.message);
     } finally {
       setGuardando(false);
     }
@@ -1257,7 +1374,7 @@ export default function Pagos() {
 
             <input
               type="text"
-              placeholder="Buscar por número, fecha o método..."
+              placeholder={`Buscar por número, ${tipoVista === "cliente" ? "cliente" : "proveedor"}, fecha o método...`}
               value={searchTerm}
               onChange={(event) =>
                 setSearchTerm(event.target.value)
@@ -1311,6 +1428,10 @@ export default function Pagos() {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                     N.º pago
+                  </th>
+
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
                   </th>
 
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -1371,6 +1492,10 @@ export default function Pagos() {
                         {String(
                           pago.id_pago_insumo
                         ).padStart(4, "0")}
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
+                        {obtenerNombreEntidadPago(pago, tipoVista)}
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -1976,14 +2101,41 @@ export default function Pagos() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-500 text-sm">
+                    {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
+                  </p>
+
+                  <p className="text-lg font-semibold text-gray-800">
+                    {obtenerNombreEntidadPago(viewingPago, tipoVista)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-sm">
                     Fecha
                   </p>
 
-                  <p className="text-lg">
-                    {formatearFecha(
-                      viewingPago.fecha_pago
-                    )}
-                  </p>
+                  {isEditandoPago ? (
+                    <input
+                      type="date"
+                      value={
+                        viewingPago.fecha_pago
+                          ? new Date(viewingPago.fecha_pago).toISOString().split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setViewingPago({
+                          ...viewingPago,
+                          fecha_pago: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-lg">
+                      {formatearFecha(
+                        viewingPago.fecha_pago
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1991,13 +2143,31 @@ export default function Pagos() {
                     Método de pago
                   </p>
 
-                  <p className="text-lg">
-                    {metodoPagoConfig[
-                      viewingPago.tipo_medio_pago
-                    ]?.label ||
-                      viewingPago.tipo_medio_pago ||
-                      "Sin especificar"}
-                  </p>
+                  {isEditandoPago ? (
+                    <select
+                      value={viewingPago.tipo_medio_pago || "efectivo"}
+                      onChange={(e) =>
+                        setViewingPago({
+                          ...viewingPago,
+                          tipo_medio_pago: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="efectivo">Efectivo</option>
+                      <option value="transferencia">Transferencia</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="tarjeta">Tarjeta</option>
+                    </select>
+                  ) : (
+                    <p className="text-lg">
+                      {metodoPagoConfig[
+                        viewingPago.tipo_medio_pago
+                      ]?.label ||
+                        viewingPago.tipo_medio_pago ||
+                        "Sin especificar"}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -2139,30 +2309,45 @@ export default function Pagos() {
 
 
               <div className="flex gap-4 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={cerrarDetalle}
-                  className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50"
-                >
-                  Cerrar
-                </button>
+                {isEditandoPago ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditandoPago(false)}
+                      className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 font-semibold text-gray-700"
+                    >
+                      Cancelar
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDelete(
-                      viewingPago.id_pago_insumo
-                    )
-                  }
-                  disabled={guardando}
-                  className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Trash2 size={18} />
+                    <button
+                      type="button"
+                      onClick={handleGuardarEdicionPago}
+                      disabled={guardando}
+                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {guardando ? "Guardando..." : "Guardar cambios"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={cerrarDetalle}
+                      className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 font-semibold text-gray-700"
+                    >
+                      Cerrar
+                    </button>
 
-                  {guardando
-                    ? "Eliminando..."
-                    : "Eliminar pago"}
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditandoPago(true)}
+                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Edit size={18} />
+                      Editar pago
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -25,24 +25,43 @@ const obtenerPagos = async (req, res) => {
 
         if (tipo === "cliente") {
             const resultado = await db.query(`
-                SELECT
+                SELECT DISTINCT ON (pp.Id_Pago_Pedido)
                     pp.*,
-                    mp.Tipo AS tipo_medio_pago
+                    mp.Tipo AS tipo_medio_pago,
+                    c.Id_Cliente AS id_cliente,
+                    c.Nombre AS nombre_cliente,
+                    c.Apellido AS apellido_cliente,
+                    c.Razon_Social AS razon_social_cliente
                 FROM PagoPedido pp
                 LEFT JOIN Metodo_Pago mp
                     ON pp.Id_Medio_Pago = mp.Id_Medio_Pago
+                LEFT JOIN Detalle_Pago_Pedido dpp
+                    ON pp.Id_Pago_Pedido = dpp.Id_Pago_Pedido
+                LEFT JOIN Pedido p
+                    ON dpp.Id_Pedido = p.Id_Pedido
+                LEFT JOIN Cliente c
+                    ON p.Id_Cliente = c.Id_Cliente
                 ORDER BY pp.Id_Pago_Pedido DESC
             `);
             return res.json(resultado.rows);
         }
 
         const resultado = await db.query(`
-            SELECT
+            SELECT DISTINCT ON (pi.Id_Pago_Insumo)
                 pi.*,
-                mp.Tipo AS tipo_medio_pago
+                mp.Tipo AS tipo_medio_pago,
+                pr.Id_Proveedor AS id_proveedor,
+                pr.Nombre AS nombre_proveedor,
+                pr.Razon_Social AS razon_social_proveedor
             FROM Pago_Insumo pi
             LEFT JOIN Metodo_Pago mp
                 ON pi.Id_Medio_Pago = mp.Id_Medio_Pago
+            LEFT JOIN Detalle_Pago_Compra dpc
+                ON pi.Id_Pago_Insumo = dpc.Id_Pago_Insumo
+            LEFT JOIN Factura_Proveedor fp
+                ON dpc.Id_Factura_Proveedor = fp.Id_Factura_Proveedor
+            LEFT JOIN Proveedor pr
+                ON fp.Id_Proveedor = pr.Id_Proveedor
             ORDER BY pi.Id_Pago_Insumo DESC
         `);
 
@@ -74,13 +93,24 @@ const obtenerPagoPorId = async (req, res) => {
         if (tipo === "cliente") {
             const pago = await db.query(
                 `
-                SELECT
+                SELECT DISTINCT ON (pp.Id_Pago_Pedido)
                     pp.*,
-                    mp.Tipo AS tipo_medio_pago
+                    mp.Tipo AS tipo_medio_pago,
+                    c.Id_Cliente AS id_cliente,
+                    c.Nombre AS nombre_cliente,
+                    c.Apellido AS apellido_cliente,
+                    c.Razon_Social AS razon_social_cliente
                 FROM PagoPedido pp
                 LEFT JOIN Metodo_Pago mp
                     ON pp.Id_Medio_Pago = mp.Id_Medio_Pago
+                LEFT JOIN Detalle_Pago_Pedido dpp
+                    ON pp.Id_Pago_Pedido = dpp.Id_Pago_Pedido
+                LEFT JOIN Pedido p
+                    ON dpp.Id_Pedido = p.Id_Pedido
+                LEFT JOIN Cliente c
+                    ON p.Id_Cliente = c.Id_Cliente
                 WHERE pp.Id_Pago_Pedido = $1
+                ORDER BY pp.Id_Pago_Pedido DESC
                 `,
                 [id]
             );
@@ -115,13 +145,23 @@ const obtenerPagoPorId = async (req, res) => {
 
         const pago = await db.query(
             `
-            SELECT
+            SELECT DISTINCT ON (pi.Id_Pago_Insumo)
                 pi.*,
-                mp.Tipo AS tipo_medio_pago
+                mp.Tipo AS tipo_medio_pago,
+                pr.Id_Proveedor AS id_proveedor,
+                pr.Nombre AS nombre_proveedor,
+                pr.Razon_Social AS razon_social_proveedor
             FROM Pago_Insumo pi
             LEFT JOIN Metodo_Pago mp
                 ON pi.Id_Medio_Pago = mp.Id_Medio_Pago
+            LEFT JOIN Detalle_Pago_Compra dpc
+                ON pi.Id_Pago_Insumo = dpc.Id_Pago_Insumo
+            LEFT JOIN Factura_Proveedor fp
+                ON dpc.Id_Factura_Proveedor = fp.Id_Factura_Proveedor
+            LEFT JOIN Proveedor pr
+                ON fp.Id_Proveedor = pr.Id_Proveedor
             WHERE pi.Id_Pago_Insumo = $1
+            ORDER BY pi.Id_Pago_Insumo DESC
             `,
             [id]
         );
@@ -929,9 +969,75 @@ const eliminarPago = async (req, res) => {
     } finally {
 
         client.release();
-
     }
+};
 
+
+// =====================================================
+// EDITAR PAGO
+// =====================================================
+
+const editarPago = async (req, res) => {
+    const { id } = req.params;
+    const { tipo } = req.query;
+    const { fecha_pago, id_medio_pago, tipo_medio_pago } = req.body;
+
+    try {
+        let medioPagoId = id_medio_pago ? Number(id_medio_pago) : null;
+
+        if (!medioPagoId && tipo_medio_pago) {
+            const medioRes = await db.query(
+                `SELECT Id_Medio_Pago FROM Metodo_Pago WHERE LOWER(Tipo) = LOWER($1) LIMIT 1`,
+                [tipo_medio_pago.trim()]
+            );
+            if (medioRes.rows.length > 0) {
+                medioPagoId = medioRes.rows[0].id_medio_pago || medioRes.rows[0].Id_Medio_Pago;
+            }
+        }
+
+        if (tipo === "cliente") {
+            const result = await db.query(
+                `UPDATE PagoPedido 
+                 SET Fecha_Pago = COALESCE($1, Fecha_Pago),
+                     Id_Medio_Pago = COALESCE($2, Id_Medio_Pago)
+                 WHERE Id_Pago_Pedido = $3
+                 RETURNING *`,
+                [fecha_pago || null, medioPagoId || null, id]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ mensaje: "El pago no existe." });
+            }
+
+            return res.json({
+                mensaje: "Pago actualizado correctamente.",
+                pago: result.rows[0]
+            });
+        }
+
+        const result = await db.query(
+            `UPDATE Pago_Insumo 
+             SET Fecha_Pago = COALESCE($1, Fecha_Pago),
+                 Id_Medio_Pago = COALESCE($2, Id_Medio_Pago)
+             WHERE Id_Pago_Insumo = $3
+             RETURNING *`,
+            [fecha_pago || null, medioPagoId || null, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ mensaje: "El pago no existe." });
+        }
+
+        res.json({
+            mensaje: "Pago actualizado correctamente.",
+            pago: result.rows[0]
+        });
+    } catch (error) {
+        console.error("Error al editar pago:", error);
+        res.status(500).json({
+            mensaje: error.message || "Error al actualizar el pago."
+        });
+    }
 };
 
 
@@ -940,10 +1046,9 @@ const eliminarPago = async (req, res) => {
 // =====================================================
 
 module.exports = {
-
     obtenerPagos,
     obtenerPagoPorId,
     crearPago,
+    editarPago,
     eliminarPago
-
 };

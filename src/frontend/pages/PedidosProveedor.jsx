@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Search,
   Plus,
@@ -232,6 +232,21 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
   const [error, setError] = useState("");
   const [errorForm, setErrorForm] = useState("");
   const [mensajeExito, setMensajeExito] = useState("");
+
+  const addModalScrollRef = useRef(null);
+  const viewModalScrollRef = useRef(null);
+
+  const scrollToTopAddModal = () => {
+    setTimeout(() => {
+      addModalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
+
+  const scrollToTopViewModal = () => {
+    setTimeout(() => {
+      viewModalScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
+  };
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterEstado, setFilterEstado] = useState("todos");
@@ -550,22 +565,25 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       setErrorForm(
         "Seleccioná un proveedor de la lista."
       );
-
+      scrollToTopAddModal();
       return;
     }
 
     if (newFactura.tipo_comprobante === 'factura' && !newFactura.nro_factura_proveedor.trim()) {
       setErrorForm("Ingresá el número de factura.");
+      scrollToTopAddModal();
       return;
     }
 
     if (!newFactura.fecha_emision || !newFactura.vencimiento) {
       setErrorForm("Completá las fechas de emisión y vencimiento.");
+      scrollToTopAddModal();
       return;
     }
 
     if (Number(newFactura.precio_total) <= 0) {
       setErrorForm("El precio total debe ser mayor que cero.");
+      scrollToTopAddModal();
       return;
     }
 
@@ -622,6 +640,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       );
 
       setErrorForm(err.message);
+      scrollToTopAddModal();
     } finally {
       setGuardando(false);
     }
@@ -644,6 +663,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       !viewingFactura.nro_factura_proveedor?.trim()
     ) {
       setErrorForm("Ingresá el número de factura.");
+      scrollToTopViewModal();
       return;
     }
 
@@ -723,6 +743,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       );
 
       setErrorForm(err.message);
+      scrollToTopViewModal();
     } finally {
       setGuardando(false);
     }
@@ -1147,7 +1168,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               onSubmit={handleAddFactura}
               className="flex flex-col flex-1 overflow-hidden min-h-0"
             >
-              <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
+              <div ref={addModalScrollRef} className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
               {errorForm && (
                 <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
                   {errorForm}
@@ -1156,74 +1177,32 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm mb-2 text-gray-700">
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
                     Proveedor *
                   </label>
 
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchProveedor}
-                      onChange={(event) => {
-                        setSearchProveedor(
-                          event.target.value
-                        );
+                  <select
+                    value={newFactura.id_proveedor}
+                    onChange={(event) =>
+                      setNewFactura((prev) => ({
+                        ...prev,
+                        id_proveedor: event.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                    required
+                  >
+                    <option value="">Seleccionar proveedor...</option>
 
-                        setShowSuggestions(true);
-
-                        setNewFactura((prev) => ({
-                          ...prev,
-                          id_proveedor: "",
-                        }));
-                      }}
-                      onFocus={() =>
-                        setShowSuggestions(true)
-                      }
-                      onBlur={() =>
-                        setTimeout(
-                          () =>
-                            setShowSuggestions(
-                              false
-                            ),
-                          200
-                        )
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Buscar proveedor..."
-                    />
-
-                    {showSuggestions && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        {proveedoresFiltrados.length >
-                        0 ? (
-                          proveedoresFiltrados.map(
-                            (proveedor) => (
-                              <button
-                                key={
-                                  proveedor.id_proveedor
-                                }
-                                type="button"
-                                onMouseDown={() =>
-                                  seleccionarProveedor(
-                                    proveedor
-                                  )
-                                }
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors text-sm"
-                              >
-                                {
-                                  proveedor.nombre_proveedor
-                                }
-                              </button>
-                            )
-                          )
-                        ) : (
-                          <div className="px-4 py-2 text-sm text-gray-500">
-                            No se encontraron proveedores.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    {proveedores.map((proveedor) => (
+                      <option
+                        key={proveedor.id_proveedor}
+                        value={proveedor.id_proveedor}
+                      >
+                        {proveedor.nombre_proveedor}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -1265,9 +1244,19 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                             event.target.value,
                         }))
                       }
-                      className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                      className={`w-full px-3.5 py-1.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
+                        newFactura.tipo_comprobante === 'factura' && !newFactura.nro_factura_proveedor.trim()
+                          ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
+                          : "border-gray-300 focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+                      }`}
                       placeholder="Ej.: A-0001-00001234"
                     />
+
+                    {newFactura.tipo_comprobante === 'factura' && !newFactura.nro_factura_proveedor.trim() && (
+                      <p className="text-xs text-red-600 mt-1 font-semibold">
+                        ⚠️ Campo obligatorio para comprobantes de tipo Factura.
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1431,7 +1420,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-4">
+            <div ref={viewModalScrollRef} className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white space-y-4">
               {errorForm && (
                 <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm">
                   {errorForm}
@@ -1498,13 +1487,22 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                           })
                         )
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none transition-all ${
+                        viewingFactura.tipo_comprobante === 'factura' && !viewingFactura.nro_factura_proveedor?.trim()
+                          ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
+                          : "border-gray-300 focus:ring-2 focus:ring-blue-500"
+                      }`}
                     />
                   ) : (
                     <p className="text-base text-gray-800">
                       {
                         viewingFactura.nro_factura_proveedor
                       }
+                    </p>
+                  )}
+                  {isEditandoFactura && viewingFactura.tipo_comprobante === 'factura' && !viewingFactura.nro_factura_proveedor?.trim() && (
+                    <p className="text-xs text-red-600 mt-1 font-semibold">
+                      ⚠️ Campo obligatorio para comprobantes de tipo Factura.
                     </p>
                   )}
                 </div>

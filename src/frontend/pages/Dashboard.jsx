@@ -24,14 +24,28 @@ import {
 // ── URL base de tu backend ────────────────────────────────────────────────────
 const API_URL = "http://localhost:4000/api";
 
+// Helper para convertir fechas a string ISO (YYYY-MM-DD) de forma segura
+function obtenerFechaISO(val) {
+  if (!val) return "";
+  const s = String(val);
+  if (s.includes("T")) return s.split("T")[0];
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 export function Dashboard({ pagosPendientes: propPagosPendientes }) {
-  const periodo = "mensual";
+  const [periodo, setPeriodo]               = useState("mensual");
 
   // ── Estado ──────────────────────────────────────────────────────────────────
   const [productos, setProductos]           = useState([]);
   const [insumos, setInsumos]               = useState([]);
-  const [localPagosPendientes] = useState([]);
+  const [pedidos, setPedidos]               = useState([]);
+  const [localPagosPendientes]              = useState([]);
 
   const pagosPendientes = propPagosPendientes !== undefined ? propPagosPendientes : localPagosPendientes;
 
@@ -61,21 +75,25 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
       setError(null);
       try {
         // Llamadas en paralelo para mayor velocidad
-        const [resProductos, resInsumos] = await Promise.all([
+        const [resProductos, resInsumos, resPedidos] = await Promise.all([
           fetch(`${API_URL}/productos`),
           fetch(`${API_URL}/insumos`),
+          fetch(`${API_URL}/pedidos`),
         ]);
 
         if (!resProductos.ok) throw new Error("Error al cargar productos.");
         if (!resInsumos.ok)   throw new Error("Error al cargar insumos.");
+        if (!resPedidos.ok)   throw new Error("Error al cargar pedidos.");
 
-        const [dataProductos, dataInsumos] = await Promise.all([
+        const [dataProductos, dataInsumos, dataPedidos] = await Promise.all([
           resProductos.json(),
           resInsumos.json(),
+          resPedidos.json(),
         ]);
 
-        setProductos(dataProductos);
-        setInsumos(dataInsumos);
+        setProductos(Array.isArray(dataProductos) ? dataProductos : []);
+        setInsumos(Array.isArray(dataInsumos) ? dataInsumos : []);
+        setPedidos(Array.isArray(dataPedidos) ? dataPedidos : []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -91,33 +109,65 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
     return insumos.find((i) => i.id === id)?.nombre || "Desconocido";
   }
 
-  // ── Estadísticas de productos ────────────────────────────────────────────────
-  const productosPendientes    = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "pendiente").length;
-  const productosTerminados    = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "terminado").length;
-  const productosEnProduccion  = productos.filter((p) => (p.estado || p.Estado || "").toLowerCase() === "en_produccion").length;
-  const totalFacturacion       = productos.reduce(
-    (sum, p) => sum + (Number(p.precio || p.Precio || 0) * Number(p.cantidad || p.Cantidad || 0)), 0
-  );
-
   // ── Filtrar productos por rango de fechas ────────────────────────────────────
   const productosFiltrados = useMemo(() => {
     return productos.filter((producto) => {
-      const fechaProducto = new Date(producto.fecha_pedido);
-      const desde = fechaDesde ? new Date(fechaDesde) : null;
-      const hasta = fechaHasta ? new Date(fechaHasta) : null;
-      if (desde && fechaProducto < desde) return false;
-      if (hasta && fechaProducto > hasta) return false;
+      const fechaStr = obtenerFechaISO(producto.fecha_pedido || producto.Fecha_Pedido);
+      if (fechaDesde && (!fechaStr || fechaStr < fechaDesde)) return false;
+      if (fechaHasta && (!fechaStr || fechaStr > fechaHasta)) return false;
       return true;
     });
   }, [productos, fechaDesde, fechaHasta]);
+
+  // ── Filtrar pedidos por rango de fechas ──────────────────────────────────────
+  const pedidosFiltrados = useMemo(() => {
+    return pedidos.filter((pedido) => {
+      const fechaStr = obtenerFechaISO(pedido.fecha_generacion || pedido.Fecha_Generacion);
+      if (fechaDesde && (!fechaStr || fechaStr < fechaDesde)) return false;
+      if (fechaHasta && (!fechaStr || fechaStr > fechaHasta)) return false;
+      return true;
+    });
+  }, [pedidos, fechaDesde, fechaHasta]);
+
+  // ── Estadísticas de productos (dinámicas según filtros) ──────────────────────
+  const productosPendientes = useMemo(() => {
+    return productosFiltrados.filter(
+      (p) => (p.estado || p.Estado || "").toLowerCase() === "pendiente"
+    ).length;
+  }, [productosFiltrados]);
+
+  const productosTerminados = useMemo(() => {
+    return productosFiltrados.filter(
+      (p) => (p.estado || p.Estado || "").toLowerCase() === "terminado"
+    ).length;
+  }, [productosFiltrados]);
+
+  const productosEnProduccion = useMemo(() => {
+    return productosFiltrados.filter(
+      (p) => (p.estado || p.Estado || "").toLowerCase() === "en_produccion"
+    ).length;
+  }, [productosFiltrados]);
+
+  const pedidosFacturados = useMemo(() => {
+    return pedidosFiltrados.filter(
+      (p) => (p.estado_facturacion ?? p.Estado_Facturacion) === "se_factura"
+    );
+  }, [pedidosFiltrados]);
+
+  const totalFacturacion = useMemo(() => {
+    return pedidosFacturados.reduce(
+      (sum, p) => sum + Number(p.precio_total ?? p.Precio_Total ?? 0),
+      0
+    );
+  }, [pedidosFacturados]);
 
   // ── Histograma de modelos más vendidos ───────────────────────────────────────
   const histogramaModelos = useMemo(() => {
     const modelosMap = new Map();
     productosFiltrados.forEach((producto) => {
-      const nombreModelo = producto.modelo || "Desconocido";
+      const nombreModelo = producto.modelo || producto.Modelo || "Desconocido";
       const cantidad = modelosMap.get(nombreModelo) || 0;
-      modelosMap.set(nombreModelo, cantidad + (Number(producto.cantidad) || 0));
+      modelosMap.set(nombreModelo, cantidad + (Number(producto.cantidad || producto.Cantidad) || 1));
     });
     return Array.from(modelosMap.entries())
       .map(([modeloName, cantidad]) => ({
@@ -128,28 +178,27 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
       .sort((a, b) => b.cantidad - a.cantidad);
   }, [productosFiltrados]);
 
-  // ── Productos por período ────────────────────────────────────────────────────
+  // ── Productos por período (Día, Mes, Año) ────────────────────────────────────
   const productosPorMes = useMemo(() => {
     const mesesMap = new Map();
     productosFiltrados.forEach((producto) => {
-      if (!producto.fecha_pedido) return; // Ignorar productos sin fecha
-      const fecha = new Date(producto.fecha_pedido);
-      if (isNaN(fecha)) return; // Ignorar fechas inválidas
-      
+      const fechaISO = obtenerFechaISO(producto.fecha_pedido || producto.Fecha_Pedido);
+      if (!fechaISO) return;
+      const parts = fechaISO.split("-");
+      if (parts.length < 3) return;
+
       let key;
-      if (periodo === "diario") {
-        key = fecha.toISOString().split("T")[0];
-      } else if (periodo === "mensual") {
-        key = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
+      if (periodo === "mensual") {
+        key = `${parts[0]}-${parts[1]}`;
       } else {
-        key = String(fecha.getFullYear());
+        key = parts[0];
       }
       const cantidad = mesesMap.get(key) || 0;
-      mesesMap.set(key, cantidad + (Number(producto.cantidad) || 0));
+      mesesMap.set(key, cantidad + (Number(producto.cantidad || producto.Cantidad) || 1));
     });
+
     return Array.from(mesesMap.entries())
-      .map(([periodoKey, cantidad], index) => ({
-        name: `${periodoKey}-${index}`,
+      .map(([periodoKey, cantidad]) => ({
         periodo: periodoKey,
         productos: cantidad,
       }))
@@ -158,13 +207,14 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
   // ── Formatear etiqueta del período ──────────────────────────────────────────
   function formatPeriodoLabel(periodoStr) {
-    if (periodo === "diario") {
-      const date = new Date(periodoStr);
-      return `${date.getDate()}/${date.getMonth() + 1}`;
-    } else if (periodo === "mensual") {
-      const [year, month] = periodoStr.split("-");
-      const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-      return meses[parseInt(month) - 1];
+    if (!periodoStr) return "";
+    if (periodo === "mensual") {
+      const parts = periodoStr.split("-");
+      if (parts.length >= 2) {
+        const meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+        const monthIdx = parseInt(parts[1], 10) - 1;
+        return `${meses[monthIdx] || parts[1]} ${parts[0]}`;
+      }
     }
     return periodoStr;
   }
@@ -213,8 +263,11 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         />
         <StatCard
           title="Facturación Total"
-          value={`$${(totalFacturacion / 1000).toFixed(0)}K`}
-          change={`${productos.length} productos`}
+          value={`$ ${totalFacturacion.toLocaleString("es-AR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}
+          change={`${pedidosFacturados.length} pedido(s) facturado(s)`}
           icon={DollarSign}
           color="bg-purple-500"
         />
@@ -222,37 +275,39 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
       {/* Filtros de fecha */}
       <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex items-center gap-2">
-            <Calendar size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Filtrar por fecha:</span>
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar size={20} className="text-gray-400" />
+              <span className="text-sm font-semibold text-gray-700">Filtrar por fecha:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 font-medium">Desde:</label>
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all bg-white"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600 font-medium">Hasta:</label>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all bg-white"
+              />
+            </div>
+            {(fechaDesde || fechaHasta) && (
+              <button
+                onClick={() => { setFechaDesde(""); setFechaHasta(""); }}
+                className="text-sm text-red-700 hover:text-red-800 font-medium underline transition-all"
+              >
+                Limpiar filtros
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Desde:</label>
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) => setFechaDesde(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Hasta:</label>
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) => setFechaHasta(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {(fechaDesde || fechaHasta) && (
-            <button
-              onClick={() => { setFechaDesde(""); setFechaHasta(""); }}
-              className="text-sm text-blue-600 hover:text-blue-700 underline"
-            >
-              Limpiar filtros
-            </button>
-          )}
         </div>
       </div>
 
@@ -261,7 +316,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
         {/* Modelos más vendidos */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg mb-4 text-gray-800">Modelos Más Vendidos</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Modelos Más Vendidos</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={histogramaModelos} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -277,9 +332,35 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
         {/* Productos por período */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg mb-4 text-gray-800">
-            Productos Pedidos por {periodo === "diario" ? "Día" : periodo === "mensual" ? "Mes" : "Año"}
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Productos Pedidos por {periodo === "mensual" ? "Mes" : "Año"}
+            </h3>
+            <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold text-gray-600 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setPeriodo("mensual")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  periodo === "mensual"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "hover:text-gray-900"
+                }`}
+              >
+                Mes
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriodo("anual")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  periodo === "anual"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "hover:text-gray-900"
+                }`}
+              >
+                Año
+              </button>
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={productosPorMes}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -298,7 +379,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
       {/* Avisos de Pagos Pendientes */}
       <div id="section-pagos-pendientes" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <h3 className="text-lg mb-4 text-gray-800">Avisos de Pagos Pendientes</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Avisos de Pagos Pendientes</h3>
 
         {pagosPendientes.length === 0 ? (
           <p className="text-gray-400 text-sm">No hay pagos pendientes.</p>
@@ -317,7 +398,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
                     <Building size={20} className="text-orange-600" />
                   )}
                   <div>
-                    <p className="text-sm text-gray-800">{pago.nombre}</p>
+                    <p className="text-sm text-gray-800 font-medium">{pago.nombre}</p>
                     <p className="text-xs text-gray-500">
                       {pago.tipo === "cliente" ? "Cliente" : "Proveedor"} — Vence: {pago.fecha_vencimiento}
                     </p>
@@ -325,8 +406,8 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-base text-red-700">
-                      ${Number(pago.monto_adeudado).toLocaleString()}
+                    <p className="text-base font-bold text-red-700">
+                      ${Number(pago.monto_adeudado).toLocaleString("es-AR")}
                     </p>
                     <p className="text-xs text-gray-500">Pendiente</p>
                   </div>
@@ -343,7 +424,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl text-gray-800">Detalle del Aviso</h3>
+              <h3 className="text-xl text-gray-800 font-bold">Detalle del Aviso</h3>
               <button
                 onClick={() => setSelectedPago(null)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -368,7 +449,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
                   <p className="text-sm text-gray-500">
                     {selectedPago.tipo === "cliente" ? "Cliente" : "Proveedor"}
                   </p>
-                  <p className="text-lg text-gray-800">{selectedPago.nombre}</p>
+                  <p className="text-lg font-bold text-gray-800">{selectedPago.nombre}</p>
                 </div>
               </div>
 
@@ -392,8 +473,8 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
                 <p className="text-sm text-gray-500 mb-1">Monto Adeudado</p>
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <DollarSign size={20} className="text-red-600" />
-                  <p className="text-xl text-red-700">
-                    ${Number(selectedPago.monto_adeudado).toLocaleString()}
+                  <p className="text-xl font-bold text-red-700">
+                    ${Number(selectedPago.monto_adeudado).toLocaleString("es-AR")}
                   </p>
                 </div>
               </div>
@@ -401,7 +482,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
               <div className="pt-4">
                 <button
                   onClick={() => setSelectedPago(null)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors font-medium"
                 >
                   Cerrar
                 </button>
@@ -421,7 +502,7 @@ function StatCard({ title, value, change, icon: Icon, color }) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-500 text-sm mb-1">{title}</p>
-          <p className="text-3xl mb-2 text-gray-800">{value}</p>
+          <p className="text-3xl font-bold mb-2 text-gray-800">{value}</p>
           <p className="text-xs text-gray-400">{change}</p>
         </div>
         <div className={`${color} text-white p-3 rounded-xl`}>

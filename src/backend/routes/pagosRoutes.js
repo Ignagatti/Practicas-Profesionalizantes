@@ -6,6 +6,7 @@ const {
     obtenerPagos,
     obtenerPagoPorId,
     crearPago,
+    editarPago,
     eliminarPago
 } = require("../controllers/pagosController");
 
@@ -20,6 +21,10 @@ router.get("/:id", obtenerPagoPorId);
 
 // Crear un nuevo pago
 router.post("/", crearPago);
+
+
+// Editar un pago
+router.put("/:id", editarPago);
 
 
 // Eliminar un pago

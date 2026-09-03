@@ -23,6 +23,7 @@ const PRODUCTO_VACIO = {
 
 function Productos() {
     const [productos, setProductos] = useState([]);
+    const [cargando, setCargando] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filtroEstado, setFiltroEstado] = useState("todos");
     const [fechaDesde, setFechaDesde] = useState("");
@@ -64,8 +65,7 @@ function Productos() {
             const API_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : 'http://localhost:4000/api';
             const res = await fetch(`${API_URL}/clientes`);
             const data = await res.json();
-            const activos = data.filter(c => c.estado !== 'bloqueado');
-            setClientes(activos);
+            setClientes(data);
         } catch (error) {
             console.error('Error al cargar clientes:', error);
         }
@@ -81,11 +81,14 @@ function Productos() {
     };
 
     const cargarProductos = async () => {
+        setCargando(true);
         try {
             const data = await obtenerProductos();
             setProductos(data);
         } catch (error) {
             console.error('Error al cargar:', error);
+        } finally {
+            setCargando(false);
         }
     };
 
@@ -404,7 +407,20 @@ function Productos() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {filteredProductos.map((p, idx) => (
+                            {cargando ? (
+                                <tr>
+                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500 font-medium">
+                                        Cargando productos...
+                                    </td>
+                                </tr>
+                            ) : filteredProductos.length === 0 ? (
+                                <tr>
+                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-400 italic">
+                                        No hay productos para mostrar.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredProductos.map((p, idx) => (
                                 <tr key={p.id_producto || p.Id_Producto} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4 text-sm text-gray-400 font-medium">#00{idx+1}</td>
                                     <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Sin cliente'}</td>
@@ -428,7 +444,7 @@ function Productos() {
                                         <button onClick={() => handleOpenDetail(p)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Visualizar detalles"><Eye size={18} /></button>
                                     </td>
                                 </tr>
-                            ))}
+                            )))}
                         </tbody>
                     </table>
                 </div>

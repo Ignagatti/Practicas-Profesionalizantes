@@ -1,4 +1,11 @@
 const pool = require('../config/db');
+const {
+    parseMoney,
+    roundMoney,
+    addMoney,
+    subMoney,
+    multMoney
+} = require('../utils/currencyUtils');
 
 const ESTADOS_PRODUCTO_VALIDOS = [
     'pendiente',
@@ -194,7 +201,7 @@ const obtenerPedidoPorId = async (req, res) => {
 
         const pedido = resultado.rows[0];
 
-        // Obtener el historial de pagos asociados al pedido
+        // Obtener historial de pagos asociados al pedido
         const pagosResultado = await pool.query(
             `
             SELECT 
@@ -205,7 +212,7 @@ const obtenerPedidoPorId = async (req, res) => {
                 mp.Tipo AS medio_pago
             FROM Detalle_Pago_Pedido dpp
             INNER JOIN PagoPedido pp ON dpp.Id_Pago_Pedido = pp.Id_Pago_Pedido
-            LEFT JOIN Metodo_Pago mp ON pp.Id_Medio_Pago = pp.Id_Medio_Pago
+            LEFT JOIN Metodo_Pago mp ON pp.Id_Medio_Pago = mp.Id_Medio_Pago
             WHERE dpp.Id_Pedido = $1
             ORDER BY pp.Fecha_Pago ASC, pp.Id_Pago_Pedido ASC
             `,
@@ -309,15 +316,17 @@ const crearPedido = async (req, res) => {
             });
         }
 
-        const productosUnicos = [...new Set(productos.map(Number))];
+        const productosUnicos = [...new Set(productos.map(Number))].sort((a, b) => a - b);
 
         await client.query('BEGIN');
 
+        // Bloqueo y verificación de Cliente
         const clienteExiste = await client.query(
             `
-            SELECT Id_Cliente
+            SELECT Id_Cliente, Saldo
             FROM Cliente
             WHERE Id_Cliente = $1
+            FOR UPDATE
             `,
             [Id_Cliente]
         );
@@ -329,6 +338,7 @@ const crearPedido = async (req, res) => {
             });
         }
 
+        // Bloqueo y verificación de Productos
         const productosResultado = await client.query(
             `
             SELECT 
@@ -338,6 +348,8 @@ const crearPedido = async (req, res) => {
                 Cantidad
             FROM Producto
             WHERE Id_Producto = ANY($1::int[])
+            ORDER BY Id_Producto ASC
+            FOR UPDATE
             `,
             [productosUnicos]
         );
@@ -376,15 +388,15 @@ const crearPedido = async (req, res) => {
             });
         }
 
-        let precioTotal = productosResultado.rows.reduce((total, producto) => {
-            const precio = Number(producto.precio || 0);
+        let subtotalCalculado = productosResultado.rows.reduce((total, producto) => {
+            const precio = roundMoney(parseMoney(producto.precio));
             const cantidad = Number(producto.cantidad || 1);
-
-            return total + precio * cantidad;
+            return addMoney(total, multMoney(precio, cantidad));
         }, 0);
 
+        let precioTotal = subtotalCalculado;
         if (estadoFacturacionFinal === 'se_factura') {
-            precioTotal = precioTotal * 1.21;
+            precioTotal = roundMoney(multMoney(subtotalCalculado, 1.21));
         }
 
         const montoAdeudado = estadoPagoFinal === 'pagado' ? 0 : precioTotal;
@@ -430,6 +442,7 @@ const crearPedido = async (req, res) => {
             );
         }
         
+        // Actualizar saldo del cliente (disminuye saldo a favor / aumenta deuda)
         await client.query(
             `UPDATE Cliente SET Saldo = Saldo - $1 WHERE Id_Cliente = $2`,
             [precioTotal, Id_Cliente]
@@ -443,9 +456,7 @@ const crearPedido = async (req, res) => {
         });
     } catch (error) {
         await client.query('ROLLBACK');
-
         console.error('Error en crearPedido:', error.message);
-
         res.status(500).json({
             error: 'Error al crear pedido',
             detalle: error.message
@@ -594,16 +605,17 @@ const actualizarPedido = async (req, res) => {
             });
         }
 
-        const productosUnicos = [...new Set(productos.map(Number))];
+        const productosUnicos = [...new Set(productos.map(Number))].sort((a, b) => a - b);
 
         await client.query('BEGIN');
 
-        // Verificar que el pedido existe y obtener su cliente
+        // Bloqueo y verificación de Pedido y Cliente
         const pedidoExiste = await client.query(
             `
-            SELECT Id_Pedido, Id_Cliente
+            SELECT Id_Pedido, Id_Cliente, Precio_Total, Monto_Adeudado
             FROM Pedido
             WHERE Id_Pedido = $1
+            FOR UPDATE
             `,
             [id]
         );
@@ -616,8 +628,15 @@ const actualizarPedido = async (req, res) => {
         }
 
         const idCliente = pedidoExiste.rows[0].id_cliente;
+        const precioAnterior = roundMoney(parseMoney(pedidoExiste.rows[0].precio_total));
 
-        // Verificar que los productos existen y pertenecen al cliente
+        // Bloquear Cliente
+        await client.query(
+            `SELECT Id_Cliente FROM Cliente WHERE Id_Cliente = $1 FOR UPDATE`,
+            [idCliente]
+        );
+
+        // Bloquear Productos
         const productosResultado = await client.query(
             `
             SELECT 
@@ -627,6 +646,8 @@ const actualizarPedido = async (req, res) => {
                 Cantidad
             FROM Producto
             WHERE Id_Producto = ANY($1::int[])
+            ORDER BY Id_Producto ASC
+            FOR UPDATE
             `,
             [productosUnicos]
         );
@@ -649,7 +670,6 @@ const actualizarPedido = async (req, res) => {
             });
         }
 
-        // Verificar que los productos no estén asociados a OTRO pedido
         const productosYaEnOtroPedido = await client.query(
             `
             SELECT Id_Producto
@@ -666,18 +686,20 @@ const actualizarPedido = async (req, res) => {
             });
         }
 
-        let precioTotal = productosResultado.rows.reduce((total, producto) => {
-            const precio = Number(producto.precio || 0);
+        let subtotalCalculado = productosResultado.rows.reduce((total, producto) => {
+            const precio = roundMoney(parseMoney(producto.precio));
             const cantidad = Number(producto.cantidad || 1);
-
-            return total + precio * cantidad;
+            return addMoney(total, multMoney(precio, cantidad));
         }, 0);
 
+        let nuevoPrecioTotal = subtotalCalculado;
         if (estadoFacturacionFinal === 'se_factura') {
-            precioTotal = precioTotal * 1.21;
+            nuevoPrecioTotal = roundMoney(multMoney(subtotalCalculado, 1.21));
         }
 
-        let montoAdeudadoFinal = Monto_Adeudado !== undefined ? Number(Monto_Adeudado) : precioTotal;
+        const diferenciaPrecio = subMoney(nuevoPrecioTotal, precioAnterior);
+
+        let montoAdeudadoFinal = Monto_Adeudado !== undefined ? roundMoney(parseMoney(Monto_Adeudado)) : nuevoPrecioTotal;
         if (estadoPagoFinal === 'pagado') {
             montoAdeudadoFinal = 0;
         }
@@ -700,7 +722,7 @@ const actualizarPedido = async (req, res) => {
             [
                 Vencimiento || null,
                 Observaciones || null,
-                precioTotal,
+                nuevoPrecioTotal,
                 estadoFacturacionFinal,
                 Nro_Factura || null,
                 montoAdeudadoFinal,
@@ -709,16 +731,9 @@ const actualizarPedido = async (req, res) => {
             ]
         );
 
-        // Eliminar detalles anteriores
-        await client.query(
-            `
-            DELETE FROM Detalle_Pedido
-            WHERE Id_Pedido = $1
-            `,
-            [id]
-        );
+        // Actualizar detalles
+        await client.query(`DELETE FROM Detalle_Pedido WHERE Id_Pedido = $1`, [id]);
 
-        // Insertar nuevos detalles
         for (const idProducto of productosUnicos) {
             await client.query(
                 `
@@ -728,6 +743,12 @@ const actualizarPedido = async (req, res) => {
                 [id, idProducto]
             );
         }
+
+        // Actualizar saldo del cliente con la diferencia
+        await client.query(
+            `UPDATE Cliente SET Saldo = Saldo - $1 WHERE Id_Cliente = $2`,
+            [diferenciaPrecio, idCliente]
+        );
 
         await client.query('COMMIT');
 
@@ -886,7 +907,7 @@ const eliminarPedido = async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // 1. Verificar si el pedido existe y obtener sus datos clave
+        // 1. Bloquear y verificar si el pedido existe
         const pedidoResp = await client.query(
             "SELECT Id_Cliente, Estado_Pago, Precio_Total FROM Pedido WHERE Id_Pedido = $1 FOR UPDATE",
             [id]
@@ -898,6 +919,7 @@ const eliminarPedido = async (req, res) => {
         }
 
         const pedido = pedidoResp.rows[0];
+        const precioTotal = roundMoney(parseMoney(pedido.precio_total));
 
         // 2. Prohibir eliminación si ya fue pagado o tiene saldo parcial
         if (pedido.estado_pago !== 'pendiente' && pedido.estado_pago !== 'no_se_factura') {
@@ -916,8 +938,12 @@ const eliminarPedido = async (req, res) => {
         // 4. Revertir el impacto contable en el saldo del cliente
         if (pedido.id_cliente) {
             await client.query(
+                "SELECT Id_Cliente FROM Cliente WHERE Id_Cliente = $1 FOR UPDATE",
+                [pedido.id_cliente]
+            );
+            await client.query(
                 "UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2",
-                [pedido.precio_total, pedido.id_cliente]
+                [precioTotal, pedido.id_cliente]
             );
         }
 

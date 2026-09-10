@@ -1,9 +1,14 @@
 const pool = require('../config/db');
 
-// OBTENER TODOS
+// OBTENER TODOS (Solo activos)
 const obtenerInsumos = async (req, res) => {
     try {
-        const resultado = await pool.query('SELECT * FROM Insumo ORDER BY Id_Insumo ASC');
+        const { incluirInactivos } = req.query;
+        let query = 'SELECT * FROM Insumo WHERE (activo = true OR activo IS NULL) ORDER BY Id_Insumo ASC';
+        if (incluirInactivos === 'true') {
+            query = 'SELECT * FROM Insumo ORDER BY Id_Insumo ASC';
+        }
+        const resultado = await pool.query(query);
         res.json(resultado.rows);
     } catch (error) {
         console.error('Error en obtenerInsumos:', error.message);
@@ -22,7 +27,7 @@ const crearInsumo = async (req, res) => {
     if (precio_unitario < 0) return res.status(400).json({ error: 'El precio no puede ser negativo' });
 
     try {
-        const query = 'INSERT INTO Insumo (Nombre, Categoria, Precio_Unitario) VALUES ($1, $2, $3) RETURNING *';
+        const query = 'INSERT INTO Insumo (Nombre, Categoria, Precio_Unitario, Activo) VALUES ($1, $2, $3, true) RETURNING *';
         const valores = [nombre, categoria, precio_unitario];
         const resultado = await pool.query(query, valores);
         res.status(201).json(resultado.rows[0]);
@@ -50,16 +55,19 @@ const actualizarInsumo = async (req, res) => {
     }
 };
 
-// BORRAR
+// BORRAR (Soft Delete / Baja lógica para preservar históricos)
 const eliminarInsumo = async (req, res) => {
     const { id } = req.params;
     try {
-        const resultado = await pool.query('DELETE FROM Insumo WHERE Id_Insumo = $1', [id]);
+        const resultado = await pool.query(
+            'UPDATE Insumo SET Activo = false, Eliminado_En = NOW() WHERE Id_Insumo = $1 RETURNING *',
+            [id]
+        );
         if (resultado.rowCount === 0) return res.status(404).json({ error: 'Insumo no encontrado' });
-        res.json({ mensaje: `Insumo con ID ${id} eliminado con éxito` });
+        res.json({ mensaje: `Insumo con ID ${id} desactivado con éxito`, insumo: resultado.rows[0] });
     } catch (error) {
         console.error('Error en eliminarInsumo:', error.message);
-        res.status(500).json({ error: 'Error al eliminar el insumo. Quizás esté siendo usado por un producto.' });
+        res.status(500).json({ error: 'Error al eliminar el insumo.' });
     }
 };
 
@@ -77,10 +85,10 @@ const ajustarPrecios = async (req, res) => {
         const factor = 1 + (porcentaje / 100);
 
         if (categoria && categoria !== 'todos' && categoria !== '') {
-            query = 'UPDATE Insumo SET Precio_Unitario = Precio_Unitario * $1 WHERE Categoria = $2 RETURNING *';
+            query = 'UPDATE Insumo SET Precio_Unitario = ROUND((Precio_Unitario * $1)::numeric, 2) WHERE Categoria = $2 AND (activo = true OR activo IS NULL) RETURNING *';
             valores = [factor, categoria];
         } else {
-            query = 'UPDATE Insumo SET Precio_Unitario = Precio_Unitario * $1 RETURNING *';
+            query = 'UPDATE Insumo SET Precio_Unitario = ROUND((Precio_Unitario * $1)::numeric, 2) WHERE (activo = true OR activo IS NULL) RETURNING *';
             valores = [factor];
         }
 

@@ -3,7 +3,6 @@ import {
   Search,
   Plus,
   Eye,
-  Edit,
   Trash2,
   DollarSign,
   X,
@@ -17,168 +16,84 @@ import {
 } from "lucide-react";
 
 
+import {
+  parseMoney,
+  roundMoney,
+  addMoney,
+  subMoney,
+  formatMoney,
+  formatDate,
+  dateForInput
+} from "../utils/currencyUtils";
+import { useToast } from "../components/ui/ToastContext.jsx";
+import { useConfirm } from "../components/ui/ConfirmContext.jsx";
+
 // =====================================================
 // CONFIGURACIÓN
 // =====================================================
 
 const API_URL = "http://localhost:4000/api";
 
-function parseNum(val) {
-  if (typeof val === "number") return isNaN(val) ? 0 : val;
-  if (!val) return 0;
-  let str = String(val).trim();
-  if (str.includes(",") && str.includes(".")) {
-    str = str.replace(/\./g, "").replace(",", ".");
-  } else if (str.includes(",")) {
-    str = str.replace(",", ".");
-  }
-  const num = parseFloat(str);
-  return isNaN(num) ? 0 : num;
-}
-
-/*
-  Estos identificadores deben coincidir con los registros
-  existentes en la tabla Metodo_Pago.
-
-  Cuando puedan conectarse a PostgreSQL, deben comprobar:
-
-  SELECT * FROM Metodo_Pago;
-*/
-
-const METODOS_PAGO = [
-  {
-    id: 1,
-    tipo: "efectivo",
-    label: "Efectivo",
-  },
-  {
-    id: 2,
-    tipo: "transferencia",
-    label: "Transferencia",
-  },
-  {
-    id: 3,
-    tipo: "cheque",
-    label: "Cheque",
-  },
-  {
-    id: 4,
-    tipo: "tarjeta",
-    label: "Tarjeta",
-  },
-];
-
-
-const metodoPagoConfig = {
-  efectivo: {
-    label: "Efectivo",
-    color: "bg-green-100 text-green-700",
-  },
-
-  transferencia: {
-    label: "Transferencia",
-    color: "bg-blue-100 text-blue-700",
-  },
-
-  cheque: {
-    label: "Cheque",
-    color: "bg-purple-100 text-purple-700",
-  },
-
-  tarjeta: {
-    label: "Tarjeta",
-    color: "bg-orange-100 text-orange-700",
-  },
-};
-
-
-const estadoPagoConfig = {
-  pendiente: {
-    label: "Pendiente",
-    color: "bg-yellow-100 text-yellow-700",
-  },
-
-  parcial: {
-    label: "Parcial",
-    color: "bg-blue-100 text-blue-700",
-  },
-
-  pagado: {
-    label: "Pagado",
-    color: "bg-green-100 text-green-700",
-  },
-};
-
+const parseNum = parseMoney;
+const formatearDinero = formatMoney;
+const formatearFecha = formatDate;
+const fechaParaInput = dateForInput;
 
 const FORM_VACIO = {
+  id_proveedor: "",
+  id_entidad: "",
   fecha_pago: new Date().toISOString().split("T")[0],
   monto: "",
-  id_medio_pago: "",
-  id_proveedor: "",
-  facturas: [],
   monto_favor_usado: "",
+  id_medio_pago: "",
+  facturas: [],
 };
 
+const METODOS_PAGO = [
+  { id: 1, label: "Efectivo" },
+  { id: 2, label: "Transferencia" },
+  { id: 3, label: "Cheque" },
+  { id: 4, label: "Tarjeta" },
+];
 
-// =====================================================
-// FUNCIONES AUXILIARES
-// =====================================================
-
-function normalizarTexto(valor) {
-  return String(valor ?? "").trim();
+function normalizarTexto(texto) {
+  if (!texto) return "";
+  return String(texto).trim().toLowerCase();
 }
-
 
 function normalizarTipoMedioPago(tipo) {
-  return normalizarTexto(tipo)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  if (!tipo) return "efectivo";
+  const t = String(tipo).toLowerCase().trim();
+  if (t.includes("efect")) return "efectivo";
+  if (t.includes("transf")) return "transferencia";
+  if (t.includes("cheq")) return "cheque";
+  if (t.includes("tarj")) return "tarjeta";
+  return t;
 }
 
+const metodoPagoConfig = {
+  efectivo: { label: "Efectivo", color: "bg-emerald-100 text-emerald-800" },
+  transferencia: { label: "Transferencia", color: "bg-blue-100 text-blue-800" },
+  cheque: { label: "Cheque", color: "bg-purple-100 text-purple-800" },
+  tarjeta: { label: "Tarjeta", color: "bg-indigo-100 text-indigo-800" },
+};
 
-function formatearDinero(valor) {
-  return Number(valor || 0).toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const estadoPagoConfig = {
+  pagado: { label: "Pagado", color: "bg-emerald-100 text-emerald-800" },
+  parcial: { label: "Parcial", color: "bg-amber-100 text-amber-800" },
+  pendiente: { label: "Pendiente", color: "bg-rose-100 text-rose-800" },
+};
+
+function obtenerNombreProveedor(factura) {
+  if (!factura) return "Proveedor Desconocido";
+  const razon = (factura.razon_social || factura.Razon_Social || "").trim();
+  const nombre = (factura.nombre || factura.Nombre || "").trim();
+  const apellido = (factura.apellido || factura.Apellido || "").trim();
+  if (razon) return razon;
+  if (nombre || apellido) return `${nombre} ${apellido}`.trim();
+  return "Proveedor Desconocido";
 }
 
-
-function fechaParaInput(fecha) {
-  if (!fecha) {
-    return "";
-  }
-
-  return String(fecha).split("T")[0];
-}
-
-
-function formatearFecha(fecha) {
-  const fechaNormalizada = fechaParaInput(fecha);
-
-  if (!fechaNormalizada) {
-    return "—";
-  }
-
-  const partes = fechaNormalizada.split("-");
-
-  if (partes.length !== 3) {
-    return fechaNormalizada;
-  }
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-
-function obtenerNombreProveedor(datos) {
-  const nombre = (datos.nombre ?? datos.Nombre ?? "").trim();
-  const apellido = (datos.apellido ?? datos.Apellido ?? "").trim();
-  const contacto = `${nombre} ${apellido}`.trim();
-  const razonSocial = (datos.razon_social ?? datos.Razon_Social ?? "").trim();
-
-  return contacto || razonSocial || "Desconocido";
-}
 
 
 function normalizarFactura(factura) {
@@ -400,6 +315,9 @@ async function leerRespuesta(respuesta) {
 // =====================================================
 
 export default function Pagos() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [tipoVista, setTipoVista] = useState("cliente");
   const [pagos, setPagos] = useState([]);
   const [facturas, setFacturas] = useState([]);
@@ -424,8 +342,6 @@ export default function Pagos() {
 
   const [showViewModal, setShowViewModal] =
     useState(false);
-
-  const [isEditandoPago, setIsEditandoPago] = useState(false);
 
   const [viewingPago, setViewingPago] =
     useState(null);
@@ -1032,7 +948,7 @@ export default function Pagos() {
 
 
   // =====================================================
-  // VER DETALLE
+  // VER DETALLE (SOLO LECTURA)
   // =====================================================
 
   async function abrirDetallePago(pago) {
@@ -1040,7 +956,6 @@ export default function Pagos() {
     setDetallesPago([]);
     setErrorForm("");
     setCargandoDetalle(true);
-    setIsEditandoPago(false);
     setShowViewModal(true);
 
     try {
@@ -1091,7 +1006,6 @@ export default function Pagos() {
 
   function cerrarDetalle() {
     setShowViewModal(false);
-    setIsEditandoPago(false);
     setViewingPago(null);
     setDetallesPago([]);
     setErrorForm("");
@@ -1099,20 +1013,24 @@ export default function Pagos() {
 
 
   // =====================================================
-  // ELIMINAR PAGO
+  // ELIMINAR / ANULAR PAGO
   // =====================================================
 
   async function handleDelete(id) {
-    const confirmar = window.confirm(
-      "¿Está seguro de que desea eliminar este pago? Los montos se devolverán a las facturas asociadas."
-    );
+    const confirmar = await confirm({
+      title: "Eliminar Pago",
+      message: "¿Está seguro de que desea eliminar este pago? Los montos aplicados se restaurarán automáticamente a las facturas o pedidos correspondientes.",
+      confirmText: "Eliminar Pago",
+      cancelText: "Cancelar",
+      type: "danger"
+    });
 
     if (!confirmar) {
       return;
     }
 
     setGuardando(true);
-    setErrorForm("");
+    setError("");
 
     try {
       const respuesta = await fetch(
@@ -1133,13 +1051,7 @@ export default function Pagos() {
         );
       }
 
-      cerrarDetalle();
-
-      mostrarExito(
-        datos.mensaje ||
-        "Pago eliminado correctamente."
-      );
-
+      toast.success(datos.mensaje || "Pago eliminado correctamente.");
       await cargarDatos();
     } catch (err) {
       console.error(
@@ -1147,62 +1059,8 @@ export default function Pagos() {
         err
       );
 
-      if (showViewModal) {
-        setErrorForm(err.message);
-      } else {
-        setError(err.message);
-      }
-    } finally {
-      setGuardando(false);
-    }
-  }
-
-
-  // =====================================================
-  // GUARDAR EDICIÓN DE PAGO
-  // =====================================================
-
-  async function handleGuardarEdicionPago() {
-    if (!viewingPago) return;
-
-    setGuardando(true);
-    setErrorForm("");
-
-    try {
-      const idPago =
-        viewingPago.id_pago_insumo ||
-        viewingPago.id_pago_pedido ||
-        viewingPago.Id_Pago_Insumo ||
-        viewingPago.Id_Pago_Pedido;
-
-      const respuesta = await fetch(
-        `${API_URL}/pagos/${idPago}?tipo=${tipoVista}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fecha_pago: viewingPago.fecha_pago,
-            tipo_medio_pago: viewingPago.tipo_medio_pago,
-          }),
-        }
-      );
-
-      const datos = await leerRespuesta(respuesta);
-
-      if (!respuesta.ok) {
-        throw new Error(
-          datos.mensaje ||
-          datos.error ||
-          "No se pudo actualizar el pago."
-        );
-      }
-
-      setIsEditandoPago(false);
-      mostrarExito(datos.mensaje || "Pago actualizado correctamente.");
-      await cargarDatos();
-    } catch (err) {
-      console.error("Error al actualizar el pago:", err);
-      setErrorForm(err.message);
+      toast.error(err.message, "Error al eliminar");
+      setError(err.message);
     } finally {
       setGuardando(false);
     }
@@ -1548,7 +1406,7 @@ export default function Pagos() {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={() =>
@@ -1556,8 +1414,8 @@ export default function Pagos() {
                                 pago
                               )
                             }
-                            className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg"
-                            title="Ver detalle"
+                            className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                            title="Ver detalle del pago"
                           >
                             <Eye size={18} />
                           </button>
@@ -1569,7 +1427,7 @@ export default function Pagos() {
                                 pago.id_pago_insumo
                               )
                             }
-                            className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
+                            className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
                             title="Eliminar pago"
                           >
                             <Trash2 size={18} />
@@ -2112,62 +1970,31 @@ export default function Pagos() {
                   <p className="text-gray-500 text-sm">
                     Fecha
                   </p>
-
-                  {isEditandoPago ? (
-                    <input
-                      type="date"
-                      value={
-                        viewingPago.fecha_pago
-                          ? new Date(viewingPago.fecha_pago).toISOString().split("T")[0]
-                          : ""
-                      }
-                      onChange={(e) =>
-                        setViewingPago({
-                          ...viewingPago,
-                          fecha_pago: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  ) : (
-                    <p className="text-lg">
-                      {formatearFecha(
-                        viewingPago.fecha_pago
-                      )}
-                    </p>
-                  )}
+                  <p className="text-lg font-semibold text-gray-800">
+                    {formatearFecha(
+                      viewingPago.fecha_pago
+                    )}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-gray-500 text-sm">
                     Método de pago
                   </p>
-
-                  {isEditandoPago ? (
-                    <select
-                      value={viewingPago.tipo_medio_pago || "efectivo"}
-                      onChange={(e) =>
-                        setViewingPago({
-                          ...viewingPago,
-                          tipo_medio_pago: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                    >
-                      <option value="efectivo">Efectivo</option>
-                      <option value="transferencia">Transferencia</option>
-                      <option value="cheque">Cheque</option>
-                      <option value="tarjeta">Tarjeta</option>
-                    </select>
-                  ) : (
-                    <p className="text-lg">
-                      {metodoPagoConfig[
+                  <span
+                    className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
+                      metodoPagoConfig[
                         viewingPago.tipo_medio_pago
-                      ]?.label ||
-                        viewingPago.tipo_medio_pago ||
-                        "Sin especificar"}
-                    </p>
-                  )}
+                      ]?.color ||
+                      "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {metodoPagoConfig[
+                      viewingPago.tipo_medio_pago
+                    ]?.label ||
+                      viewingPago.tipo_medio_pago ||
+                      "Sin especificar"}
+                  </span>
                 </div>
 
                 <div>
@@ -2175,7 +2002,7 @@ export default function Pagos() {
                     Monto total
                   </p>
 
-                  <p className="text-lg">
+                  <p className="text-lg font-bold text-gray-900">
                     $
                     {formatearDinero(
                       viewingPago.monto
@@ -2188,7 +2015,7 @@ export default function Pagos() {
                     Monto restante
                   </p>
 
-                  <p className="text-lg">
+                  <p className="text-lg font-semibold text-gray-700">
                     $
                     {formatearDinero(
                       viewingPago.monto_restante
@@ -2202,7 +2029,7 @@ export default function Pagos() {
                   </p>
 
                   <span
-                    className={`inline-block mt-1 px-3 py-1 rounded-full text-xs ${
+                    className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${
                       estadoPagoConfig[
                         viewingPago.estado_pago
                       ]?.color ||
@@ -2219,8 +2046,8 @@ export default function Pagos() {
 
 
               <div>
-                <h3 className="text-lg text-gray-800 mb-3">
-                  Facturas asociadas
+                <h3 className="text-lg font-bold text-gray-800 mb-3">
+                  {tipoVista === "proveedor" ? "Facturas asociadas" : "Pedidos asociados"}
                 </h3>
 
                 {cargandoDetalle ? (
@@ -2229,7 +2056,7 @@ export default function Pagos() {
                   </div>
                 ) : detallesPago.length === 0 ? (
                   <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-lg">
-                    No hay facturas asociadas.
+                    No hay comprobantes asociados.
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -2238,11 +2065,11 @@ export default function Pagos() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Factura
+                              Comprobante
                             </th>
 
                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                              Monto usado
+                              Monto aplicado
                             </th>
 
                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -2260,22 +2087,22 @@ export default function Pagos() {
                             (detalle) => (
                               <tr
                                 key={`${viewingPago.id_pago_insumo}-${detalle.id_factura_proveedor}`}
-                                className="border-t"
+                                className="border-t hover:bg-gray-50"
                               >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
                                   {
                                     detalle.nro_factura_proveedor
                                   }
                                 </td>
 
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-700">
                                   $
                                   {formatearDinero(
                                     detalle.monto_usado
                                   )}
                                 </td>
 
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                   $
                                   {formatearDinero(
                                     detalle.monto_adeudado
@@ -2284,7 +2111,7 @@ export default function Pagos() {
 
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs ${
+                                    className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                                       estadoPagoConfig[
                                         detalle.estado_pago
                                       ]?.color ||
@@ -2308,46 +2135,22 @@ export default function Pagos() {
               </div>
 
 
-              <div className="flex gap-4 pt-4 border-t border-gray-200">
-                {isEditandoPago ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditandoPago(false)}
-                      className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 font-semibold text-gray-700"
-                    >
-                      Cancelar
-                    </button>
+              {/* AVISO CONTABLE */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-start gap-3 text-blue-800 text-xs">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600" />
+                <p>
+                  <strong>Comprobante Histórico Asentado:</strong> Los registros de pago son inmutables para garantizar la trazabilidad contable y auditoría de cuentas corrientes.
+                </p>
+              </div>
 
-                    <button
-                      type="button"
-                      onClick={handleGuardarEdicionPago}
-                      disabled={guardando}
-                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {guardando ? "Guardando..." : "Guardar cambios"}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={cerrarDetalle}
-                      className="flex-1 border border-gray-300 py-3 rounded-lg hover:bg-gray-50 font-semibold text-gray-700"
-                    >
-                      Cerrar
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsEditandoPago(true)}
-                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center justify-center gap-2"
-                    >
-                      <Edit size={18} />
-                      Editar pago
-                    </button>
-                  </>
-                )}
+              <div className="flex justify-end pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={cerrarDetalle}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl font-bold text-gray-700 transition-colors text-sm"
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

@@ -8,6 +8,7 @@ import {
     terminarProductosMasivo
 } from '../services/productosService';
 import { obtenerInsumos } from '../services/insumosService';
+import { useToast } from '../components/ui/ToastContext.jsx';
 
 const PRODUCTO_VACIO = {
     id_cliente: '',
@@ -22,6 +23,7 @@ const PRODUCTO_VACIO = {
 };
 
 function Productos() {
+    const toast = useToast();
     const [productos, setProductos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -307,7 +309,7 @@ function Productos() {
                     ventana.close();
                 }, 250);
             } else {
-                alert("Por favor, permite las ventanas emergentes (pop-ups) para imprimir la planilla.");
+                toast.warning("Por favor, permite las ventanas emergentes (pop-ups) para imprimir la planilla.");
             }
             // Actualizar el estado en el backend
             const promesas = seleccionados.map(id => {

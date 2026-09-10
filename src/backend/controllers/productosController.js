@@ -1,8 +1,14 @@
 const pool = require('../config/db');
 
-// OBTENER TODOS
+// OBTENER TODOS (Solo activos por defecto)
 const obtenerProductos = async (req, res) => {
     try {
+        const { incluirInactivos } = req.query;
+        let filtroActivo = 'WHERE (p.activo = true OR p.activo IS NULL)';
+        if (incluirInactivos === 'true') {
+            filtroActivo = '';
+        }
+
         const query = `
             SELECT p.*, p.Observaciones as observaciones, 
                    CASE 
@@ -12,6 +18,7 @@ const obtenerProductos = async (req, res) => {
                    END as cliente 
             FROM Producto p 
             LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
+            ${filtroActivo}
             ORDER BY p.Id_Producto ASC
         `;
         const resultado = await pool.query(query);
@@ -27,7 +34,7 @@ const crearProducto = async (req, res) => {
     const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente } = req.body;
 
     try {
-        const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido, Id_Cliente) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *';
+        const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido, Id_Cliente, Activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING *';
         const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, precio || 0, observaciones || '', fecha_pedido || new Date(), id_cliente || null];
         const resultado = await pool.query(query, valores);
         res.status(201).json(resultado.rows[0]);
@@ -55,7 +62,7 @@ const actualizarProducto = async (req, res) => {
     }
 };
 
-// BORRAR
+// BORRAR (Soft Delete / Baja lógica)
 const eliminarProducto = async (req, res) => {
     const { id } = req.params;
     try {
@@ -72,32 +79,27 @@ const eliminarProducto = async (req, res) => {
             });
         }
 
-        // 2. Si no está en producción, procedemos al borrado
-        await pool.query('DELETE FROM Producto WHERE Id_Producto = $1', [id]);
-        res.json({ mensaje: 'Producto eliminado correctamente' });
+        // 2. Soft Delete: Desactivar producto preservando históricos en pedidos
+        const resultado = await pool.query(
+            'UPDATE Producto SET Activo = false, Eliminado_En = NOW() WHERE Id_Producto = $1 RETURNING *',
+            [id]
+        );
+        res.json({ mensaje: 'Producto desactivado correctamente', producto: resultado.rows[0] });
     } catch (error) {
         console.error('Error en eliminarProducto:', error.message);
-        
-        if (error.code === '23503') {
-            return res.status(400).json({ 
-                error: 'No se puede eliminar este producto porque ya forma parte de un pedido existente.' 
-            });
-        }
-
         res.status(500).json({ error: 'Error al intentar eliminar el producto.' });
     }
 };
 
 // PASAR DE EN PRODUCCIÓN A TERMINADO
 const terminarProductosMasivo = async (req, res) => {
-    const { ids } = req.body; // Esperamos un array de IDs: [1, 2, 3]
+    const { ids } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: 'Debe proporcionar una lista de IDs válida.' });
     }
 
     try {
-        // Actualiza a 'terminado' solo aquellos que estén 'en_produccion' dentro de la lista de IDs proporcionada
         const query = `
             UPDATE Producto 
             SET Estado = 'terminado' 

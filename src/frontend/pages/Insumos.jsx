@@ -7,6 +7,8 @@ import {
     eliminarInsumo,
     ajustarPreciosPorcentaje
 } from '../services/insumosService';
+import { useToast } from '../components/ui/ToastContext.jsx';
+import { useConfirm } from '../components/ui/ConfirmContext.jsx';
 
 const CATEGORIAS = ['Modelo', 'Tela', 'Lustre'];
 
@@ -17,6 +19,9 @@ const INSUMO_VACIO = {
 };
 
 function Insumos() {
+    const toast = useToast();
+    const confirm = useConfirm();
+
     const [insumos, setInsumos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +46,8 @@ function Insumos() {
             const data = await obtenerInsumos();
             setInsumos(data);
         } catch (error) {
-            console.error('Error al cargar insumos:', error);
+            console.error(error);
+            toast.error("Error al cargar los insumos.");
         } finally {
             setCargando(false);
         }
@@ -69,23 +75,34 @@ function Insumos() {
         try {
             if (isEditing) {
                 await actualizarInsumo(formData.id, formData);
+                toast.success("Insumo actualizado correctamente.");
             } else {
                 await crearInsumo(formData);
+                toast.success("Insumo creado correctamente.");
             }
             setShowFormModal(false);
             cargarInsumos();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message, "Error");
         }
     };
 
     const handleEliminar = async (id) => {
-        if (!confirm("¿Seguro quieres eliminar este insumo?")) return;
+        const ok = await confirm({
+            title: "Desactivar Insumo",
+            message: "¿Está seguro que desea desactivar este insumo? Se preservarán los registros históricos donde se utilizó.",
+            confirmText: "Desactivar",
+            cancelText: "Cancelar",
+            type: "danger"
+        });
+        if (!ok) return;
+
         try {
             await eliminarInsumo(id);
+            toast.success("Insumo desactivado con éxito.");
             cargarInsumos();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message, "Error al eliminar");
         }
     };
 
@@ -94,11 +111,12 @@ function Insumos() {
         
         try {
             await ajustarPreciosPorcentaje(porcentajeAjuste, filtroCategoria);
+            toast.success(`Precios ajustados un ${porcentajeAjuste}% con éxito.`);
             setPorcentajeAjuste("");
             setShowAdjustModal(false);
             cargarInsumos();
         } catch (error) {
-            alert(error.message);
+            toast.error(error.message, "Error al ajustar precios");
         }
     };
 

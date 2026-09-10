@@ -21,6 +21,8 @@ import {
   CreditCard,
   User,
 } from "lucide-react";
+import { useToast } from "../ui/ToastContext.jsx";
+import { useConfirm } from "../ui/ConfirmContext.jsx";
 
 const API_URL = "http://localhost:4000/api";
 
@@ -143,6 +145,9 @@ export function EntidadesPanel({
   tipoInicial = "cliente",
   mostrarSelector = false,
 }) {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [tipoVista, setTipoVista] = useState(tipoInicial);
   const [entidades, setEntidades] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -432,7 +437,15 @@ export function EntidadesPanel({
     const accion = selectedEntidad.estado === "activo" ? "bloquear" : "activar";
     const nombreEntidad = obtenerNombreEntidad(tipoVista).toLowerCase();
 
-    if (!confirm(`¿Está seguro que desea ${accion} este ${nombreEntidad}?`)) {
+    const ok = await confirm({
+      title: `${selectedEntidad.estado === "activo" ? "Bloquear" : "Activar"} ${obtenerNombreEntidad(tipoVista)}`,
+      message: `¿Está seguro que desea ${accion} este ${nombreEntidad}?`,
+      confirmText: selectedEntidad.estado === "activo" ? "Bloquear" : "Activar",
+      cancelText: "Cancelar",
+      type: selectedEntidad.estado === "activo" ? "warning" : "info"
+    });
+
+    if (!ok) {
       return;
     }
 
@@ -538,7 +551,14 @@ export function EntidadesPanel({
   }
 
   async function eliminarDireccion(idDireccion) {
-    if (!confirm("¿Está seguro que desea eliminar esta dirección?")) return;
+    const ok = await confirm({
+      title: "Eliminar Dirección",
+      message: "¿Está seguro que desea eliminar esta dirección?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger"
+    });
+    if (!ok) return;
 
     try {
       const ruta = obtenerRuta(tipoVista);
@@ -554,12 +574,13 @@ export function EntidadesPanel({
       }
 
       setDirecciones((prev) => prev.filter((d) => d.id !== idDireccion));
-      mostrarExito("Dirección eliminada correctamente.");
+      toast.success("Dirección eliminada correctamente.");
 
       if (direccionEditandoId === idDireccion) {
         cancelarEdicionDireccion();
       }
     } catch (err) {
+      toast.error(err.message, "Error");
       setError(err.message);
     }
   }

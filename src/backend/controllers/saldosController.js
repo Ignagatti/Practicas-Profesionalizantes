@@ -1,14 +1,15 @@
 const db = require("../config/db");
-
+const {
+    parseMoney,
+    roundMoney
+} = require("../utils/currencyUtils");
 
 // =====================================================
 // OBTENER SALDOS DE TODOS LOS PROVEEDORES
 // =====================================================
 
 const obtenerSaldosProveedores = async (req, res) => {
-
     try {
-
         const resultado = await db.query(`
             SELECT
                 p.Id_Proveedor,
@@ -48,15 +49,11 @@ const obtenerSaldosProveedores = async (req, res) => {
         res.json(resultado.rows);
 
     } catch (error) {
-
         console.error("Error al obtener saldos:", error);
-
         res.status(500).json({
             mensaje: "Error al obtener los saldos de los proveedores."
         });
-
     }
-
 };
 
 
@@ -65,11 +62,9 @@ const obtenerSaldosProveedores = async (req, res) => {
 // =====================================================
 
 const obtenerSaldoProveedor = async (req, res) => {
-
     const { id } = req.params;
 
     try {
-
         const proveedor = await db.query(
             `
             SELECT
@@ -107,11 +102,9 @@ const obtenerSaldoProveedor = async (req, res) => {
         );
 
         if (proveedor.rows.length === 0) {
-
             return res.status(404).json({
                 mensaje: "El proveedor no existe."
             });
-
         }
 
         const facturas = await db.query(
@@ -141,15 +134,11 @@ const obtenerSaldoProveedor = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Error al obtener saldo del proveedor:", error);
-
         res.status(500).json({
             mensaje: "Error al obtener el saldo del proveedor."
         });
-
     }
-
 };
 
 
@@ -158,13 +147,10 @@ const obtenerSaldoProveedor = async (req, res) => {
 // =====================================================
 
 const recalcularSaldoProveedor = async (req, res) => {
-
     const { id } = req.params;
-
     const client = await db.connect();
 
     try {
-
         await client.query("BEGIN");
 
         const proveedor = await client.query(
@@ -178,13 +164,10 @@ const recalcularSaldoProveedor = async (req, res) => {
         );
 
         if (proveedor.rows.length === 0) {
-
             await client.query("ROLLBACK");
-
             return res.status(404).json({
                 mensaje: "El proveedor no existe."
             });
-
         }
 
         const resultadoSaldo = await client.query(
@@ -194,26 +177,21 @@ const recalcularSaldoProveedor = async (req, res) => {
                     SUM(Monto_Adeudado),
                     0
                 ) AS saldo_calculado
-
             FROM Factura_Proveedor
-
             WHERE Id_Proveedor = $1
             `,
             [id]
         );
 
-        const saldoCalculado = Number(
-            resultadoSaldo.rows[0].saldo_calculado
+        const saldoCalculado = roundMoney(
+            parseMoney(resultadoSaldo.rows[0].saldo_calculado)
         );
 
         const proveedorActualizado = await client.query(
             `
             UPDATE Proveedor
-
             SET Saldo = $1
-
             WHERE Id_Proveedor = $2
-
             RETURNING
                 Id_Proveedor,
                 Nombre,
@@ -235,21 +213,14 @@ const recalcularSaldoProveedor = async (req, res) => {
         });
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
         console.error("Error al recalcular saldo:", error);
-
         res.status(500).json({
             mensaje: "Error al recalcular el saldo del proveedor."
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
 
 
@@ -258,28 +229,22 @@ const recalcularSaldoProveedor = async (req, res) => {
 // =====================================================
 
 const recalcularTodosLosSaldos = async (req, res) => {
-
     const client = await db.connect();
 
     try {
-
         await client.query("BEGIN");
 
         const resultado = await client.query(`
             UPDATE Proveedor p
-
             SET Saldo = (
                 SELECT
                     COALESCE(
                         SUM(fp.Monto_Adeudado),
                         0
                     )
-
                 FROM Factura_Proveedor fp
-
                 WHERE fp.Id_Proveedor = p.Id_Proveedor
             )
-
             RETURNING
                 p.Id_Proveedor,
                 p.Nombre,
@@ -297,33 +262,20 @@ const recalcularTodosLosSaldos = async (req, res) => {
         });
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
         console.error("Error al recalcular todos los saldos:", error);
-
         res.status(500).json({
             mensaje: "Error al recalcular los saldos."
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
 
 
-// =====================================================
-// EXPORTAR FUNCIONES
-// =====================================================
-
 module.exports = {
-
     obtenerSaldosProveedores,
     obtenerSaldoProveedor,
     recalcularSaldoProveedor,
     recalcularTodosLosSaldos
-
 };

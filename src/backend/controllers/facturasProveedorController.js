@@ -1,9 +1,14 @@
 const db = require("../config/db");
+const {
+    parseMoney,
+    roundMoney,
+    addMoney,
+    subMoney
+} = require("../utils/currencyUtils");
 
 // Obtener todas las facturas
 const obtenerFacturas = async (req, res) => {
     try {
-
         const resultado = await db.query(`
             SELECT
                 fp.*,
@@ -17,64 +22,46 @@ const obtenerFacturas = async (req, res) => {
         `);
 
         res.json(resultado.rows);
-
     } catch (error) {
-
-        console.error(error);
+        console.error("Error en obtenerFacturas:", error);
         res.status(500).json({
             mensaje: "Error al obtener las facturas."
         });
-
     }
 };
 
 // Obtener una factura por ID
 const obtenerFacturaPorId = async (req, res) => {
-
     const { id } = req.params;
 
     try {
-
         const resultado = await db.query(
-
             `SELECT *
              FROM Factura_Proveedor
              WHERE Id_Factura_Proveedor = $1`,
-
             [id]
-
         );
 
         if (resultado.rows.length === 0) {
-
             return res.status(404).json({
                 mensaje: "Factura inexistente."
             });
-
         }
 
         res.json(resultado.rows[0]);
-
     } catch (error) {
-
-        console.error(error);
-
+        console.error("Error en obtenerFacturaPorId:", error);
         res.status(500).json({
             mensaje: "Error del servidor."
         });
-
     }
-
 };
-
 
 // Crear factura
 const crearFactura = async (req, res) => {
-
     const client = await db.connect();
 
     try {
-
         const {
             Precio_Total,
             Vencimiento,
@@ -85,21 +72,18 @@ const crearFactura = async (req, res) => {
             tipo_comprobante
         } = req.body;
 
+        const precioTotal = roundMoney(parseMoney(Precio_Total));
         const archivo_pdf = req.file ? `/uploads/${req.file.filename}` : null;
         const tipoComp = tipo_comprobante || 'factura';
 
-         // Validaciones
-        if (
-            !Precio_Total ||
-            !Fecha_Emision ||
-            !Id_Proveedor
-        ) {
+        // Validaciones
+        if (!Precio_Total || !Fecha_Emision || !Id_Proveedor) {
             return res.status(400).json({
                 mensaje: "Faltan datos obligatorios."
             });
         }
 
-        if (Number(Precio_Total) <= 0) {
+        if (precioTotal <= 0) {
             return res.status(400).json({
                 mensaje: "El precio debe ser mayor que cero."
             });
@@ -113,12 +97,13 @@ const crearFactura = async (req, res) => {
 
         await client.query("BEGIN");
 
-         // 3️⃣ Verificar que exista el proveedor
+        // Bloqueo y verificación de proveedor
         const proveedor = await client.query(
             `
             SELECT *
             FROM Proveedor
             WHERE Id_Proveedor = $1
+            FOR UPDATE
             `,
             [Id_Proveedor]
         );
@@ -159,9 +144,9 @@ const crearFactura = async (req, res) => {
             RETURNING *
             `,
             [
-                Precio_Total,
-                Vencimiento,
-                Observaciones,
+                precioTotal,
+                Vencimiento || null,
+                Observaciones || null,
                 Fecha_Emision,
                 Nro_Factura_Proveedor || null,
                 Id_Proveedor,
@@ -170,7 +155,7 @@ const crearFactura = async (req, res) => {
             ]
         );
 
-        // Actualizar saldo del proveedor
+        // Actualizar saldo del proveedor (aumenta la deuda)
         await client.query(
             `
             UPDATE Proveedor
@@ -178,7 +163,7 @@ const crearFactura = async (req, res) => {
             WHERE Id_Proveedor = $2
             `,
             [
-                Precio_Total,
+                precioTotal,
                 Id_Proveedor
             ]
         );
@@ -191,34 +176,23 @@ const crearFactura = async (req, res) => {
         });
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
-        console.error(error);
-
+        console.error("Error en crearFactura:", error);
         res.status(500).json({
             mensaje: "Error al crear la factura.",
             error: error.message
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
-
 
 // Editar factura
 const editarFactura = async (req, res) => {
-
     const client = await db.connect();
 
     try {
-
         const { id } = req.params;
-
         const {
             Precio_Total,
             Vencimiento,
@@ -228,6 +202,7 @@ const editarFactura = async (req, res) => {
             tipo_comprobante
         } = req.body;
 
+        const nuevoPrecioTotal = roundMoney(parseMoney(Precio_Total));
         const tipoComp = tipo_comprobante || 'factura';
 
         // Validaciones
@@ -237,7 +212,7 @@ const editarFactura = async (req, res) => {
             });
         }
 
-        if (Number(Precio_Total) <= 0) {
+        if (nuevoPrecioTotal <= 0) {
             return res.status(400).json({
                 mensaje: "El precio debe ser mayor que cero."
             });
@@ -251,12 +226,13 @@ const editarFactura = async (req, res) => {
 
         await client.query("BEGIN");
 
-        // Buscar la factura actual
+        // Buscar y bloquear la factura actual
         const facturaActual = await client.query(
             `
             SELECT *
             FROM Factura_Proveedor
             WHERE Id_Factura_Proveedor = $1
+            FOR UPDATE
             `,
             [id]
         );
@@ -267,7 +243,7 @@ const editarFactura = async (req, res) => {
 
         const factura = facturaActual.rows[0];
 
-        // Archivo opcional en Update, si no hay archivo, preservamos el anterior.
+        // Archivo opcional en Update
         let archivo_pdf = factura.archivo_pdf;
         if (req.file) {
             archivo_pdf = `/uploads/${req.file.filename}`;
@@ -278,9 +254,17 @@ const editarFactura = async (req, res) => {
             throw new Error("No se puede modificar una factura pagada.");
         }
 
-        // Calcular diferencia entre el monto nuevo y el anterior
-        const diferencia =
-            Number(Precio_Total) - Number(factura.precio_total);
+        const precioAnterior = roundMoney(parseMoney(factura.precio_total));
+        const montoAdeudadoAnterior = roundMoney(parseMoney(factura.monto_adeudado));
+        const diferencia = roundMoney(subMoney(nuevoPrecioTotal, precioAnterior));
+        const nuevoMontoAdeudado = Math.max(0, roundMoney(addMoney(montoAdeudadoAnterior, diferencia)));
+
+        let nuevoEstado = "pendiente";
+        if (nuevoMontoAdeudado <= 0.009) {
+            nuevoEstado = "pagado";
+        } else if (nuevoMontoAdeudado < nuevoPrecioTotal) {
+            nuevoEstado = "parcial";
+        }
 
         // Actualizar la factura
         const resultado = await client.query(
@@ -291,27 +275,29 @@ const editarFactura = async (req, res) => {
                 Vencimiento = $2,
                 Observaciones = $3,
                 Fecha_Emision = $4,
-                Monto_Adeudado = Monto_Adeudado + $5,
-                Nro_Factura_Proveedor = $6,
+                Monto_Adeudado = $5,
+                Estado_Pago = $6,
+                Nro_Factura_Proveedor = $7,
                 tipo_comprobante = $8,
                 archivo_pdf = $9
-            WHERE Id_Factura_Proveedor = $7
+            WHERE Id_Factura_Proveedor = $10
             RETURNING *
             `,
             [
-                Precio_Total,
-                Vencimiento,
-                Observaciones,
+                nuevoPrecioTotal,
+                Vencimiento || null,
+                Observaciones || null,
                 Fecha_Emision,
-                diferencia,
+                nuevoMontoAdeudado,
+                nuevoEstado,
                 Nro_Factura_Proveedor || null,
-                id,
                 tipoComp,
-                archivo_pdf
+                archivo_pdf,
+                id
             ]
         );
 
-        // Actualizar el saldo del proveedor
+        // Bloquear y actualizar el saldo del proveedor
         await client.query(
             `
             UPDATE Proveedor
@@ -332,40 +318,32 @@ const editarFactura = async (req, res) => {
         });
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
-        console.error(error);
-
+        console.error("Error en editarFactura:", error);
         res.status(500).json({
-            mensaje: error.message
+            mensaje: error.message || "Error al actualizar la factura."
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
 
 // Eliminar factura
 const eliminarFactura = async (req, res) => {
-
     const client = await db.connect();
 
     try {
-
         const { id } = req.params;
 
         await client.query("BEGIN");
 
-        // Buscar la factura
+        // Buscar y bloquear la factura
         const factura = await client.query(
             `
             SELECT *
             FROM Factura_Proveedor
             WHERE Id_Factura_Proveedor = $1
+            FOR UPDATE
             `,
             [id]
         );
@@ -375,6 +353,7 @@ const eliminarFactura = async (req, res) => {
         }
 
         const datosFactura = factura.rows[0];
+        const precioTotal = roundMoney(parseMoney(datosFactura.precio_total));
 
         // Verificar si tiene pagos asociados
         const pagos = await client.query(
@@ -388,11 +367,11 @@ const eliminarFactura = async (req, res) => {
 
         if (pagos.rows.length > 0) {
             return res.status(400).json({
-                error: "No se puede eliminar esta factura porque posee pagos registrados. No comprometas la contabilidad."
+                error: "No se puede eliminar esta factura porque posee pagos registrados. Debe anular los pagos primero."
             });
         }
 
-        // Actualizar saldo del proveedor
+        // Bloquear y actualizar saldo del proveedor
         await client.query(
             `
             UPDATE Proveedor
@@ -400,7 +379,7 @@ const eliminarFactura = async (req, res) => {
             WHERE Id_Proveedor = $2
             `,
             [
-                datosFactura.precio_total,
+                precioTotal,
                 datosFactura.id_proveedor
             ]
         );
@@ -421,29 +400,20 @@ const eliminarFactura = async (req, res) => {
         });
 
     } catch (error) {
-
         await client.query("ROLLBACK");
-
-        console.error(error);
-
+        console.error("Error en eliminarFactura:", error);
         res.status(500).json({
-            mensaje: error.message
+            mensaje: error.message || "Error al eliminar la factura."
         });
-
     } finally {
-
         client.release();
-
     }
-
 };
 
 module.exports = {
-
     obtenerFacturas,
     obtenerFacturaPorId,
     crearFactura,
     editarFactura,
     eliminarFactura
-
 };

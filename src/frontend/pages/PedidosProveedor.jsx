@@ -169,36 +169,26 @@ function normalizarFactura(factura) {
 }
 
 
+import {
+  parseMoney,
+  roundMoney,
+  formatMoney,
+  formatDate,
+  dateForInput
+} from "../utils/currencyUtils";
+import { useToast } from "../components/ui/ToastContext.jsx";
+import { useConfirm } from "../components/ui/ConfirmContext.jsx";
+
 function fechaParaInput(fecha) {
-  if (!fecha) {
-    return "";
-  }
-
-  return String(fecha).split("T")[0];
+  return dateForInput(fecha);
 }
-
 
 function formatearFecha(fecha) {
-  if (!fecha) {
-    return "—";
-  }
-
-  const fechaNormalizada = fechaParaInput(fecha);
-  const partes = fechaNormalizada.split("-");
-
-  if (partes.length !== 3) {
-    return fecha;
-  }
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return formatDate(fecha, "—");
 }
 
-
 function formatearDinero(valor) {
-  return Number(valor || 0).toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatMoney(valor);
 }
 
 
@@ -223,6 +213,9 @@ async function leerRespuesta(respuesta) {
 // =====================================================
 
 export function PedidosProveedor({ tipoVista, setTipoVista }) {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [facturas, setFacturas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
 
@@ -1126,7 +1119,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                               ventana.focus();
                               setTimeout(() => ventana.print(), 250);
                             } else {
-                              alert("Por favor, permite ventanas emergentes para imprimir.");
+                              toast.warning("Por favor, permite ventanas emergentes para imprimir.");
                             }
                           }}
                           className="p-2 hover:bg-green-50 rounded-lg transition-colors text-green-600"

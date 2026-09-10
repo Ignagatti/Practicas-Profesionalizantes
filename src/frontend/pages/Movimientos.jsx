@@ -19,41 +19,24 @@ import {
 const API_URL = "http://localhost:4000/api";
 
 
-// =====================================================
-// FUNCIONES AUXILIARES
-// =====================================================
+import {
+  parseMoney,
+  roundMoney,
+  formatMoney,
+  formatDate,
+  dateForInput
+} from "../utils/currencyUtils";
 
 function formatearDinero(valor) {
-  return Number(valor || 0).toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatMoney(valor);
 }
-
 
 function obtenerFechaSimple(fecha) {
-  if (!fecha) {
-    return "";
-  }
-
-  return String(fecha).split("T")[0];
+  return dateForInput(fecha);
 }
 
-
 function formatearFecha(fecha) {
-  const fechaSimple = obtenerFechaSimple(fecha);
-
-  if (!fechaSimple) {
-    return "—";
-  }
-
-  const partes = fechaSimple.split("-");
-
-  if (partes.length !== 3) {
-    return fechaSimple;
-  }
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return formatDate(fecha, "—");
 }
 
 

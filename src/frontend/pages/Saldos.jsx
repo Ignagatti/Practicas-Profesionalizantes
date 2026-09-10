@@ -12,6 +12,8 @@ import {
   FileText,
   Calendar,
 } from "lucide-react";
+import { useToast } from "../components/ui/ToastContext.jsx";
+import { useConfirm } from "../components/ui/ConfirmContext.jsx";
 
 
 // =====================================================
@@ -154,37 +156,24 @@ function normalizarFactura(factura) {
 }
 
 
+import {
+  parseMoney,
+  roundMoney,
+  formatMoney,
+  formatDate,
+  dateForInput
+} from "../utils/currencyUtils";
+
 function fechaParaInput(fecha) {
-  if (!fecha) {
-    return "";
-  }
-
-  return String(fecha).split("T")[0];
+  return dateForInput(fecha);
 }
-
 
 function formatearFecha(fecha) {
-  const fechaNormalizada = fechaParaInput(fecha);
-
-  if (!fechaNormalizada) {
-    return "—";
-  }
-
-  const partes = fechaNormalizada.split("-");
-
-  if (partes.length !== 3) {
-    return fechaNormalizada;
-  }
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  return formatDate(fecha, "—");
 }
 
-
 function formatearDinero(valor) {
-  return Number(valor || 0).toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatMoney(valor);
 }
 
 
@@ -209,6 +198,9 @@ async function leerRespuesta(respuesta) {
 // =====================================================
 
 export function Saldos() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   const [saldos, setSaldos] = useState([]);
 
   const [cargando, setCargando] = useState(true);
@@ -522,9 +514,13 @@ export function Saldos() {
   // =====================================================
 
   async function recalcularTodos() {
-    const confirmar = window.confirm(
-      "¿Desea recalcular los saldos de todos los proveedores?"
-    );
+    const confirmar = await confirm({
+      title: "Recalcular Saldos",
+      message: "¿Desea recalcular automáticamente los saldos de todos los proveedores en base a sus facturas?",
+      confirmText: "Recalcular Saldos",
+      cancelText: "Cancelar",
+      type: "warning"
+    });
 
     if (!confirmar) {
       return;
@@ -552,9 +548,8 @@ export function Saldos() {
         );
       }
 
-      mostrarExito(
-        datos.mensaje ||
-        "Todos los saldos fueron recalculados."
+      toast.success(
+        datos.mensaje || "Todos los saldos fueron recalculados correctamente."
       );
 
       await cargarSaldos();
@@ -564,6 +559,7 @@ export function Saldos() {
         err
       );
 
+      toast.error(err.message, "Error");
       setError(err.message);
     } finally {
       setRecalculandoTodos(false);

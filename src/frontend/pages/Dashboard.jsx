@@ -21,6 +21,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import {
+  parseMoney,
+  roundMoney,
+  formatMoney,
+  formatDate
+} from "../utils/currencyUtils";
+
 // ── URL base de tu backend ────────────────────────────────────────────────────
 const API_URL = "http://localhost:4000/api";
 
@@ -263,10 +270,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         />
         <StatCard
           title="Facturación Total"
-          value={`$ ${totalFacturacion.toLocaleString("es-AR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}
+          value={`$${formatMoney(totalFacturacion)}`}
           change={`${pedidosFacturados.length} pedido(s) facturado(s)`}
           icon={DollarSign}
           color="bg-purple-500"

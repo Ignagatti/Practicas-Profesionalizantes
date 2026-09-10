@@ -12,6 +12,15 @@ import {
   FileText,
   Calendar,
 } from "lucide-react";
+import {
+  parseMoney,
+  roundMoney,
+  addMoney,
+  subMoney,
+  multMoney,
+  formatMoney,
+  formatDate
+} from "../utils/currencyUtils";
 
 const API_URL = "http://localhost:4000/api";
 
@@ -74,16 +83,11 @@ function clonarPedido(pedido) {
 }
 
 function formatearPrecio(valor) {
-  return Number(valor || 0).toLocaleString("es-AR");
+  return formatMoney(valor);
 }
 
 function formatearFecha(fecha) {
-  if (!fecha) return "-";
-
-  const fechaLimpia = fecha.includes("T") ? fecha.split("T")[0] : fecha;
-  const [anio, mes, dia] = fechaLimpia.split("-");
-
-  return `${dia}/${mes}/${anio}`;
+  return formatDate(fecha);
 }
 
 function formatearEstado(texto) {
@@ -99,6 +103,7 @@ function formatearEstado(texto) {
 }
 
 function getNombreCliente(pedido) {
+  if (!pedido) return "-";
   const nombre = (pedido.nombre || pedido.Nombre || "").trim();
   const apellido = (pedido.apellido || pedido.Apellido || "").trim();
   const contacto = `${nombre} ${apellido}`.trim();
@@ -108,6 +113,7 @@ function getNombreCliente(pedido) {
 }
 
 function getDescripcionProducto(producto) {
+  if (!producto) return "-";
   return [
     producto.modelo || producto.Modelo,
     producto.tela || producto.Tela,
@@ -118,15 +124,17 @@ function getDescripcionProducto(producto) {
 }
 
 function getSubtotalProducto(producto) {
-  const precio = producto.precio ?? producto.Precio ?? 0;
-  const cantidad = producto.cantidad ?? producto.Cantidad ?? 1;
+  if (!producto) return 0;
+  const precio = roundMoney(parseMoney(producto.precio ?? producto.Precio ?? 0));
+  const cantidad = Number(producto.cantidad ?? producto.Cantidad ?? 1);
 
-  return Number(precio || 0) * Number(cantidad || 1);
+  return roundMoney(multMoney(precio, cantidad));
 }
 
 function calcularTotalPedido(productos = []) {
+  if (!Array.isArray(productos)) return 0;
   return productos.reduce((total, producto) => {
-    return total + getSubtotalProducto(producto);
+    return addMoney(total, getSubtotalProducto(producto));
   }, 0);
 }
 

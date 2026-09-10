@@ -8,6 +8,8 @@ import {
   DollarSign,
   X,
 } from "lucide-react";
+import { useToast } from "../components/ui/ToastContext.jsx";
+import { useConfirm } from "../components/ui/ConfirmContext.jsx";
 
 // Datos iniciales de ejemplo — reemplazá esto con tu fuente de datos real
 // o conectá al contexto: const { insumos, setInsumos } = useAppContext();
@@ -24,6 +26,9 @@ const CATEGORIA_COLORS = {
 };
 
 export function Precios() {
+  const toast = useToast();
+  const confirm = useConfirm();
+
   // Si usás AppContext, reemplazá estas dos líneas por:
   // const { insumos, setInsumos } = useAppContext();
   const [insumos, setInsumos] = useState(INSUMOS_INICIALES);
@@ -64,7 +69,7 @@ export function Precios() {
   const handleAjustePorcentaje = () => {
     const porcentajeNum = parseFloat(porcentaje);
     if (isNaN(porcentajeNum)) {
-      alert("Por favor ingrese un porcentaje válido");
+      toast.error("Por favor ingrese un porcentaje válido");
       return;
     }
 
@@ -84,7 +89,7 @@ export function Precios() {
       })
     );
 
-    alert(
+    toast.success(
       `Ajuste del ${porcentaje}% aplicado a ${filteredInsumos.length} insumo(s) visible(s)`
     );
     setShowAjusteModal(false);
@@ -98,6 +103,7 @@ export function Precios() {
     setInsumos([...insumos, { ...newInsumo, id: newId }]);
     setShowAddModal(false);
     setNewInsumo({ categoria: "Modelo", nombre: "", precioUnitario: 0 });
+    toast.success("Insumo agregado con éxito.");
   };
 
   const handleEditInsumo = (e) => {
@@ -111,11 +117,20 @@ export function Precios() {
     );
     setShowEditModal(false);
     setEditingInsumo(null);
+    toast.success("Insumo actualizado con éxito.");
   };
 
-  const handleDelete = (id) => {
-    if (confirm("¿Está seguro que desea eliminar este insumo?")) {
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: "Eliminar Insumo",
+      message: "¿Está seguro que desea eliminar este insumo?",
+      confirmText: "Eliminar",
+      cancelText: "Cancelar",
+      type: "danger",
+    });
+    if (ok) {
       setInsumos((prev) => prev.filter((i) => i.id !== id));
+      toast.success("Insumo eliminado con éxito.");
     }
   };
 

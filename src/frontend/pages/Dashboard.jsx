@@ -77,7 +77,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
 
   // ── Cargar datos del backend al montar ──────────────────────────────────────
   useEffect(() => {
-    async function cargarDatos() {
+    async function cargarDatos(esReintento = false) {
       setCargando(true);
       setError(null);
       try {
@@ -88,9 +88,9 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
           fetch(`${API_URL}/pedidos`),
         ]);
 
-        if (!resProductos.ok) throw new Error("Error al cargar productos.");
-        if (!resInsumos.ok)   throw new Error("Error al cargar insumos.");
-        if (!resPedidos.ok)   throw new Error("Error al cargar pedidos.");
+        if (!resProductos.ok || !resInsumos.ok || !resPedidos.ok) {
+          throw new Error("Error de respuesta al sincronizar con el servidor.");
+        }
 
         const [dataProductos, dataInsumos, dataPedidos] = await Promise.all([
           resProductos.json(),
@@ -102,6 +102,11 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
         setInsumos(Array.isArray(dataInsumos) ? dataInsumos : []);
         setPedidos(Array.isArray(dataPedidos) ? dataPedidos : []);
       } catch (err) {
+        if (!esReintento) {
+          // Reintentar automáticamente una vez tras breve pausa
+          setTimeout(() => cargarDatos(true), 800);
+          return;
+        }
         setError(err.message);
       } finally {
         setCargando(false);

@@ -96,22 +96,37 @@ app.use(
     movimientosRoutes
 );
 
+// Endpoint de comprobación de estado para Electron y clientes
+app.get("/api/health", async (req, res) => {
+    try {
+        await pool.query("SELECT 1");
+        res.json({ status: "ok", db: "connected" });
+    } catch (err) {
+        res.status(200).json({ status: "connecting", error: err.message });
+    }
+});
+
 // =====================================================
-// COMPROBAR CONEXIÓN CON POSTGRESQL E INICIAR SERVIDOR
+// INICIAR SERVIDOR Y SINCRONIZAR BASE DE DATOS
 // =====================================================
 
 const migrate = require("./scripts/migrate");
 
-pool.query("SELECT NOW()")
-    .then(async () => {
-        await migrate();
-        app.listen(PORT, () => {
-            console.log(`El servidor se conectó a la Base de Datos correctamente en el puerto ${PORT}`);
+const server = app.listen(PORT, () => {
+    console.log(`El servidor se conectó y está escuchando en el puerto ${PORT}`);
+    
+    // Verificar conexión a PostgreSQL y ejecutar migraciones
+    pool.query("SELECT NOW()")
+        .then(async () => {
+            await migrate();
+            console.log("Conectado a la Base de Datos PostgreSQL y migraciones ejecutadas.");
+        })
+        .catch((error) => {
+            console.error(
+                "Error general: No se pudo conectar a la base de datos PostgreSQL:",
+                error
+            );
         });
-    })
-    .catch((error) => {
-        console.error(
-            "Error general: No se pudo conectar a la base de datos PostgreSQL:",
-            error
-        );
-    });
+});
+
+module.exports = { app, server };

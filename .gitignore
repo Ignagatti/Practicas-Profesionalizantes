@@ -22,6 +22,11 @@ dist-electron/
 src/frontend/dist/
 .neon/
 
+# Subidas locales y temporales
+src/backend/uploads/*
+!src/backend/uploads/.gitkeep
+*.log
+
 # Agent skills & lockfiles
 .agents/
 skills-lock.json

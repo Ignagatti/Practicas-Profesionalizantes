@@ -4,7 +4,7 @@
   "description": "Sistema de Gestión Administrativa - Fábrica de Sillas y Sillones",
   "main": "src/electron/main.js",
   "scripts": {
-    "backend": "nodemon src/backend/server.js",
+    "backend": "nodemon --watch src/backend src/backend/server.js",
     "frontend": "vite src/frontend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "build:vite": "vite build src/frontend",

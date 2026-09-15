@@ -28,6 +28,8 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
+    minWidth: 1024,
+    minHeight: 600,
     title: "Sistema de Gestión Administrativa - Fábrica de Sillas y Sillones",
     icon: iconPath,
     autoHideMenuBar: true,
@@ -51,6 +53,7 @@ async function createWindow() {
     await mainWindow.loadFile(indexPath);
   }
 
+  mainWindow.maximize();
   mainWindow.show();
 
   mainWindow.on('closed', () => {

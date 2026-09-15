@@ -24,10 +24,34 @@ const PORT = process.env.PORT || 4000;
 
 
 // =====================================================
-// MIDDLEWARES
+// MIDDLEWARES DE SEGURIDAD
 // =====================================================
 
-app.use(cors());
+const helmet = require("helmet");
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false // Permite flexibilidad con Vite y Electron en desarrollo
+}));
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4000",
+    "http://127.0.0.1:4000"
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Permitir peticiones sin origen (apps de escritorio Electron, herramientas internas, scripts)
+        if (!origin || allowedOrigins.includes(origin) || origin.startsWith("http://localhost:") || origin.startsWith("file://")) {
+            return callback(null, true);
+        }
+        return callback(new Error("Acceso no permitido por la política CORS"), false);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"]
+}));
 
 const path = require("path");
 

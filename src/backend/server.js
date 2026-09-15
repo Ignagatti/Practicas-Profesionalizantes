@@ -17,6 +17,8 @@ const facturasProveedorRoutes = require("./routes/facturasProveedorRoutes");
 const pagosRoutes = require("./routes/pagosRoutes");
 const estadosPagoRoutes = require("./routes/estadosPagoRoutes");
 const saldosRoutes = require("./routes/saldosRoutes");
+const licenciaRoutes = require("./routes/licenciaRoutes");
+const { validarLicenciaMiddleware } = require("./controllers/licenciaController");
 
 const app = express();
 
@@ -50,7 +52,7 @@ app.use(cors({
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"]
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "x-license-key"]
 }));
 
 const path = require("path");
@@ -61,6 +63,12 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // =====================================================
 // RUTAS
 // =====================================================
+
+// Verificación y estado de licencias (público)
+app.use("/api/licencia", licenciaRoutes);
+
+// Escudo de seguridad: valida clave de licencia activa en toda la API
+app.use("/api", validarLicenciaMiddleware);
 
 app.use("/api/clientes", clientesRoutes);
 app.use("/api/pedidos", pedidosRoutes);

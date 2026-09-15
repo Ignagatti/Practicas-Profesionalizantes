@@ -9,6 +9,7 @@
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "build:vite": "vite build src/frontend",
     "build:exe": "powershell -Command \"Remove-Item -Recurse -Force dist-electron -ErrorAction SilentlyContinue\" && npm run build:vite && electron-builder --win",
+    "build:mac": "npm run build:vite && electron-builder --mac",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
@@ -31,6 +32,29 @@
         "nsis"
       ],
       "icon": "assets/logo-acuaber.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.business"
+    },
+    "dmg": {
+      "title": "Acuaber Instalador",
+      "artifactName": "Acuaber-${version}-${arch}.dmg"
     },
     "portable": {
       "artifactName": "Acuaber-Portable.exe"

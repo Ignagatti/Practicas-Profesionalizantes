@@ -38,6 +38,27 @@ async function migrate() {
       }
       console.log('Se inicializó la tabla Metodo_Pago con los métodos predeterminados.');
     }
+
+    // Tabla de Licencias del Sistema
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS Licencia (
+        id SERIAL PRIMARY KEY,
+        clave VARCHAR(100) UNIQUE NOT NULL,
+        titular VARCHAR(100) DEFAULT 'Acuaber Fábrica',
+        activa BOOLEAN DEFAULT true,
+        creada_en TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
+    const checkLicencia = await pool.query(`SELECT COUNT(*) FROM Licencia;`);
+    if (parseInt(checkLicencia.rows[0].count, 10) === 0) {
+      await pool.query(`
+        INSERT INTO Licencia (clave, titular, activa) 
+        VALUES ('ACUABER-FABRICA-2026', 'Acuaber Fábrica Central', true)
+        ON CONFLICT (clave) DO NOTHING;
+      `);
+      console.log('Se inicializó la tabla Licencia con la clave predeterminada.');
+    }
   } catch (e) {
     console.error('Error en migración:', e);
   }

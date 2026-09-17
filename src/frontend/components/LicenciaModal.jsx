@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import logoAcuaber from '../assets/logo-acuaber.png';
 
 const API_URL = 'http://localhost:4000/api';
@@ -62,16 +62,12 @@ export function LicenciaModal({
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 transform transition-all">
         
         {/* Cabecera */}
-        <div className="bg-[#8b0000] p-6 text-center text-white relative">
+        <div className="bg-[#8b0000] p-6 text-center text-white">
           <div className="mx-auto w-16 h-16 bg-white rounded-2xl shadow-md p-2 flex items-center justify-center mb-3">
             <img src={logoAcuaber} alt="Acuaber" className="max-h-full max-w-full object-contain" />
           </div>
           <h2 className="text-xl font-bold tracking-tight">Sistema Acuaber</h2>
           <p className="text-xs text-red-200 mt-1">Ingreso al Sistema</p>
-          
-          <div className="absolute top-4 right-4 text-red-300">
-            <Lock size={18} />
-          </div>
         </div>
 
         {/* Contenido */}
@@ -142,16 +138,11 @@ export function LicenciaModal({
           </form>
         </div>
 
-        {/* Footer */}
-        <div className="bg-gray-50 px-6 py-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
-          <span>Acuaber Muebles &copy; 2026</span>
-          <span>Esperanza, Santa Fe</span>
-        </div>
-
       </div>
     </div>
   );
 }
 
 export default LicenciaModal;
+
 

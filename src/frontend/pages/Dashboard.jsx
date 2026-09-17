@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Package,
   DollarSign,
@@ -9,6 +9,13 @@ import {
   Calendar,
   X,
   ChevronDown,
+  Database,
+  Download,
+  Upload,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import {
   BarChart,
@@ -62,6 +69,14 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
   const [fechaHasta, setFechaHasta]         = useState("");
   const [selectedPago, setSelectedPago]     = useState(null);
 
+  // ── Estados para Respaldo y Restauración ─────────────────────────────────────
+  const [exportandoBackup, setExportandoBackup] = useState(false);
+  const [restaurandoBackup, setRestaurandoBackup] = useState(false);
+  const [modalRestaurarAbierto, setModalRestaurarAbierto] = useState(false);
+  const [archivoBackup, setArchivoBackup]   = useState(null);
+  const [mensajeBackup, setMensajeBackup]   = useState(null); // { tipo: 'exito' | 'error', texto: '' }
+  const fileInputRef                        = useRef(null);
+
   // ── Al montar, verificar si se solicitó hacer scroll a pagos pendientes ─────
   useEffect(() => {
     if (sessionStorage.getItem('scroll_to_payments') === 'true') {
@@ -75,46 +90,172 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
     }
   }, []);
 
-  // ── Cargar datos del backend al montar ──────────────────────────────────────
-  useEffect(() => {
-    async function cargarDatos(esReintento = false) {
-      setCargando(true);
-      setError(null);
-      try {
-        // Llamadas en paralelo para mayor velocidad
-        const [resProductos, resInsumos, resPedidos] = await Promise.all([
-          fetch(`${API_URL}/productos`),
-          fetch(`${API_URL}/insumos`),
-          fetch(`${API_URL}/pedidos`),
-        ]);
+  // ── Función para cargar datos del backend ──────────────────────────────────
+  async function cargarDatos(esReintento = false) {
+    setCargando(true);
+    setError(null);
+    try {
+      // Llamadas en paralelo para mayor velocidad
+      const [resProductos, resInsumos, resPedidos] = await Promise.all([
+        fetch(`${API_URL}/productos`),
+        fetch(`${API_URL}/insumos`),
+        fetch(`${API_URL}/pedidos`),
+      ]);
 
-        if (!resProductos.ok || !resInsumos.ok || !resPedidos.ok) {
-          throw new Error("Error de respuesta al sincronizar con el servidor.");
-        }
-
-        const [dataProductos, dataInsumos, dataPedidos] = await Promise.all([
-          resProductos.json(),
-          resInsumos.json(),
-          resPedidos.json(),
-        ]);
-
-        setProductos(Array.isArray(dataProductos) ? dataProductos : []);
-        setInsumos(Array.isArray(dataInsumos) ? dataInsumos : []);
-        setPedidos(Array.isArray(dataPedidos) ? dataPedidos : []);
-      } catch (err) {
-        if (!esReintento) {
-          // Reintentar automáticamente una vez tras breve pausa
-          setTimeout(() => cargarDatos(true), 800);
-          return;
-        }
-        setError(err.message);
-      } finally {
-        setCargando(false);
+      if (!resProductos.ok || !resInsumos.ok || !resPedidos.ok) {
+        throw new Error("Error de respuesta al sincronizar con el servidor.");
       }
-    }
 
+      const [dataProductos, dataInsumos, dataPedidos] = await Promise.all([
+        resProductos.json(),
+        resInsumos.json(),
+        resPedidos.json(),
+      ]);
+
+      setProductos(Array.isArray(dataProductos) ? dataProductos : []);
+      setInsumos(Array.isArray(dataInsumos) ? dataInsumos : []);
+      setPedidos(Array.isArray(dataPedidos) ? dataPedidos : []);
+    } catch (err) {
+      if (!esReintento) {
+        // Reintentar automáticamente una vez tras breve pausa
+        setTimeout(() => cargarDatos(true), 800);
+        return;
+      }
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
     cargarDatos();
   }, []);
+
+  // ── Descargar Backup SQL ────────────────────────────────────────────────────
+  const handleDescargarBackup = async () => {
+    setExportandoBackup(true);
+    setMensajeBackup(null);
+    try {
+      const resp = await fetch(`${API_URL}/backup/exportar`);
+      if (!resp.ok) {
+        const dataErr = await resp.json().catch(() => ({}));
+        throw new Error(dataErr.error || "No se pudo generar la copia de seguridad.");
+      }
+
+      const blob = await resp.blob();
+      const disposition = resp.headers.get("Content-Disposition");
+      let nombreArchivo = "backup_acuaber.sql";
+      if (disposition && disposition.includes("filename=")) {
+        nombreArchivo = disposition.split("filename=")[1].replace(/"/g, "").trim();
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      setMensajeBackup({
+        tipo: "exito",
+        texto: `¡Copia de seguridad "${nombreArchivo}" descargada correctamente!`
+      });
+      setTimeout(() => setMensajeBackup(null), 6000);
+    } catch (err) {
+      console.error("Error al exportar backup:", err);
+      setMensajeBackup({
+        tipo: "error",
+        texto: "Error al exportar copia de seguridad: " + err.message
+      });
+    } finally {
+      setExportandoBackup(false);
+    }
+  };
+
+  // ── Seleccionar archivo para Restaurar ───────────────────────────────────────
+  const handleSeleccionarArchivo = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".sql")) {
+      setMensajeBackup({
+        tipo: "error",
+        texto: "El archivo seleccionado debe tener extensión .sql"
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setArchivoBackup(file);
+    setModalRestaurarAbierto(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // ── Confirmar y Ejecutar Restauración ───────────────────────────────────────
+  const handleConfirmarRestauracion = async () => {
+    if (!archivoBackup) return;
+
+    setRestaurandoBackup(true);
+    setMensajeBackup(null);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const sqlContent = event.target?.result;
+          const resp = await fetch(`${API_URL}/backup/restaurar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sqlContent })
+          });
+
+          const data = await resp.json();
+          if (!resp.ok || !data.ok) {
+            throw new Error(data.error || "No se pudo restaurar la base de datos.");
+          }
+
+          setModalRestaurarAbierto(false);
+          setArchivoBackup(null);
+          setMensajeBackup({
+            tipo: "exito",
+            texto: "¡Base de datos restaurada exitosamente! Los datos han sido actualizados."
+          });
+
+          // Recargar todos los datos del dashboard y tablas
+          await cargarDatos();
+          setTimeout(() => setMensajeBackup(null), 7000);
+        } catch (subErr) {
+          console.error("Error procesando restauración:", subErr);
+          setMensajeBackup({
+            tipo: "error",
+            texto: "Error en la restauración: " + subErr.message
+          });
+        } finally {
+          setRestaurandoBackup(false);
+        }
+      };
+
+      reader.onerror = () => {
+        setRestaurandoBackup(false);
+        setMensajeBackup({
+          tipo: "error",
+          texto: "Error al leer el archivo desde tu computadora."
+        });
+      };
+
+      reader.readAsText(archivoBackup);
+    } catch (err) {
+      console.error("Error al restaurar backup:", err);
+      setRestaurandoBackup(false);
+      setMensajeBackup({
+        tipo: "error",
+        texto: "Error: " + err.message
+      });
+    }
+  };
 
   // ── Helper: obtener nombre de insumo por id ──────────────────────────────────
   function getInsumoNombre(id) {
@@ -427,6 +568,165 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
           </div>
         )}
       </div>
+
+      {/* ── Sección de Respaldo y Recuperación de Datos ────────────────────────── */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+          <div className="flex items-start gap-3.5">
+            <div className="p-3 bg-red-50 text-[#8b0000] rounded-xl border border-red-100">
+              <Database size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">Copia de Seguridad y Resguardo del Sistema</h3>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Generá copias completas de seguridad en tu equipo o restaurá la base de datos desde un archivo SQL.
+              </p>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex items-center gap-3">
+            {/* Input file invisible */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleSeleccionarArchivo}
+              accept=".sql"
+              className="hidden"
+            />
+
+            {/* Botón Descargar Backup */}
+            <button
+              onClick={handleDescargarBackup}
+              disabled={exportandoBackup || restaurandoBackup}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm ${
+                exportandoBackup
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:scale-[0.99]"
+              }`}
+              title="Descargar copia de seguridad en formato .sql"
+            >
+              {exportandoBackup ? (
+                <>
+                  <Loader2 size={16} className="animate-spin text-[#8b0000]" />
+                  <span>Generando copia...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={16} className="text-[#8b0000]" />
+                  <span>Descargar Copia (.sql)</span>
+                </>
+              )}
+            </button>
+
+            {/* Botón Restaurar Backup */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={exportandoBackup || restaurandoBackup}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-all shadow-sm ${
+                restaurandoBackup
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#8b0000] hover:bg-[#6b0000] hover:shadow-md active:scale-[0.99]"
+              }`}
+              title="Restaurar base de datos a partir de un archivo .sql descargado"
+            >
+              {restaurandoBackup ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Restaurando...</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={16} />
+                  <span>Restaurar Base de Datos</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mensaje de alerta / feedback */}
+        {mensajeBackup && (
+          <div
+            className={`mt-4 p-3.5 rounded-xl text-sm flex items-center justify-between transition-all ${
+              mensajeBackup.tipo === "exito"
+                ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                : "bg-red-50 border border-red-200 text-red-700"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              {mensajeBackup.tipo === "exito" ? (
+                <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+              ) : (
+                <AlertTriangle size={18} className="text-red-600 shrink-0" />
+              )}
+              <span className="font-medium">{mensajeBackup.texto}</span>
+            </div>
+            <button
+              onClick={() => setMensajeBackup(null)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Confirmación de Restauración */}
+      {modalRestaurarAbierto && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">¿Confirmar restauración de datos?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Estás a punto de restaurar la base de datos con el archivo: <br />
+                <strong className="text-gray-800 font-mono text-xs bg-gray-100 px-2 py-1 rounded inline-block mt-1">
+                  {archivoBackup?.name}
+                </strong>
+              </p>
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 text-left mb-6">
+                <strong>Advertencia de Seguridad:</strong> Esta operación reemplazará los datos actuales por los contenidos en la copia seleccionada dentro de una transacción segura.
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalRestaurarAbierto(false);
+                    setArchivoBackup(null);
+                  }}
+                  disabled={restaurandoBackup}
+                  className="w-1/2 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmarRestauracion}
+                  disabled={restaurandoBackup}
+                  className={`w-1/2 py-2.5 px-4 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md transition-all ${
+                    restaurandoBackup
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-[#8b0000] hover:bg-[#6b0000]"
+                  }`}
+                >
+                  {restaurandoBackup ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Restaurando...</span>
+                    </>
+                  ) : (
+                    <span>Restaurar Datos</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Detalle de Pago */}
       {selectedPago && (

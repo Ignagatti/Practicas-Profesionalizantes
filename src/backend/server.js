@@ -18,6 +18,7 @@ const pagosRoutes = require("./routes/pagosRoutes");
 const estadosPagoRoutes = require("./routes/estadosPagoRoutes");
 const saldosRoutes = require("./routes/saldosRoutes");
 const licenciaRoutes = require("./routes/licenciaRoutes");
+const backupRoutes = require("./routes/backupRoutes");
 const { validarLicenciaMiddleware } = require("./controllers/licenciaController");
 
 const app = express();
@@ -102,6 +103,11 @@ app.use(
 app.use(
     "/api/movimientos",
     movimientosRoutes
+);
+
+app.use(
+    "/api/backup",
+    backupRoutes
 );
 
 // Endpoint de comprobación de estado para Electron y clientes

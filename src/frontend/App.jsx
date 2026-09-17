@@ -15,7 +15,7 @@ import { ConfirmProvider } from "./components/ui/ConfirmContext.jsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx";
 import LicenciaModal from "./components/LicenciaModal.jsx";
 import logoAcuaber from "./assets/logo-acuaber.png";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api";
 
@@ -219,20 +219,19 @@ function App() {
         </div>
         <div className="flex items-center gap-2.5 text-[#8b0000] font-semibold text-sm mb-1.5">
           <Loader2 className="animate-spin" size={20} />
-          <span>Validando licencia con Neon Cloud...</span>
+          <span>Cargando sistema...</span>
         </div>
         <p className="text-xs text-gray-400">Sistema de Gestión Acuaber</p>
       </div>
     );
   }
 
-  // Si no hay licencia activa, bloquear toda la vista y mostrar únicamente el modal de activación
+  // Si no hay clave activa, bloquear toda la vista y solicitar la clave
   if (!licenciaActiva) {
     return (
       <LicenciaModal
         abierto={true}
         esBloqueante={true}
-        titularActual={titularLicencia}
         errorInicial={errorLicencia}
         alActivar={(datos) => {
           setLicenciaActiva(true);
@@ -266,16 +265,6 @@ function App() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  {/* Badge de Licencia de Software con opción de ver / cambiar clave */}
-                  <button
-                    onClick={() => setModalLicenciaAbierto(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-full text-xs font-medium transition-all shadow-sm cursor-pointer"
-                    title="Licencia de Software Activa - Clic para cambiar clave"
-                  >
-                    <ShieldCheck size={15} className="text-emerald-600" />
-                    <span className="font-semibold">{titularLicencia || "Licencia Activa"}</span>
-                  </button>
-
                   {/* Botón de Campana de Notificaciones global */}
                   <button
                     onClick={handleBellClick}

@@ -52,7 +52,7 @@ function obtenerFechaISO(val) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-export function Dashboard({ pagosPendientes: propPagosPendientes }) {
+export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPendientes }) {
   const [periodo, setPeriodo]               = useState("mensual");
 
   // ── Estado ──────────────────────────────────────────────────────────────────
@@ -115,6 +115,12 @@ export function Dashboard({ pagosPendientes: propPagosPendientes }) {
       setProductos(Array.isArray(dataProductos) ? dataProductos : []);
       setInsumos(Array.isArray(dataInsumos) ? dataInsumos : []);
       setPedidos(Array.isArray(dataPedidos) ? dataPedidos : []);
+
+      // Notificar actualización de avisos pendientes a nivel global
+      window.dispatchEvent(new CustomEvent('acuaber:actualizar_pendientes'));
+      if (typeof onActualizarPendientes === 'function') {
+        onActualizarPendientes();
+      }
     } catch (err) {
       if (!esReintento) {
         // Reintentar automáticamente una vez tras breve pausa

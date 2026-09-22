@@ -934,6 +934,7 @@ export default function Pagos() {
       );
 
       await cargarDatos();
+      window.dispatchEvent(new CustomEvent('acuaber:actualizar_pendientes'));
     } catch (err) {
       console.error(
         "Error al registrar el pago:",
@@ -1053,6 +1054,7 @@ export default function Pagos() {
 
       toast.success(datos.mensaje || "Pago eliminado correctamente.");
       await cargarDatos();
+      window.dispatchEvent(new CustomEvent('acuaber:actualizar_pendientes'));
     } catch (err) {
       console.error(
         "Error al eliminar el pago:",

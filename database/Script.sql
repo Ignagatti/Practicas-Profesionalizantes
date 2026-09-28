@@ -54,7 +54,8 @@ CREATE TYPE tipo_pago AS ENUM (
     'efectivo',
     'transferencia',
     'cheque',
-    'tarjeta'
+    'tarjeta',
+    'saldo_a_favor'
 );
 
 CREATE TYPE estado_pago AS ENUM (
@@ -265,7 +266,8 @@ INSERT INTO Metodo_Pago (Id_Medio_Pago, Tipo) VALUES
     (1, 'efectivo'),
     (2, 'transferencia'),
     (3, 'cheque'),
-    (4, 'tarjeta')
+    (4, 'tarjeta'),
+    (5, 'saldo_a_favor')
 ON CONFLICT (Id_Medio_Pago) DO NOTHING;
 
 -- Licencia Inicial del Software

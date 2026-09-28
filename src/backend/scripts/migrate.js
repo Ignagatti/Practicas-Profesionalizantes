@@ -22,6 +22,12 @@ async function migrate() {
       // Ignorar error si el enum ya contiene tarjeta
     }
 
+    try {
+      await pool.query(`ALTER TYPE tipo_pago ADD VALUE IF NOT EXISTS 'saldo_a_favor';`);
+    } catch (errEnum) {
+      // Ignorar error si el enum ya contiene saldo_a_favor
+    }
+
     const checkMetodos = await pool.query(`SELECT COUNT(*) FROM Metodo_Pago;`);
     if (parseInt(checkMetodos.rows[0].count, 10) === 0) {
       await pool.query(`
@@ -31,13 +37,15 @@ async function migrate() {
           (3, 'cheque')
         ON CONFLICT (Id_Medio_Pago) DO NOTHING;
       `);
-      try {
-        await pool.query(`INSERT INTO Metodo_Pago (Id_Medio_Pago, Tipo) VALUES (4, 'tarjeta') ON CONFLICT (Id_Medio_Pago) DO NOTHING;`);
-      } catch (errTarjeta) {
-        // Ignorar error si ya existe
-      }
-      console.log('Se inicializó la tabla Metodo_Pago con los métodos predeterminados.');
     }
+
+    try {
+      await pool.query(`INSERT INTO Metodo_Pago (Id_Medio_Pago, Tipo) VALUES (4, 'tarjeta') ON CONFLICT (Id_Medio_Pago) DO NOTHING;`);
+    } catch (errTarjeta) {}
+
+    try {
+      await pool.query(`INSERT INTO Metodo_Pago (Id_Medio_Pago, Tipo) VALUES (5, 'saldo_a_favor') ON CONFLICT (Id_Medio_Pago) DO NOTHING;`);
+    } catch (errSaldo) {}
 
     // Tabla de Licencias del Sistema
     await pool.query(`

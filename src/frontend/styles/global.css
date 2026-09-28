@@ -128,3 +128,15 @@ tr:hover {
 }
 
 .badge-success { background: #d1fae5; color: #065f46; }
+
+/* Quitar flechas/spinners de inputs numéricos en todos los navegadores */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+

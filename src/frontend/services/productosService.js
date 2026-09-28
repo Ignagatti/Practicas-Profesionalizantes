@@ -56,3 +56,18 @@ export const terminarProductosMasivo = async (ids) => {
     if (!respuesta.ok) throw new Error(data.error || 'Error al actualizar el estado de los productos');
     return data;
 };
+
+// ========================================================
+// NUEVA FUNCIÓN: PASAR DE TERMINADO A ENVIADO (MASIVO)
+// ========================================================
+export const enviarProductosMasivo = async (ids) => {
+    const respuesta = await fetch(`${API_URL}/estado/enviar-masivo`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+    });
+
+    const data = await respuesta.json();
+    if (!respuesta.ok) throw new Error(data.error || 'Error al marcar como enviados los productos');
+    return data;
+};

@@ -164,12 +164,17 @@ function App() {
     e.preventDefault();
     cargarPendientes();
     if (seccion !== "dashboard") {
-      setSeccion("dashboard");
       sessionStorage.setItem("scroll_to_payments", "true");
+      setSeccion("dashboard");
     } else {
+      window.dispatchEvent(new CustomEvent("scroll-to-pagos-pendientes"));
       const target = document.getElementById("section-pagos-pendientes");
       if (target) {
-        target.scrollIntoView({ behavior: "smooth" });
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        target.classList.add("ring-2", "ring-red-600", "ring-offset-4");
+        setTimeout(() => {
+          target.classList.remove("ring-2", "ring-red-600", "ring-offset-4");
+        }, 2500);
       }
     }
   };
@@ -278,7 +283,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSidebarOpen(true)}
-                    className="lg:hidden p-2 text-gray-700 hover:text-red-750 hover:bg-gray-100 rounded-xl transition-colors"
+                    className="lg:hidden p-2 text-gray-700 hover:text-red-700 hover:bg-gray-100 rounded-xl transition-colors"
                     title="Abrir menú"
                   >
                     <Menu size={24} />
@@ -297,7 +302,7 @@ function App() {
                   {/* Botón de Campana de Notificaciones global */}
                   <button
                     onClick={handleBellClick}
-                    className="relative p-2 text-gray-500 hover:text-red-750 transition-colors focus:outline-none rounded-lg hover:bg-gray-100"
+                    className="relative p-2 text-gray-500 hover:text-red-700 transition-colors focus:outline-none rounded-lg hover:bg-gray-100"
                     title="Avisos de pagos pendientes"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -313,7 +318,7 @@ function App() {
 
                   <div className="h-8 w-px bg-gray-200"></div>
 
-                  <div className="w-10 h-10 bg-red-750 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
                     A
                   </div>
 

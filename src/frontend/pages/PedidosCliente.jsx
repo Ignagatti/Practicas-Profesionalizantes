@@ -404,6 +404,19 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     cargarClientes();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setShowAddModal(false);
+        setShowViewModal(false);
+        setShowConfirmDeleteModal(false);
+        setIsEditingPedido(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const abrirModalAgregar = () => {
     const hoy = obtenerFechaActualISO();
 
@@ -963,7 +976,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     link.href = pedido.pdf_factura_url;
     link.download =
       pedido.pdf_factura_nombre ||
-      `factura_PED-${String(pedido.id_pedido).padStart(3, "0")}.pdf`;
+      `factura_VENT-${String(pedido.id_pedido).padStart(3, "0")}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -976,7 +989,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       .map(
         (producto) => `
           <tr>
-            <td>PR-${String(producto.id_producto).padStart(3, "0")} - ${getDescripcionProducto(producto)}</td>
+            <td>PROD-${String(producto.id_producto).padStart(3, "0")} - ${getDescripcionProducto(producto)}</td>
             <td>${producto.cantidad}</td>
             <td>$${formatearPrecio(producto.precio)}</td>
             <td>$${formatearPrecio(getSubtotalProducto(producto))}</td>
@@ -995,7 +1008,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     ventana.document.write(`
       <html>
         <head>
-          <title>Pedido PED-${String(pedido.id_pedido).padStart(3, "0")}</title>
+          <title>Venta VENT-${String(pedido.id_pedido).padStart(3, "0")}</title>
           <style>
             body { font-family: Arial, sans-serif; padding: 32px; color: #111827; }
             h1 { margin-bottom: 4px; color: #7f1d1d; }
@@ -1007,7 +1020,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           </style>
         </head>
         <body>
-          <h1>Pedido PED-${String(pedido.id_pedido).padStart(3, "0")}</h1>
+          <h1>Venta VENT-${String(pedido.id_pedido).padStart(3, "0")}</h1>
           <p><strong>Cliente:</strong> ${getNombreCliente(pedido)}</p>
           <p><strong>Fecha de generación:</strong> ${formatearFecha(pedido.fecha_generacion)}</p>
           <p><strong>Vencimiento:</strong> ${formatearFecha(pedido.vencimiento)}</p>
@@ -1159,7 +1172,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                  Nº Pedido
+                  N° VENTA
                 </th>
                 <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Cliente
@@ -1176,6 +1189,9 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Total
                 </th>
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Monto Adeudado
+                </th>
                 <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
@@ -1183,13 +1199,13 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
             <tbody className="divide-y divide-gray-200">
               {cargando ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-6 text-center text-gray-500">
+                  <td colSpan="8" className="px-4 py-6 text-center text-gray-500">
                     Cargando pedidos...
                   </td>
                 </tr>
               ) : pedidosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-10 text-center">
+                  <td colSpan="8" className="px-4 py-10 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Package size={36} className="text-gray-300" />
                       <p className="text-gray-600 font-medium">
@@ -1211,11 +1227,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       key={pedido.id_pedido}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                        PED-{String(pedido.id_pedido).padStart(3, "0")}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-bold">
+                        VENT-{String(pedido.id_pedido).padStart(3, "0")}
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-gray-800">
+                      <td className="px-6 py-4 text-sm text-gray-800 font-medium">
                         {getNombreCliente(pedido)}
                       </td>
 
@@ -1225,7 +1241,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${pagoInfo.color}`}
+                          className={`px-2 py-1 rounded-full text-xs font-bold ${pagoInfo.color}`}
                         >
                           {pagoInfo.label}
                         </span>
@@ -1233,14 +1249,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${facturaInfo.color}`}
+                          className={`px-2 py-1 rounded-full text-xs font-bold ${facturaInfo.color}`}
                         >
                           {facturaInfo.label}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
                         ${formatearPrecio(pedido.precio_total)}
+                      </td>
+
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                        <span className={Number(pedido.monto_adeudado) > 0 ? "text-red-700 font-bold" : "text-green-700 font-bold"}>
+                          ${formatearPrecio(pedido.monto_adeudado ?? 0)}
+                        </span>
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -1310,7 +1332,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                      Cliente *
+                      Cliente <span className="text-red-600 font-bold">*</span>
                     </label>
 
                     <select
@@ -1319,7 +1341,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                       required
                     >
-                      <option value="">Seleccionar cliente...</option>
+                      <option value="">Seleccionar...</option>
 
                       {clientes.map((cliente) => {
                         const nombre = (cliente.nombre || cliente.Nombre || "").trim();
@@ -1369,47 +1391,21 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                      Estado de Pago
-                    </label>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                    Estado de Facturación
+                  </label>
 
-                    <select
-                      disabled
-                      value={newPedido.Estado_Pago}
-                      onChange={(e) =>
-                        setNewPedido({
-                          ...newPedido,
-                          Estado_Pago: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-gray-100 cursor-not-allowed"
-                    >
-                      {ESTADOS_PAGO.map((estado) => (
-                        <option key={estado} value={estado}>
-                          {formatearEstado(estado)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                      Estado de Facturación
-                    </label>
-
-                    <select
-                      value={newPedido.Estado_Facturacion === "no_se_factura" ? "no_se_factura" : "sin_factura"}
-                      onChange={(e) =>
-                        actualizarFacturacionNuevoPedido(e.target.value)
-                      }
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                    >
-                      <option value="no_se_factura">No se factura</option>
-                      <option value="sin_factura">Se factura</option>
-                    </select>
-                  </div>
+                  <select
+                    value={newPedido.Estado_Facturacion === "no_se_factura" ? "no_se_factura" : "sin_factura"}
+                    onChange={(e) =>
+                      actualizarFacturacionNuevoPedido(e.target.value)
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                  >
+                    <option value="no_se_factura">No se factura</option>
+                    <option value="sin_factura">Se factura</option>
+                  </select>
                 </div>
 
                 {newPedido.Estado_Facturacion !== "no_se_factura" && (
@@ -1437,7 +1433,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                               Nro_Factura: e.target.value,
                             })
                           }
-                          placeholder="Ej: A-0001-00008420"
+                          placeholder=""
                           className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                         />
 
@@ -1603,7 +1599,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
             <div className="p-5 sm:p-6 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">
-                  Detalle del Pedido - PED-
+                  Detalle de Venta - VENT-
                   {String(selectedPedido.id_pedido).padStart(3, "0")}
                 </h3>
 
@@ -1784,7 +1780,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                               nro_factura: e.target.value,
                             })
                           }
-                          placeholder="Ej: A-0001-00008420"
+                          placeholder=""
                           className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                         />
 
@@ -1894,14 +1890,14 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         }
                         className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                       >
-                        <option value="">Seleccionar producto...</option>
+                        <option value="">Seleccionar...</option>
 
                         {productosDisponiblesEdicion.map((producto) => (
                           <option
                             key={producto.id_producto}
                             value={producto.id_producto}
                           >
-                            PR-{String(producto.id_producto).padStart(3, "0")} -{" "}
+                            PROD-{String(producto.id_producto).padStart(3, "0")} -{" "}
                             {getDescripcionProducto(producto)} - $
                             {formatearPrecio(getSubtotalProducto(producto))}
                           </option>
@@ -2095,14 +2091,6 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 </>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    onClick={cerrarModalDetalle}
-                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Cerrar
-                  </button>
-
                   <button
                     type="button"
                     onClick={() => descargarPdfPedido(selectedPedido)}

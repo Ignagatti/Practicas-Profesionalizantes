@@ -20,6 +20,9 @@ import {
   RefreshCw,
   CreditCard,
   User,
+  Package,
+  Tag,
+  Clock,
 } from "lucide-react";
 import { useToast } from "../ui/ToastContext.jsx";
 import { useConfirm } from "../ui/ConfirmContext.jsx";
@@ -193,6 +196,25 @@ export function EntidadesPanel({
   useEffect(() => {
     cargarEntidades();
   }, [tipoVista]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (showConfirmDeleteEntidadModal) {
+          setShowConfirmDeleteEntidadModal(false);
+        } else if (showAddModal) {
+          setShowAddModal(false);
+          setErrorForm(null);
+        } else if (showViewModal) {
+          setShowViewModal(false);
+          setIsEditando(false);
+          setErrorForm(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showConfirmDeleteEntidadModal, showAddModal, showViewModal]);
 
   async function cargarEntidades() {
     setCargando(true);
@@ -687,7 +709,7 @@ export function EntidadesPanel({
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
-                    Contacto / Nombre
+                    Nombre
                   </th>
                   <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Razón Social
@@ -915,9 +937,6 @@ function EntidadModal({
             <h3 className="text-xl font-bold text-gray-800">
               {isEditando ? `Editar ${obtenerNombreEntidad(tipoVista)}` : `Visualizar ${obtenerNombreEntidad(tipoVista)}: ${nombreTitulo}`}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              CUIT/CUIL: {entidad.cuit || "—"} | Tel: {entidad.telefono || "—"} | Email: {entidad.email || "—"}
-            </p>
           </div>
           <button onClick={cerrar} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
             <X size={20} />
@@ -1067,77 +1086,50 @@ function EntidadModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
-          {isEditando ? (
-            <>
-              <button
-                onClick={() => {
-                  setIsEditando(false);
-                  cancelarEdicionDireccion();
-                }}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Cancelar
-              </button>
+        {(isEditando || activeTab === "info") && (
+          <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            {isEditando ? (
+              <>
+                <button
+                  onClick={() => {
+                    setIsEditando(false);
+                    cancelarEdicionDireccion();
+                  }}
+                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Cancelar
+                </button>
 
-              <button
-                onClick={guardar}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
-              >
-                Guardar cambios
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setShowConfirmDeleteEntidadModal(true)}
-                className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
-                title="Eliminar permanentemente"
-              >
-                <Trash2 size={16} />
-                Eliminar
-              </button>
-            </>
-          ) : (
-            <div className="flex gap-3 w-full justify-between items-center">
-              <button
-                type="button"
-                onClick={cerrar}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Cerrar
-              </button>
-              <div className="flex gap-3 items-center">
-                {activeTab === "info" ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("movimientos")}
-                      className="px-4 py-2.5 border border-purple-600 text-purple-600 rounded-xl text-sm font-semibold hover:bg-purple-50 transition-colors"
-                    >
-                      Ver movimientos
-                    </button>
-                    <button
-                      onClick={() => setIsEditando(true)}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
-                    >
-                      <Edit size={16} />
-                      Editar
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("info")}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
-                  >
-                    <User size={16} />
-                    Ver Información General
-                  </button>
-                )}
+                <button
+                  onClick={guardar}
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
+                >
+                  Guardar cambios
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDeleteEntidadModal(true)}
+                  className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                  title="Eliminar permanentemente"
+                >
+                  <Trash2 size={16} />
+                  Eliminar
+                </button>
+              </>
+            ) : (
+              <div className="flex gap-3 w-full justify-end items-center">
+                <button
+                  onClick={() => setIsEditando(true)}
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <Edit size={16} />
+                  Editar
+                </button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1155,13 +1147,49 @@ function DireccionesPanel({
   cancelarEdicionDireccion,
   eliminarDireccion,
 }) {
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const formularioVisible = mostrarFormulario || Boolean(direccionEditandoId);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await guardarDireccion(e);
+    setMostrarFormulario(false);
+  };
+
+  const handleEditar = (direccion) => {
+    editarDireccion(direccion);
+    setMostrarFormulario(true);
+  };
+
+  const handleCancelar = () => {
+    cancelarEdicionDireccion();
+    setMostrarFormulario(false);
+  };
+
   return (
     <div className="pt-4 border-t border-gray-200 space-y-4">
-      <div>
-        <h4 className="text-base text-gray-800">Direcciones</h4>
-        <p className="text-sm text-gray-500">
-          Direcciones asociadas a este registro.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-base font-bold text-gray-800">Direcciones</h4>
+          <p className="text-sm text-gray-500">
+            Direcciones asociadas a este registro.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (formularioVisible) {
+              handleCancelar();
+            } else {
+              setNuevaDireccion(DIRECCION_VACIA);
+              setMostrarFormulario(true);
+            }
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
+        >
+          <Plus size={14} />
+          {formularioVisible ? "Ocultar formulario" : "Agregar otra dirección"}
+        </button>
       </div>
 
       {cargandoDirecciones ? (
@@ -1187,37 +1215,35 @@ function DireccionesPanel({
                 </p>
               </div>
 
-              {isEditando && (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => editarDireccion(direccion)}
-                    className="text-blue-600 text-sm hover:underline"
-                  >
-                    Editar
-                  </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleEditar(direccion)}
+                  className="text-blue-600 text-sm hover:underline"
+                >
+                  Editar
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => eliminarDireccion(direccion.id)}
-                    className="text-red-600 text-sm hover:underline"
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => eliminarDireccion(direccion.id)}
+                  className="text-red-600 text-sm hover:underline"
+                >
+                  Eliminar
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {isEditando && (
+      {formularioVisible && (
         <form
-          onSubmit={guardarDireccion}
-          className="bg-gray-50 rounded-lg p-4 space-y-3"
+          onSubmit={handleSubmit}
+          className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200"
         >
-          <h5 className="text-sm text-gray-700">
-            {direccionEditandoId ? "Editar dirección" : "Agregar dirección"}
+          <h5 className="text-sm font-semibold text-gray-700">
+            {direccionEditandoId ? "Editar dirección" : "Agregar otra dirección"}
           </h5>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1274,20 +1300,18 @@ function DireccionesPanel({
           <div className="flex gap-3">
             <button
               type="submit"
-              className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800"
+              className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 text-sm font-semibold shadow-sm"
             >
-              {direccionEditandoId ? "Guardar dirección" : "Agregar dirección"}
+              {direccionEditandoId ? "Guardar dirección" : "Guardar dirección"}
             </button>
 
-            {direccionEditandoId && (
-              <button
-                type="button"
-                onClick={cancelarEdicionDireccion}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar edición
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleCancelar}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 text-sm font-medium text-gray-700"
+            >
+              Cancelar
+            </button>
           </div>
         </form>
       )}
@@ -1490,6 +1514,7 @@ function MovimientosContent({ entidad, tipoVista }) {
   });
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [movimientoSeleccionado, setMovimientoSeleccionado] = useState(null);
 
   const esCliente = tipoVista === "cliente";
   const tituloEntidad = esCliente ? "Cliente" : "Proveedor";
@@ -1651,13 +1676,21 @@ function MovimientosContent({ entidad, tipoVista }) {
                   <th className="p-3 whitespace-nowrap">Tipo Movimiento</th>
                   <th className="p-3 whitespace-nowrap">Referencia</th>
                   <th className="p-3 text-right whitespace-nowrap">Monto</th>
-                  <th className="p-3 text-center whitespace-nowrap">Estado Pago</th>
-                  <th className="p-3 whitespace-nowrap">Observaciones</th>
+                  <th className="p-3 text-center whitespace-nowrap">Estado</th>
+                  <th className="p-3 text-center whitespace-nowrap">N° MOVIMIENTO</th>
+                  <th className="p-3 text-right whitespace-nowrap">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white text-sm">
                 {movimientos.map((mov, idx) => {
                   const esPago = mov.tipo_movimiento === "pago";
+                  const codigoMovimiento =
+                    mov.tipo_movimiento === "pedido"
+                      ? `VENT-${String(mov.id_movimiento).padStart(3, "0")}`
+                      : mov.tipo_movimiento === "factura"
+                      ? `COMP-${String(mov.id_movimiento).padStart(3, "0")}`
+                      : `PAG-${String(mov.id_movimiento).padStart(3, "0")}`;
+
                   return (
                     <tr key={mov.id_movimiento || idx} className="hover:bg-gray-50 transition-colors">
                       <td className="p-3 font-medium text-gray-700 whitespace-nowrap">
@@ -1696,8 +1729,21 @@ function MovimientosContent({ entidad, tipoVista }) {
                           {mov.estado_pago || "—"}
                         </span>
                       </td>
-                      <td className="p-3 text-xs text-gray-500 max-w-xs truncate">
-                        {mov.observaciones || "—"}
+                      <td className="p-3 text-center whitespace-nowrap font-mono font-bold text-xs text-gray-700">
+                        <span className="bg-gray-100 px-2 py-1 rounded-md border border-gray-200">
+                          {codigoMovimiento}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setMovimientoSeleccionado(mov)}
+                          className="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+                          title="Abrir detalle completo"
+                        >
+                          <Eye size={14} />
+                          <span>Ver</span>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -1706,6 +1752,327 @@ function MovimientosContent({ entidad, tipoVista }) {
             </table>
           </div>
         )}
+      </div>
+
+      {movimientoSeleccionado && (
+        <MovimientoDetalleModal
+          movimiento={movimientoSeleccionado}
+          tipoVista={tipoVista}
+          cerrar={() => setMovimientoSeleccionado(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function MovimientoDetalleModal({ movimiento, tipoVista, cerrar }) {
+  const [datos, setDatos] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        cerrar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cerrar]);
+
+  useEffect(() => {
+    const cargar = async () => {
+      setCargando(true);
+      setError(null);
+      try {
+        let endpoint = "";
+        if (movimiento.tipo_movimiento === "pedido") {
+          endpoint = `${API_URL}/pedidos/${movimiento.id_movimiento}`;
+        } else if (movimiento.tipo_movimiento === "factura") {
+          endpoint = `${API_URL}/facturasProveedor/${movimiento.id_movimiento}`;
+        } else if (movimiento.tipo_movimiento === "pago") {
+          endpoint = `${API_URL}/pagos/${movimiento.id_movimiento}?tipo=${tipoVista}`;
+        }
+
+        const res = await fetch(endpoint);
+        if (!res.ok) {
+          throw new Error("No se pudo obtener el detalle");
+        }
+        const data = await res.json();
+        setDatos(data);
+      } catch (err) {
+        setError(err.message || "Error al cargar detalle");
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargar();
+  }, [movimiento, tipoVista]);
+
+  const codigo =
+    movimiento.tipo_movimiento === "pedido"
+      ? `VENT-${String(movimiento.id_movimiento).padStart(3, "0")}`
+      : movimiento.tipo_movimiento === "factura"
+      ? `COMP-${String(movimiento.id_movimiento).padStart(3, "0")}`
+      : `PAG-${String(movimiento.id_movimiento).padStart(3, "0")}`;
+
+  const formatearDinero = (val) =>
+    Number(val || 0).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  const formatearFecha = (f) => {
+    if (!f) return "—";
+    const fechaStr = String(f).split("T")[0];
+    const partes = fechaStr.split("-");
+    if (partes.length !== 3) return fechaStr;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  };
+
+  const tipoLabel =
+    movimiento.tipo_movimiento === "pedido"
+      ? "Detalle de Venta"
+      : movimiento.tipo_movimiento === "factura"
+      ? "Detalle de Compra"
+      : "Detalle de Pago";
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-150 text-left">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 px-5 border-b border-gray-200 bg-gray-50/80">
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono font-bold text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-md border border-red-200">
+              {codigo}
+            </span>
+            <h3 className="text-base font-bold text-gray-800">{tipoLabel}</h3>
+          </div>
+          <button
+            onClick={cerrar}
+            className="p-1.5 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5 overflow-y-auto space-y-4 flex-1">
+          {cargando ? (
+            <div className="p-8 text-center text-gray-500 flex flex-col items-center gap-2">
+              <RefreshCw size={24} className="animate-spin text-red-600" />
+              <span className="text-sm font-medium">Cargando detalles...</span>
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium flex items-center gap-2">
+              <AlertCircle size={18} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          ) : datos ? (
+            <>
+              {/* PEDIDO */}
+              {movimiento.tipo_movimiento === "pedido" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Fecha Venta</span>
+                      <span className="text-sm font-semibold text-gray-800">{formatearFecha(datos.fecha_generacion)}</span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Vencimiento</span>
+                      <span className="text-sm font-semibold text-gray-800">{formatearFecha(datos.vencimiento)}</span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Factura</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {datos.nro_factura || (datos.estado_facturacion === "sin_factura" ? "Pendiente" : "No factura")}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Estado Pago</span>
+                      <span className="text-sm font-semibold capitalize text-gray-800">{datos.estado_pago || "—"}</span>
+                    </div>
+                  </div>
+
+                  {Array.isArray(datos.productos) && datos.productos.length > 0 && (
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 font-bold text-xs text-gray-600 uppercase">
+                        Productos del Pedido
+                      </div>
+                      <div className="overflow-x-auto max-h-48">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-gray-50/70 border-b border-gray-200 text-gray-500 uppercase">
+                            <tr>
+                              <th className="p-2.5">Modelo</th>
+                              <th className="p-2.5">Tela</th>
+                              <th className="p-2.5">Lustre</th>
+                              <th className="p-2.5 text-center">Cant.</th>
+                              <th className="p-2.5 text-right">Precio</th>
+                              <th className="p-2.5 text-right">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {datos.productos.map((prod, pIdx) => (
+                              <tr key={prod.id_producto || pIdx}>
+                                <td className="p-2.5 font-semibold text-gray-800">{prod.modelo}</td>
+                                <td className="p-2.5 text-gray-600">{prod.tela || "—"}</td>
+                                <td className="p-2.5 text-gray-600">{prod.color_lustre || "—"}</td>
+                                <td className="p-2.5 text-center font-bold text-gray-800">{prod.cantidad}</td>
+                                <td className="p-2.5 text-right text-gray-600">${formatearDinero(prod.precio)}</td>
+                                <td className="p-2.5 text-right font-bold text-gray-800">
+                                  ${formatearDinero(Number(prod.cantidad || 1) * Number(prod.precio || 0))}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm">
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold mr-2">Monto Adeudado:</span>
+                      <span className="font-bold text-red-600">${formatearDinero(datos.monto_adeudado)}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold mr-2">Total Pedido:</span>
+                      <span className="text-lg font-black text-gray-900">${formatearDinero(datos.precio_total)}</span>
+                    </div>
+                  </div>
+
+                  {datos.observaciones && (
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
+                      <span className="font-bold text-gray-600 block mb-0.5">Observaciones:</span>
+                      <p className="text-gray-700">{datos.observaciones}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* FACTURA */}
+              {movimiento.tipo_movimiento === "factura" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Emisión</span>
+                      <span className="text-sm font-semibold text-gray-800">{formatearFecha(datos.Fecha_Emision || datos.fecha_emision)}</span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Vencimiento</span>
+                      <span className="text-sm font-semibold text-gray-800">{formatearFecha(datos.Vencimiento || datos.vencimiento)}</span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Comprobante</span>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {datos.Nro_Factura_Proveedor || datos.nro_factura_proveedor || "—"}
+                      </span>
+                    </div>
+                    <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                      <span className="block text-[11px] font-bold text-gray-500 uppercase">Estado</span>
+                      <span className="text-sm font-semibold capitalize text-gray-800">
+                        {datos.Estado_Pago || datos.estado_pago || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm">
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold mr-2">Monto Adeudado:</span>
+                      <span className="font-bold text-red-600">${formatearDinero(datos.Monto_Adeudado || datos.monto_adeudado)}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 uppercase font-bold mr-2">Total Compra:</span>
+                      <span className="text-lg font-black text-gray-900">${formatearDinero(datos.Precio_Total || datos.precio_total)}</span>
+                    </div>
+                  </div>
+
+                  {(datos.Observaciones || datos.observaciones) && (
+                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs">
+                      <span className="font-bold text-gray-600 block mb-0.5">Observaciones:</span>
+                      <p className="text-gray-700">{datos.Observaciones || datos.observaciones}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PAGO */}
+              {movimiento.tipo_movimiento === "pago" && (() => {
+                const pagoInfo = datos.pago || datos;
+                const detalles = datos.detalles || [];
+                const esCompleto = (pagoInfo.Estado_Pago || pagoInfo.estado_pago) === "pagado";
+
+                return (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <span className="block text-[11px] font-bold text-gray-500 uppercase">Fecha Pago</span>
+                        <span className="text-sm font-semibold text-gray-800">{formatearFecha(pagoInfo.Fecha_Pago || pagoInfo.fecha_pago)}</span>
+                      </div>
+                      <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <span className="block text-[11px] font-bold text-gray-500 uppercase">Medio de Pago</span>
+                        <span className="text-sm font-semibold text-gray-800">{pagoInfo.tipo_medio_pago || pagoInfo.medio_pago || "—"}</span>
+                      </div>
+                      <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                        <span className="block text-[11px] font-bold text-gray-500 uppercase">Estado</span>
+                        <span className={`text-sm font-bold ${esCompleto ? "text-green-600" : "text-amber-600"}`}>
+                          {esCompleto ? "Pago completo" : "Pago parcial"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {detalles.length > 0 && (
+                      <div className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 font-bold text-xs text-gray-600 uppercase">
+                          Comprobantes Imputados
+                        </div>
+                        <div className="overflow-x-auto max-h-48">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-gray-50/70 border-b border-gray-200 text-gray-500 uppercase">
+                              <tr>
+                                <th className="p-2.5">Referencia</th>
+                                <th className="p-2.5 text-right">Monto Usado</th>
+                                <th className="p-2.5 text-right">Saldo Restante</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {detalles.map((det, dIdx) => (
+                                <tr key={dIdx}>
+                                  <td className="p-2.5 font-semibold text-gray-800">
+                                    {det.Nro_Factura || det.nro_factura || (det.Id_Pedido ? `Pedido N° ${det.Id_Pedido}` : det.Id_Factura_Proveedor ? `Factura N° ${det.Id_Factura_Proveedor}` : "—")}
+                                  </td>
+                                  <td className="p-2.5 text-right font-bold text-green-700">
+                                    ${formatearDinero(det.Monto_Usado || det.monto_usado)}
+                                  </td>
+                                  <td className="p-2.5 text-right text-gray-600">
+                                    ${formatearDinero(det.Monto_Adeudado || det.monto_adeudado)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm">
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase font-bold mr-2">Saldo a Favor Generado:</span>
+                        <span className="font-bold text-emerald-600">${formatearDinero(pagoInfo.Monto_Restante || pagoInfo.monto_restante)}</span>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500 uppercase font-bold mr-2">Total Pago:</span>
+                        <span className="text-lg font-black text-gray-900">${formatearDinero(pagoInfo.Monto || pagoInfo.monto)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );

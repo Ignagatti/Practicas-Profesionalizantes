@@ -55,6 +55,7 @@ const METODOS_PAGO = [
   { id: 2, label: "Transferencia" },
   { id: 3, label: "Cheque" },
   { id: 4, label: "Tarjeta" },
+  { id: 5, label: "Saldo a favor" },
 ];
 
 function normalizarTexto(texto) {
@@ -65,6 +66,7 @@ function normalizarTexto(texto) {
 function normalizarTipoMedioPago(tipo) {
   if (!tipo) return "efectivo";
   const t = String(tipo).toLowerCase().trim();
+  if (t.includes("saldo") || t.includes("favor")) return "saldo_a_favor";
   if (t.includes("efect")) return "efectivo";
   if (t.includes("transf")) return "transferencia";
   if (t.includes("cheq")) return "cheque";
@@ -77,6 +79,7 @@ const metodoPagoConfig = {
   transferencia: { label: "Transferencia", color: "bg-blue-100 text-blue-800" },
   cheque: { label: "Cheque", color: "bg-purple-100 text-purple-800" },
   tarjeta: { label: "Tarjeta", color: "bg-indigo-100 text-indigo-800" },
+  saldo_a_favor: { label: "Saldo a favor", color: "bg-teal-100 text-teal-800" },
 };
 
 const estadoPagoConfig = {
@@ -365,6 +368,17 @@ export default function Pagos() {
   useEffect(() => {
     cargarDatos();
   }, [tipoVista]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setShowAddModal(false);
+        setViewingPago(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
 
   async function cargarDatos() {
@@ -1556,7 +1570,7 @@ export default function Pagos() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Fecha del pago *
+                    Fecha del pago <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <input
@@ -1576,7 +1590,7 @@ export default function Pagos() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Método de pago *
+                    Método de pago <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <select
@@ -1594,7 +1608,7 @@ export default function Pagos() {
                     className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                   >
                     <option value="">
-                      Seleccionar método
+                      Seleccionar...
                     </option>
 
                     {METODOS_PAGO.map(
@@ -1612,7 +1626,7 @@ export default function Pagos() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    {tipoVista === "proveedor" ? "Proveedor *" : "Cliente *"}
+                    {tipoVista === "proveedor" ? "Proveedor" : "Cliente"} <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <select
@@ -1627,7 +1641,7 @@ export default function Pagos() {
                     className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">
-                      Seleccionar {tipoVista === "proveedor" ? "proveedor" : "cliente"}
+                      Seleccionar...
                     </option>
 
                     {(tipoVista === "proveedor" ? proveedoresTotales : clientesTotales).map(
@@ -1701,8 +1715,8 @@ export default function Pagos() {
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm text-gray-700">
-                    Monto total del pago ($) *
+                  <label className="block mb-2 text-sm text-gray-700 font-semibold">
+                    Monto total del pago ($) <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <div>
@@ -1720,7 +1734,7 @@ export default function Pagos() {
                         }))
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0,00"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -2093,7 +2107,7 @@ export default function Pagos() {
 
                 <div>
                   <p className="text-gray-500 text-sm">
-                    Estado
+                    Estado del pago
                   </p>
 
                   <span
@@ -2104,10 +2118,7 @@ export default function Pagos() {
                       "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {estadoPagoConfig[
-                      viewingPago.estado_pago
-                    ]?.label ||
-                      viewingPago.estado_pago}
+                    {viewingPago.estado_pago === 'pagado' ? 'Pago completo' : 'Pago parcial'}
                   </span>
                 </div>
               </div>
@@ -2158,9 +2169,9 @@ export default function Pagos() {
                                 className="border-t hover:bg-gray-50"
                               >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
-                                  {
-                                    detalle.nro_factura_proveedor
-                                  }
+                                  {tipoVista === "proveedor" 
+                                    ? (detalle.nro_factura_proveedor || `COMP-${String(detalle.id_factura_proveedor).padStart(3, '0')}`) 
+                                    : `VENT-${String(detalle.id_factura_proveedor).padStart(3, '0')}`}
                                 </td>
 
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-700">
@@ -2200,25 +2211,6 @@ export default function Pagos() {
                     </div>
                   </div>
                 )}
-              </div>
-
-
-              {/* AVISO CONTABLE */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-start gap-3 text-blue-800 text-xs">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600" />
-                <p>
-                  <strong>Comprobante Histórico Asentado:</strong> Los registros de pago son inmutables para garantizar la trazabilidad contable y auditoría de cuentas corrientes.
-                </p>
-              </div>
-
-              <div className="flex justify-end pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={cerrarDetalle}
-                  className="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-xl font-bold text-gray-700 transition-colors text-sm"
-                >
-                  Cerrar
-                </button>
               </div>
             </div>
           </div>

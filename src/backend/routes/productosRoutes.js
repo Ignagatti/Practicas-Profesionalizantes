@@ -7,5 +7,6 @@ router.post('/', productosController.crearProducto);
 router.put('/:id', productosController.actualizarProducto);
 router.delete('/:id', productosController.eliminarProducto);
 router.put('/estado/terminar-masivo', productosController.terminarProductosMasivo);
+router.put('/estado/enviar-masivo', productosController.enviarProductosMasivo);
 
 module.exports = router;

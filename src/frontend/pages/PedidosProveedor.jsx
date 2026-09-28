@@ -41,15 +41,17 @@ const estadoConfig = {
 };
 
 
-// =====================================================
-// FORMULARIO VACÍO
-// =====================================================
+function sumarDiasISO(fechaISO, dias = 30) {
+  const base = fechaISO ? new Date(`${fechaISO}T00:00:00`) : new Date();
+  base.setDate(base.getDate() + dias);
+  return base.toISOString().split("T")[0];
+}
 
 const FORM_VACIO = {
   id_proveedor: "",
   nro_factura_proveedor: "",
   fecha_emision: new Date().toISOString().split("T")[0],
-  vencimiento: "",
+  vencimiento: sumarDiasISO(new Date().toISOString().split("T")[0], 30),
   precio_total: "",
   monto_adeudado: "",
   observaciones: "",
@@ -272,6 +274,19 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
     cargarDatos();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setShowAddModal(false);
+        setShowViewModal(false);
+        setShowConfirmDeleteModal(false);
+        setIsEditandoFactura(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
 
   async function cargarDatos() {
     setCargando(true);
@@ -489,10 +504,11 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
   // =====================================================
 
   function abrirAdd() {
+    const hoy = new Date().toISOString().split("T")[0];
     setNewFactura({
       ...FORM_VACIO,
-      fecha_emision:
-        new Date().toISOString().split("T")[0],
+      fecha_emision: hoy,
+      vencimiento: sumarDiasISO(hoy, 30),
     });
 
     setSearchProveedor("");
@@ -967,42 +983,38 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               No hay facturas para mostrar.
             </div>
           ) : (
-            <table className="w-full min-w-[850px] text-left">
+            <table className="w-full min-w-[760px] text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Tipo
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    N° COMPRA
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Nro. Comprobante
-                  </th>
-
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Emisión
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Fecha
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Vencimiento
-                  </th>
-
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Total
-                  </th>
-
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                    Adeudado
-                  </th>
-
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Pago
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Tipo
+                  </th>
+
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Total
+                  </th>
+
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Monto Adeudado
+                  </th>
+
+                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
@@ -1016,47 +1028,23 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                     }
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize leading-[1.25]">
-                       <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${factura.tipo_comprobante === 'remito' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                         {factura.tipo_comprobante}
-                       </span>
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-800 font-bold">
+                      COMP-{String(factura.id_factura_proveedor).padStart(3, '0')}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {factura.nro_factura_proveedor || "-"}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                       {factura.proveedor}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-600">
                       {formatearFecha(
                         factura.fecha_emision
                       )}
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatearFecha(
-                        factura.vencimiento
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      ${formatearDinero(
-                        factura.precio_total
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                      ${formatearDinero(
-                        factura.monto_adeudado
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
+                        className={`px-2 py-1 rounded-full text-xs font-bold ${
                           estadoConfig[
                             factura.estado_pago
                           ]?.color ||
@@ -1067,6 +1055,24 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                           factura.estado_pago
                         ]?.label ||
                           factura.estado_pago}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-500 capitalize leading-[1.25]">
+                       <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${factura.tipo_comprobante === 'remito' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                         {factura.tipo_comprobante}
+                       </span>
+                    </td>
+
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                      ${formatearDinero(
+                        factura.precio_total
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-semibold">
+                      <span className={Number(factura.monto_adeudado) > 0 ? "text-red-700 font-bold" : "text-green-700 font-bold"}>
+                        ${formatearDinero(factura.monto_adeudado)}
                       </span>
                     </td>
 
@@ -1171,7 +1177,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                    Proveedor *
+                    Proveedor <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <select
@@ -1185,7 +1191,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     required
                   >
-                    <option value="">Seleccionar proveedor...</option>
+                    <option value="">Seleccionar...</option>
 
                     {proveedores.map((proveedor) => (
                       <option
@@ -1200,7 +1206,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Tipo de comprobante *
+                    Tipo de comprobante <span className="text-red-600 font-bold">*</span>
                   </label>
                   <select
                     value={newFactura.tipo_comprobante}
@@ -1221,7 +1227,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 {newFactura.tipo_comprobante === 'factura' && (
                   <div>
                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                      Número de factura *
+                      Número de factura <span className="text-red-600 font-bold">*</span>
                     </label>
 
                     <input
@@ -1242,7 +1248,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                           ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
                           : "border-gray-300 focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
                       }`}
-                      placeholder="Ej.: A-0001-00001234"
+                      placeholder=""
                     />
 
                     {newFactura.tipo_comprobante === 'factura' && !newFactura.nro_factura_proveedor.trim() && (
@@ -1255,7 +1261,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Precio total *
+                    Precio total <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <input
@@ -1270,13 +1276,13 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                       }))
                     }
                     className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                    placeholder="$ 0.00"
+                    placeholder=""
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Fecha de emisión *
+                    Fecha de emisión <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <input
@@ -1298,7 +1304,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                    Fecha de vencimiento *
+                    Fecha de vencimiento <span className="text-red-600 font-bold">*</span>
                   </label>
 
                   <input
@@ -1603,7 +1609,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                         }))
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="$ 0.00"
+                      placeholder=""
                     />
                   ) : (
                     <p className="text-lg text-gray-800">
@@ -1747,14 +1753,6 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                   <>
                     <button
                       type="button"
-                      onClick={cerrarVer}
-                      className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      Cerrar
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={() => setIsEditandoFactura(true)}
                       className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
                     >
@@ -1787,9 +1785,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               Confirmar Eliminación
             </h3>
             <p className="text-gray-600 text-sm mb-6">
-              ¿Está seguro que desea eliminar este comprobante? 
-              <br /><br />
-              <strong>Atención:</strong> Si esta factura posee pagos registrados, el sistema impedirá su borrado de forma automática.
+              ¿Estás seguro de que deseas eliminar este comprobante? Esta acción no se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
               <button

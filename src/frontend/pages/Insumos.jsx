@@ -40,6 +40,17 @@ function Insumos() {
         cargarInsumos();
     }, []);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowFormModal(false);
+                setShowAdjustModal(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const cargarInsumos = async () => {
         setCargando(true);
         try {
@@ -256,7 +267,7 @@ function Insumos() {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Nombre del Insumo <span className="text-red-600 font-bold">*</span></label>
                                     <input 
-                                        type="text" required placeholder="Ej: Pana Gris Importada"
+                                        type="text" required placeholder=""
                                         className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                                         value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                                     />
@@ -281,12 +292,17 @@ function Insumos() {
                 </div>
             )}
 
-            {/* MODAL AJUSTE PORCENTAJE - CALCADO DE LA IMAGEN */}
+            {/* MODAL AJUSTE PORCENTAJE */}
             {showAdjustModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-[9999] p-6">
-                    <div className="bg-white rounded-[25px] shadow-2xl max-w-lg w-full animate-in zoom-in duration-200">
+                    <div className="bg-white rounded-[25px] shadow-2xl max-w-lg w-full animate-in zoom-in duration-200 relative">
                         <div className="p-8 space-y-6 text-left">
-                            <h2 className="text-2xl font-bold text-gray-800">Ajuste de Precios por Porcentaje</h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-bold text-gray-800">Ajuste de Precios por Porcentaje</h2>
+                                <button onClick={() => setShowAdjustModal(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
                             
                             <p className="text-gray-500 text-[15px] leading-relaxed">
                                 Ingrese el porcentaje de aumento o descuento. Use valores positivos para aumentos y negativos para descuentos. El ajuste se aplicará solo a los <span className="font-semibold text-gray-700">{filteredInsumos.length} insumo(s) visible(s)</span> según los filtros aplicados.
@@ -297,7 +313,7 @@ function Insumos() {
                                 <div className="relative">
                                     <input 
                                         type="number" 
-                                        placeholder="Ej: 15 o -10" 
+                                        placeholder="" 
                                         className="w-full h-14 pl-5 pr-12 bg-white border border-gray-200 rounded-2xl text-gray-700 text-lg outline-none focus:border-red-400 focus:ring-1 focus:ring-red-400 transition-all placeholder:text-gray-300"
                                         value={porcentajeAjuste}
                                         onChange={(e) => setPorcentajeAjuste(e.target.value)}

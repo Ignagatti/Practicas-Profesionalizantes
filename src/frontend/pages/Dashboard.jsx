@@ -54,6 +54,12 @@ function obtenerFechaISO(val) {
 // ─────────────────────────────────────────────────────────────────────────────
 export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPendientes }) {
   const [periodo, setPeriodo]               = useState("mensual");
+  const [periodoModelos, setPeriodoModelos] = useState("mensual");
+  const [mesModelos, setMesModelos]         = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [anioModelos, setAnioModelos]       = useState(() => String(new Date().getFullYear()));
 
   // ── Estado ──────────────────────────────────────────────────────────────────
   const [productos, setProductos]           = useState([]);
@@ -77,18 +83,43 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
   const [mensajeBackup, setMensajeBackup]   = useState(null); // { tipo: 'exito' | 'error', texto: '' }
   const fileInputRef                        = useRef(null);
 
-  // ── Al montar, verificar si se solicitó hacer scroll a pagos pendientes ─────
+  // ── Listener global de tecla Escape para cerrar modales ───────────────────
   useEffect(() => {
-    if (sessionStorage.getItem('scroll_to_payments') === 'true') {
-      sessionStorage.removeItem('scroll_to_payments');
-      setTimeout(() => {
-        const target = document.getElementById('section-pagos-pendientes');
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth' });
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (selectedPago) setSelectedPago(null);
+        if (modalRestaurarAbierto && !restaurandoBackup) {
+          setModalRestaurarAbierto(false);
+          setArchivoBackup(null);
         }
-      }, 100);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPago, modalRestaurarAbierto, restaurandoBackup]);
+
+  // ── Al terminar de cargar o recibir evento, verificar si se solicitó scroll a pagos pendientes ─────
+  useEffect(() => {
+    const ejecutarScroll = () => {
+      const target = document.getElementById('section-pagos-pendientes');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.classList.add('ring-2', 'ring-red-600', 'ring-offset-4');
+        setTimeout(() => {
+          target.classList.remove('ring-2', 'ring-red-600', 'ring-offset-4');
+        }, 2500);
+      }
+    };
+
+    if (!cargando && sessionStorage.getItem('scroll_to_payments') === 'true') {
+      sessionStorage.removeItem('scroll_to_payments');
+      const timer = setTimeout(ejecutarScroll, 150);
+      return () => clearTimeout(timer);
     }
-  }, []);
+
+    window.addEventListener('scroll-to-pagos-pendientes', ejecutarScroll);
+    return () => window.removeEventListener('scroll-to-pagos-pendientes', ejecutarScroll);
+  }, [cargando]);
 
   // ── Función para cargar datos del backend ──────────────────────────────────
   async function cargarDatos(esReintento = false) {
@@ -320,10 +351,39 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
     );
   }, [pedidosFacturados]);
 
+  const { mesesDisponibles, aniosDisponibles } = useMemo(() => {
+    const setMeses = new Set();
+    const setAnios = new Set();
+    productos.forEach(p => {
+      const f = obtenerFechaISO(p.fecha_pedido || p.Fecha_Pedido);
+      if (f && f.length >= 7) {
+        setMeses.add(f.substring(0, 7));
+        setAnios.add(f.substring(0, 4));
+      }
+    });
+    const hoy = new Date();
+    setMeses.add(`${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`);
+    setAnios.add(String(hoy.getFullYear()));
+
+    return {
+      mesesDisponibles: Array.from(setMeses).sort().reverse(),
+      aniosDisponibles: Array.from(setAnios).sort().reverse()
+    };
+  }, [productos]);
+
   // ── Histograma de modelos más vendidos ───────────────────────────────────────
   const histogramaModelos = useMemo(() => {
     const modelosMap = new Map();
-    productosFiltrados.forEach((producto) => {
+    productos.forEach((producto) => {
+      const fechaISO = obtenerFechaISO(producto.fecha_pedido || producto.Fecha_Pedido);
+      if (!fechaISO) return;
+
+      if (periodoModelos === "mensual") {
+        if (!fechaISO.startsWith(mesModelos)) return;
+      } else {
+        if (!fechaISO.startsWith(anioModelos)) return;
+      }
+
       const nombreModelo = producto.modelo || producto.Modelo || "Desconocido";
       const cantidad = modelosMap.get(nombreModelo) || 0;
       modelosMap.set(nombreModelo, cantidad + (Number(producto.cantidad || producto.Cantidad) || 1));
@@ -335,7 +395,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
         cantidad,
       }))
       .sort((a, b) => b.cantidad - a.cantidad);
-  }, [productosFiltrados]);
+  }, [productos, periodoModelos, mesModelos, anioModelos]);
 
   // ── Productos por período (Día, Mes, Año) ────────────────────────────────────
   const productosPorMes = useMemo(() => {
@@ -470,9 +530,72 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Modelos más vendidos */}
+        {/* Modelos más vendidos con selector de Mes / Año */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Modelos Más Vendidos</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Modelos Más Vendidos
+              </h3>
+              <p className="text-xs text-gray-500 font-medium">
+                Período: <span className="text-red-700 font-semibold">{periodoModelos === "mensual" ? formatPeriodoLabel(mesModelos) : `Año ${anioModelos}`}</span>
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setPeriodoModelos("mensual")}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
+                    periodoModelos === "mensual"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "hover:text-gray-900"
+                  }`}
+                >
+                  Mes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPeriodoModelos("anual")}
+                  className={`px-2.5 py-1 rounded-lg transition-all ${
+                    periodoModelos === "anual"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "hover:text-gray-900"
+                  }`}
+                >
+                  Año
+                </button>
+              </div>
+
+              {periodoModelos === "mensual" ? (
+                <select
+                  value={mesModelos}
+                  onChange={(e) => setMesModelos(e.target.value)}
+                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-700"
+                >
+                  {mesesDisponibles.map((m) => (
+                    <option key={m} value={m}>
+                      {formatPeriodoLabel(m)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={anioModelos}
+                  onChange={(e) => setAnioModelos(e.target.value)}
+                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-700"
+                >
+                  {aniosDisponibles.map((a) => (
+                    <option key={a} value={a}>
+                      Año {a}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={histogramaModelos} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -489,9 +612,12 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
         {/* Productos por período */}
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Productos Pedidos por {periodo === "mensual" ? "Mes" : "Año"}
-            </h3>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Productos Pedidos por {periodo === "mensual" ? "Mes" : "Año"}
+              </h3>
+              <p className="text-xs text-gray-500 font-medium">Basado en Fecha de Pedido / Confección</p>
+            </div>
             <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold text-gray-600 self-start sm:self-auto">
               <button
                 type="button"
@@ -534,7 +660,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
       </div>
 
       {/* Avisos de Pagos Pendientes */}
-      <div id="section-pagos-pendientes" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+      <div id="section-pagos-pendientes" className="bg-white rounded-xl shadow-sm p-6 border border-gray-200 scroll-mt-24 transition-all duration-500">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">Avisos de Pagos Pendientes</h3>
 
         {pagosPendientes.length === 0 ? (
@@ -794,14 +920,6 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
                 </div>
               </div>
 
-              <div className="pt-4">
-                <button
-                  onClick={() => setSelectedPago(null)}
-                  className="w-full px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors font-medium"
-                >
-                  Cerrar
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -812,15 +930,25 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
 
 // ── Componente auxiliar StatCard ──────────────────────────────────────────────
 function StatCard({ title, value, change, icon: Icon, color }) {
+  const valueStr = String(value || "");
+  const fontSizeClass =
+    valueStr.length > 14
+      ? "text-lg sm:text-xl"
+      : valueStr.length > 10
+      ? "text-xl sm:text-2xl"
+      : "text-2xl sm:text-3xl";
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-500 text-sm mb-1">{title}</p>
-          <p className="text-3xl font-bold mb-2 text-gray-800">{value}</p>
-          <p className="text-xs text-gray-400">{change}</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-gray-500 text-sm mb-1 truncate">{title}</p>
+          <p className={`${fontSizeClass} font-bold mb-2 text-gray-800 truncate`} title={valueStr}>
+            {value}
+          </p>
+          {change && <p className="text-xs text-gray-400 truncate">{change}</p>}
         </div>
-        <div className={`${color} text-white p-3 rounded-xl`}>
+        <div className={`${color} text-white p-3 rounded-xl shrink-0`}>
           <Icon size={24} />
         </div>
       </div>

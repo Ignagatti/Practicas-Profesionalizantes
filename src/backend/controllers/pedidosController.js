@@ -22,6 +22,7 @@ const ESTADOS_PAGO_VALIDOS = [
 ];
 
 const ESTADOS_FACTURACION_VALIDOS = [
+    'sin_factura',
     'no_se_factura',
     'se_factura'
 ];
@@ -296,7 +297,13 @@ const crearPedido = async (req, res) => {
         }
 
         const estadoPagoFinal = Estado_Pago || 'pendiente';
-        const estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
+        let estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
+
+        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            estadoFacturacionFinal = 'sin_factura';
+        } else if (estadoFacturacionFinal === 'sin_factura' && Nro_Factura && Nro_Factura.trim()) {
+            estadoFacturacionFinal = 'se_factura';
+        }
 
         if (!ESTADOS_PAGO_VALIDOS.includes(estadoPagoFinal)) {
             return res.status(400).json({
@@ -307,12 +314,6 @@ const crearPedido = async (req, res) => {
         if (!ESTADOS_FACTURACION_VALIDOS.includes(estadoFacturacionFinal)) {
             return res.status(400).json({
                 error: 'Estado de facturación inválido'
-            });
-        }
-
-        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
-            return res.status(400).json({
-                error: 'Debe ingresar el número de factura cuando el pedido se factura'
             });
         }
 
@@ -395,7 +396,7 @@ const crearPedido = async (req, res) => {
         }, 0);
 
         let precioTotal = subtotalCalculado;
-        if (estadoFacturacionFinal === 'se_factura') {
+        if (estadoFacturacionFinal === 'se_factura' || estadoFacturacionFinal === 'sin_factura') {
             precioTotal = roundMoney(multMoney(subtotalCalculado, 1.21));
         }
 
@@ -585,7 +586,13 @@ const actualizarPedido = async (req, res) => {
         }
 
         const estadoPagoFinal = Estado_Pago || 'pendiente';
-        const estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
+        let estadoFacturacionFinal = Estado_Facturacion || 'no_se_factura';
+
+        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            estadoFacturacionFinal = 'sin_factura';
+        } else if (estadoFacturacionFinal === 'sin_factura' && Nro_Factura && Nro_Factura.trim()) {
+            estadoFacturacionFinal = 'se_factura';
+        }
 
         if (!ESTADOS_PAGO_VALIDOS.includes(estadoPagoFinal)) {
             return res.status(400).json({
@@ -596,12 +603,6 @@ const actualizarPedido = async (req, res) => {
         if (!ESTADOS_FACTURACION_VALIDOS.includes(estadoFacturacionFinal)) {
             return res.status(400).json({
                 error: 'Estado de facturación inválido'
-            });
-        }
-
-        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
-            return res.status(400).json({
-                error: 'Debe ingresar el número de factura cuando el pedido se factura'
             });
         }
 
@@ -693,7 +694,7 @@ const actualizarPedido = async (req, res) => {
         }, 0);
 
         let nuevoPrecioTotal = subtotalCalculado;
-        if (estadoFacturacionFinal === 'se_factura') {
+        if (estadoFacturacionFinal === 'se_factura' || estadoFacturacionFinal === 'sin_factura') {
             nuevoPrecioTotal = roundMoney(multMoney(subtotalCalculado, 1.21));
         }
 
@@ -778,10 +779,11 @@ const subirFactura = async (req, res) => {
             return res.status(400).json({ error: "Faltan datos obligatorios." });
         }
 
-        if (Estado_Facturacion === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
-            return res.status(400).json({
-                error: 'Debe ingresar el número de factura cuando el pedido se factura'
-            });
+        let estadoFacturacionFinal = Estado_Facturacion;
+        if (estadoFacturacionFinal === 'se_factura' && (!Nro_Factura || !Nro_Factura.trim())) {
+            estadoFacturacionFinal = 'sin_factura';
+        } else if (estadoFacturacionFinal === 'sin_factura' && Nro_Factura && Nro_Factura.trim()) {
+            estadoFacturacionFinal = 'se_factura';
         }
 
         const pedidoExiste = await pool.query(
@@ -806,7 +808,7 @@ const subirFactura = async (req, res) => {
                 WHERE Id_Pedido = $4
                 RETURNING *
             `;
-            params = [Estado_Facturacion, Nro_Factura || null, archivo.buffer, id];
+            params = [estadoFacturacionFinal, Nro_Factura || null, archivo.buffer, id];
         } else {
             query = `
                 UPDATE Pedido
@@ -816,7 +818,7 @@ const subirFactura = async (req, res) => {
                 WHERE Id_Pedido = $3
                 RETURNING *
             `;
-            params = [Estado_Facturacion, Nro_Factura || null, id];
+            params = [estadoFacturacionFinal, Nro_Factura || null, id];
         }
 
         const resultado = await pool.query(query, params);

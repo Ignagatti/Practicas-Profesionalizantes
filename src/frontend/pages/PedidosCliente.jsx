@@ -25,7 +25,7 @@ import {
 const API_URL = "http://localhost:4000/api";
 
 const ESTADOS_PAGO = ["pendiente", "parcial", "pagado"];
-const ESTADOS_FACTURACION = ["no_se_factura", "se_factura"];
+const ESTADOS_FACTURACION = ["no_se_factura", "sin_factura", "se_factura"];
 
 function obtenerFechaActualISO() {
   const hoy = new Date();
@@ -96,7 +96,8 @@ function formatearEstado(texto) {
     parcial: "Parcial",
     pagado: "Pagado",
     no_se_factura: "No se factura",
-    se_factura: "Se factura",
+    sin_factura: "Pendiente de facturación",
+    se_factura: "Facturado",
   };
 
   return estados[texto] || texto || "-";
@@ -162,12 +163,13 @@ function getEstadoPagoInfo(estado) {
 function getEstadoFacturaInfo(pedido) {
   const estado = pedido.estado_facturacion || pedido.Estado_Facturacion;
   if (estado === "se_factura") {
-    if (pedido.pdf_factura_url || pedido.pdf_factura_file || pedido.pdf_factura_nombre) {
-      return {
-        label: "Facturado",
-        color: "bg-green-100 text-green-700",
-      };
-    }
+    return {
+      label: "Facturado",
+      color: "bg-green-100 text-green-700",
+    };
+  }
+
+  if (estado === "sin_factura") {
     return {
       label: "Pendiente de facturación",
       color: "bg-yellow-100 text-yellow-700",
@@ -555,7 +557,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       .filter((producto) => newPedido.productos.includes(producto.id_producto))
       .reduce((total, producto) => total + getSubtotalProducto(producto), 0);
 
-    if (newPedido.Estado_Facturacion === "se_factura") {
+    if (newPedido.Estado_Facturacion === "se_factura" || newPedido.Estado_Facturacion === "sin_factura") {
       subtotal = subtotal * 1.21;
     }
     
@@ -615,20 +617,16 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       return;
     }
 
-    if (
-      newPedido.Estado_Facturacion === "se_factura" &&
-      !newPedido.Nro_Factura.trim()
-    ) {
-      setMensajeErrorAddModal(
-        "Debe ingresar el número de factura si el pedido se factura."
-      );
-      scrollToTopAddModal();
-      return;
-    }
-
     try {
       setMensajeErrorAddModal("");
       setMensajeExitoAddModal("");
+
+      const estadoFacturacionFinal =
+        newPedido.Estado_Facturacion === "no_se_factura"
+          ? "no_se_factura"
+          : newPedido.Nro_Factura && newPedido.Nro_Factura.trim()
+            ? "se_factura"
+            : "sin_factura";
 
       const body = {
         Id_Cliente: Number(newPedido.Id_Cliente),
@@ -640,11 +638,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
             30
           ),
         Observaciones: newPedido.Observaciones || null,
-        Estado_Facturacion: newPedido.Estado_Facturacion,
+        Estado_Facturacion: estadoFacturacionFinal,
         Nro_Factura:
-          newPedido.Estado_Facturacion === "no_se_factura"
+          estadoFacturacionFinal === "no_se_factura"
             ? null
-            : newPedido.Nro_Factura || null,
+            : newPedido.Nro_Factura?.trim() || null,
         Estado_Pago: newPedido.Estado_Pago,
         productos: newPedido.productos,
       };
@@ -668,12 +666,12 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
       if (
         idPedidoCreado &&
-        newPedido.Estado_Facturacion !== "no_se_factura" &&
+        estadoFacturacionFinal !== "no_se_factura" &&
         (newPedido.Nro_Factura || newPedido.Pdf_Factura_File)
       ) {
         await subirFacturaPedido(idPedidoCreado, {
-          estadoFacturacion: newPedido.Estado_Facturacion,
-          nroFactura: newPedido.Nro_Factura,
+          estadoFacturacion: estadoFacturacionFinal,
+          nroFactura: newPedido.Nro_Factura?.trim() || "",
           archivoPdf: newPedido.Pdf_Factura_File,
         });
       }
@@ -738,7 +736,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       const totalAnterior = Number(selectedPedido.precio_total || 0);
       const productosActualizados = [...selectedPedido.productos, producto];
       let totalActualizado = calcularTotalPedido(productosActualizados);
-      if (selectedPedido.estado_facturacion === "se_factura") {
+      if (selectedPedido.estado_facturacion === "se_factura" || selectedPedido.estado_facturacion === "sin_factura") {
         totalActualizado = totalActualizado * 1.21;
       }
 
@@ -788,7 +786,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     );
 
     let totalActualizado = calcularTotalPedido(productosActualizados);
-    if (selectedPedido.estado_facturacion === "se_factura") {
+    if (selectedPedido.estado_facturacion === "se_factura" || selectedPedido.estado_facturacion === "sin_factura") {
       totalActualizado = totalActualizado * 1.21;
     }
 
@@ -816,22 +814,18 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       return;
     }
 
-    if (
-      selectedPedido.estado_facturacion === "se_factura" &&
-      !selectedPedido.nro_factura?.trim()
-    ) {
-      setMensajeErrorModal(
-        "Debe ingresar el número de factura si el pedido se factura."
-      );
-      scrollToTopDetailModal();
-      return;
-    }
-
     try {
       setMensajeErrorModal("");
 
+      const estadoFacturacionFinal =
+        selectedPedido.estado_facturacion === "no_se_factura"
+          ? "no_se_factura"
+          : selectedPedido.nro_factura && selectedPedido.nro_factura.trim()
+            ? "se_factura"
+            : "sin_factura";
+
       let totalActualizado = calcularTotalPedido(selectedPedido.productos);
-      if (selectedPedido.estado_facturacion === "se_factura") {
+      if (estadoFacturacionFinal === "se_factura" || estadoFacturacionFinal === "sin_factura") {
         totalActualizado = totalActualizado * 1.21;
       }
 
@@ -846,18 +840,19 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
       const pedidoActualizado = {
         ...selectedPedido,
+        estado_facturacion: estadoFacturacionFinal,
         precio_total: totalActualizado,
         monto_adeudado: montoAdeudadoActualizado,
         nro_factura:
-          selectedPedido.estado_facturacion === "no_se_factura"
+          estadoFacturacionFinal === "no_se_factura"
             ? null
-            : selectedPedido.nro_factura || null,
+            : selectedPedido.nro_factura?.trim() || null,
         pdf_factura_url:
-          selectedPedido.estado_facturacion === "no_se_factura"
+          estadoFacturacionFinal === "no_se_factura"
             ? null
             : selectedPedido.pdf_factura_url || null,
         pdf_factura_nombre:
-          selectedPedido.estado_facturacion === "no_se_factura"
+          estadoFacturacionFinal === "no_se_factura"
             ? null
             : selectedPedido.pdf_factura_nombre || null,
       };
@@ -866,7 +861,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         Vencimiento: pedidoActualizado.vencimiento,
         Observaciones: pedidoActualizado.observaciones || null,
         Estado_Pago: pedidoActualizado.estado_pago,
-        Estado_Facturacion: pedidoActualizado.estado_facturacion,
+        Estado_Facturacion: estadoFacturacionFinal,
         Nro_Factura: pedidoActualizado.nro_factura,
         Monto_Adeudado: pedidoActualizado.monto_adeudado,
         productos: pedidoActualizado.productos.map(
@@ -888,7 +883,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         throw new Error(data.error || "Error al actualizar pedido");
       }
 
-      if (pedidoActualizado.estado_facturacion === "no_se_factura") {
+      if (estadoFacturacionFinal === "no_se_factura") {
         pedidoActualizado.pdf_factura_url = null;
         pedidoActualizado.pdf_factura_nombre = null;
       } else if (selectedPedido.eliminar_pdf_factura) {
@@ -897,8 +892,8 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         pedidoActualizado.pdf_factura_nombre = null;
       } else if (selectedPedido.pdf_factura_file || selectedPedido.nro_factura) {
         await subirFacturaPedido(selectedPedido.id_pedido, {
-          estadoFacturacion: selectedPedido.estado_facturacion,
-          nroFactura: selectedPedido.nro_factura || "",
+          estadoFacturacion: estadoFacturacionFinal,
+          nroFactura: selectedPedido.nro_factura?.trim() || "",
           archivoPdf: selectedPedido.pdf_factura_file || null,
         });
       }
@@ -1405,17 +1400,14 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     </label>
 
                     <select
-                      value={newPedido.Estado_Facturacion}
+                      value={newPedido.Estado_Facturacion === "no_se_factura" ? "no_se_factura" : "sin_factura"}
                       onChange={(e) =>
                         actualizarFacturacionNuevoPedido(e.target.value)
                       }
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
                     >
-                      {ESTADOS_FACTURACION.map((estado) => (
-                        <option key={estado} value={estado}>
-                          {formatearEstado(estado)}
-                        </option>
-                      ))}
+                      <option value="no_se_factura">No se factura</option>
+                      <option value="sin_factura">Se factura</option>
                     </select>
                   </div>
                 </div>
@@ -1433,8 +1425,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                          Número de Factura
-                          {newPedido.Estado_Facturacion === "se_factura" ? " *" : ""}
+                          Número de Factura <span className="text-gray-400 font-normal">(Opcional)</span>
                         </label>
 
                         <input
@@ -1446,26 +1437,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                               Nro_Factura: e.target.value,
                             })
                           }
-                          placeholder="Ej: FC-001"
-                          className={`w-full px-4 py-2.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
-                            newPedido.Estado_Facturacion === "se_factura" && !newPedido.Nro_Factura.trim()
-                              ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
-                              : "border-gray-300 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                          }`}
+                          placeholder="Ej: A-0001-00008420"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                         />
 
-                        {newPedido.Estado_Facturacion === "se_factura" && (
-                          <p className={`text-xs mt-1 font-medium ${!newPedido.Nro_Factura.trim() ? "text-red-600 font-semibold" : "text-gray-500"}`}>
-                            {!newPedido.Nro_Factura.trim()
-                              ? "⚠️ Campo obligatorio al seleccionar \"Se factura\"."
-                              : "Obligatorio al seleccionar \"Se factura\"."}
-                          </p>
-                        )}
+                        <p className="text-xs mt-1 text-gray-500 font-medium">
+                          {newPedido.Nro_Factura.trim()
+                            ? "✅ El pedido se guardará como 'Facturado'."
+                            : "ℹ️ Si lo dejás vacío, el pedido quedará 'Pendiente de facturación'."}
+                        </p>
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                          PDF de Factura
+                          PDF de Factura <span className="text-gray-400 font-normal">(Opcional)</span>
                         </label>
 
                         <input
@@ -1787,10 +1772,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                          Número de Factura
-                          {selectedPedido.estado_facturacion === "se_factura"
-                            ? " *"
-                            : ""}
+                          Número de Factura <span className="text-gray-400 font-normal">(Opcional)</span>
                         </label>
 
                         <input
@@ -1802,26 +1784,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                               nro_factura: e.target.value,
                             })
                           }
-                          placeholder="Ej: FC-001"
-                          className={`w-full px-4 py-2.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
-                            selectedPedido.estado_facturacion === "se_factura" && !selectedPedido.nro_factura?.trim()
-                              ? "border-red-400 focus:ring-2 focus:ring-red-600/20 focus:border-red-600"
-                              : "border-gray-300 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
-                          }`}
+                          placeholder="Ej: A-0001-00008420"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                         />
 
-                        {selectedPedido.estado_facturacion === "se_factura" && (
-                          <p className={`text-xs mt-1 font-medium ${!selectedPedido.nro_factura?.trim() ? "text-red-600 font-semibold" : "text-gray-500"}`}>
-                            {!selectedPedido.nro_factura?.trim()
-                              ? "⚠️ Campo obligatorio al seleccionar \"Se factura\"."
-                              : "Obligatorio al seleccionar \"Se factura\"."}
-                          </p>
-                        )}
+                        <p className="text-xs mt-1 text-gray-500 font-medium">
+                          {selectedPedido.nro_factura?.trim()
+                            ? "✅ Al guardar con número de factura, el estado pasará automáticamente a 'Facturado'."
+                            : "ℹ️ Si no ingresás número, el pedido permanecerá como 'Pendiente de facturación'."}
+                        </p>
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                          PDF de Factura
+                          PDF de Factura <span className="text-gray-400 font-normal">(Opcional)</span>
                         </label>
 
                         <input

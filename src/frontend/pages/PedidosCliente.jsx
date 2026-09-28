@@ -1051,23 +1051,23 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Ventas (Pedidos de Clientes)</h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Ventas (Pedidos de Clientes)</h2>
+          <p className="text-gray-500 text-sm mt-0.5">
             {pedidosFiltrados.length} pedidos registrados
           </p>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setTipoVista && setTipoVista("cliente")}
-              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors bg-white text-red-700 shadow-sm"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
             >
               Clientes
             </button>
             <button
               onClick={() => setTipoVista && setTipoVista("proveedor")}
-              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
             >
               Proveedores
             </button>
@@ -1075,9 +1075,9 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           
           <button
             onClick={abrirModalAgregar}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
+            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
           >
-            <Plus size={20} />
+            <Plus size={18} />
             Nuevo pedido
           </button>
         </div>
@@ -1095,29 +1095,29 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 space-y-4">
+      <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200 space-y-4">
         {/* Filtros de fecha primero */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center">
           <div className="flex items-center gap-2">
-            <Calendar size={20} className="text-gray-400" />
+            <Calendar size={18} className="text-gray-400" />
             <span className="text-sm text-gray-600">Filtrar por fecha:</span>
           </div>
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <label className="text-sm text-gray-700 whitespace-nowrap">Desde:</label>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Desde:</label>
             <input
               type="date"
               value={fechaDesde}
               onChange={(e) => setFechaDesde(e.target.value)}
-              className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
-          <div className="flex items-center gap-2 w-full lg:w-auto">
-            <label className="text-sm text-gray-700 whitespace-nowrap">Hasta:</label>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-700 whitespace-nowrap">Hasta:</label>
             <input
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="w-full lg:w-40 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
           {(fechaDesde || fechaHasta) && (
@@ -1127,7 +1127,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 setFechaDesde("");
                 setFechaHasta("");
               }}
-              className="text-sm text-blue-600 hover:text-blue-700 underline"
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 underline"
             >
               Limpiar fechas
             </button>
@@ -1135,20 +1135,20 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         </div>
 
         {/* Filtro de coincidencia y estado abajo */}
-        <div className="flex flex-col lg:flex-row gap-4 pt-4 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3.5 border-t border-gray-100">
           <div className="relative flex-1 w-full">
             <input
               type="text"
               placeholder="Buscar por número de pedido o cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
           <select
             value={filterEstado}
             onChange={(event) => setFilterEstado(event.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 bg-white"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="todos">Todos los estados de pago</option>
             <option value="pendiente">Pendiente</option>
@@ -1159,29 +1159,29 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-[800px] text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Nº Pedido
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Cliente
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Fecha
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Pago
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Factura
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Total
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"></th>
+                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
 

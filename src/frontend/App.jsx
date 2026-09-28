@@ -15,12 +15,13 @@ import { ConfirmProvider } from "./components/ui/ConfirmContext.jsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx";
 import LicenciaModal from "./components/LicenciaModal.jsx";
 import logoAcuaber from "./assets/logo-acuaber.png";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 
 const API_URL = "http://localhost:4000/api";
 
 function App() {
   const [seccion, setSeccion] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pagosPendientes, setPagosPendientes] = useState([]);
 
   // Estados del Sistema de Licencia
@@ -267,24 +268,36 @@ function App() {
             <Sidebar
               seccionActual={seccion}
               setSeccion={setSeccion}
+              isOpen={sidebarOpen}
+              onClose={() => setSidebarOpen(false)}
             />
 
-            <main className="flex-1 ml-64 p-8">
-              <header className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-800">
-                    {obtenerTituloSeccion()}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Gestión Administrativa - Fabricación de Sillas y Sillones
-                  </p>
+            <main className="flex-1 w-full min-w-0 lg:ml-64 p-4 sm:p-6 lg:p-8 min-h-screen flex flex-col">
+              <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSidebarOpen(true)}
+                    className="lg:hidden p-2 text-gray-700 hover:text-red-750 hover:bg-gray-100 rounded-xl transition-colors"
+                    title="Abrir menú"
+                  >
+                    <Menu size={24} />
+                  </button>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                      {obtenerTituloSeccion()}
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Gestión Administrativa - Fabricación de Sillas y Sillones
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   {/* Botón de Campana de Notificaciones global */}
                   <button
                     onClick={handleBellClick}
-                    className="relative p-1.5 text-gray-500 hover:text-red-750 transition-colors focus:outline-none rounded-full hover:bg-gray-200 flex items-center justify-center"
+                    className="relative p-2 text-gray-500 hover:text-red-750 transition-colors focus:outline-none rounded-lg hover:bg-gray-100"
                     title="Avisos de pagos pendientes"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -292,20 +305,20 @@ function App() {
                       <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
                     </svg>
                     {pagosPendientes.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                         {pagosPendientes.length}
                       </span>
                     )}
                   </button>
 
-                  <div className="h-6 w-px bg-gray-300"></div>
+                  <div className="h-8 w-px bg-gray-200"></div>
 
-                  <div className="w-10 h-10 bg-red-700 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 bg-red-750 rounded-full flex items-center justify-center text-white font-bold">
                     A
                   </div>
 
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-gray-800 leading-none">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
                       Administración
                     </p>
                     <p className="text-xs text-gray-500">
@@ -315,7 +328,7 @@ function App() {
                 </div>
               </header>
 
-              <div className="animate-in fade-in duration-500">
+              <div className="animate-in fade-in duration-300 flex-1 min-w-0">
                 <ErrorBoundary onReset={() => setSeccion("dashboard")}>
                   {renderContenido()}
                 </ErrorBoundary>

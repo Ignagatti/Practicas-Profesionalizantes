@@ -822,26 +822,26 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Compras (Pedidos a Proveedores)
           </h2>
 
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-0.5">
             {facturasFiltradas.length} facturas registradas
           </p>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setTipoVista && setTipoVista("cliente")}
-              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-gray-600 hover:text-gray-800"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
             >
               Clientes
             </button>
             <button
               onClick={() => setTipoVista && setTipoVista("proveedor")}
-              className="flex items-center gap-2 px-4 py-2 rounded-md transition-colors bg-white text-red-700 shadow-sm"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
             >
               Proveedores
             </button>
@@ -850,9 +850,9 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
           <button
             type="button"
             onClick={abrirAdd}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
+            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
           >
-            <Plus size={20} />
+            <Plus size={18} />
             Agregar factura
           </button>
         </div>
@@ -861,21 +861,21 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
       {/* FILTROS */}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 space-y-4">
+      <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200 space-y-4">
         {/* Filtros de fecha primero */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center">
           <div className="flex items-center gap-2">
             <Calendar
-              size={20}
+              size={18}
               className="text-gray-400"
             />
             <span className="text-sm text-gray-600">
-              Filtrar por fecha de emisión:
+              Filtrar por emisión:
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-600">
               Desde:
             </label>
             <input
@@ -884,12 +884,12 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               onChange={(event) =>
                 setFechaDesde(event.target.value)
               }
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-600">
               Hasta:
             </label>
             <input
@@ -898,7 +898,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               onChange={(event) =>
                 setFechaHasta(event.target.value)
               }
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
 
@@ -909,7 +909,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                 setFechaDesde("");
                 setFechaHasta("");
               }}
-              className="text-sm text-blue-600 hover:text-blue-700 underline"
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 underline"
             >
               Limpiar fechas
             </button>
@@ -917,7 +917,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
         </div>
 
         {/* Filtro de coincidencia y estado abajo */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3.5 border-t border-gray-100">
           <div className="flex-1 relative">
             <input
               type="text"
@@ -926,7 +926,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               onChange={(event) =>
                 setSearchTerm(event.target.value)
               }
-              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
 
@@ -935,7 +935,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
             onChange={(event) =>
               setFilterEstado(event.target.value)
             }
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="todos">
               Todos los estados
@@ -947,7 +947,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               Pago parcial
             </option>
             <option value="pagado">
-              Pagada
+              Pagado
             </option>
           </select>
         </div>
@@ -957,49 +957,49 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       {/* TABLA */}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full">
           {cargando ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-gray-500 text-sm">
               Cargando facturas...
             </div>
           ) : facturasFiltradas.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">
+            <div className="p-8 text-center text-gray-400 text-sm">
               No hay facturas para mostrar.
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full min-w-[850px] text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Tipo
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Nro. Comprobante
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Emisión
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Vencimiento
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Total
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Adeudado
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    Estado
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Pago
                   </th>
 
                   <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">

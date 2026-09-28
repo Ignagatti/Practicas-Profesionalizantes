@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Calendar,
 } from "lucide-react";
 
 
@@ -79,9 +80,8 @@ const metodoPagoConfig = {
 };
 
 const estadoPagoConfig = {
-  pagado: { label: "Pagado", color: "bg-emerald-100 text-emerald-800" },
-  parcial: { label: "Parcial", color: "bg-amber-100 text-amber-800" },
-  pendiente: { label: "Pendiente", color: "bg-rose-100 text-rose-800" },
+  pagado: { label: "Pago completo", color: "bg-emerald-100 text-emerald-800" },
+  parcial: { label: "Pago parcial", color: "bg-amber-100 text-amber-800" },
 };
 
 function obtenerNombreProveedor(factura) {
@@ -196,7 +196,7 @@ function normalizarPago(pago, clientes = [], proveedores = []) {
     estado_pago:
       pago.estado_pago ??
       pago.Estado_Pago ??
-      "pendiente",
+      (Number(pago.monto_restante ?? pago.Monto_Restante ?? 0) > 0 ? "parcial" : "pagado"),
 
     monto: Number(
       pago.monto ??
@@ -333,6 +333,8 @@ export default function Pagos() {
     useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
   const [filterEstado, setFilterEstado] =
     useState("todos");
@@ -533,15 +535,24 @@ export default function Pagos() {
         filterEstado === "todos" ||
         pago.estado_pago === filterEstado;
 
+      const fechaPagoStr = (pago.fecha_pago || "").split("T")[0];
+      const coincideFecha =
+        (!fechaDesde || fechaPagoStr >= fechaDesde) &&
+        (!fechaHasta || fechaPagoStr <= fechaHasta);
+
       return (
         coincideBusqueda &&
-        coincideEstado
+        coincideEstado &&
+        coincideFecha
       );
     });
   }, [
     pagos,
     searchTerm,
     filterEstado,
+    fechaDesde,
+    fechaHasta,
+    tipoVista,
   ]);
 
 
@@ -1097,28 +1108,32 @@ export default function Pagos() {
 
       {/* HEADER */}
 
+      {/* HEADER */}
+
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Pagos a {tipoVista === "proveedor" ? "proveedores" : "clientes"}
           </h2>
 
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-0.5">
             {pagosFiltrados.length} pagos registrados
           </p>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               type="button"
               onClick={() => {
                 setTipoVista("cliente");
                 setSearchTerm("");
+                setFechaDesde("");
+                setFechaHasta("");
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
                 tipoVista === "cliente"
-                  ? "bg-white text-red-700 shadow-sm"
+                  ? "bg-white text-red-700 shadow-sm font-semibold"
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
@@ -1129,10 +1144,12 @@ export default function Pagos() {
               onClick={() => {
                 setTipoVista("proveedor");
                 setSearchTerm("");
+                setFechaDesde("");
+                setFechaHasta("");
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
                 tipoVista === "proveedor"
-                  ? "bg-white text-red-700 shadow-sm"
+                  ? "bg-white text-red-700 shadow-sm font-semibold"
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
@@ -1143,7 +1160,7 @@ export default function Pagos() {
           <button
             type="button"
             onClick={abrirAdd}
-            className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800"
+            className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
           >
             <Plus size={18} />
             Registrar pago
@@ -1154,7 +1171,7 @@ export default function Pagos() {
 
       {/* RESUMEN */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-green-50 border border-green-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign
@@ -1162,12 +1179,12 @@ export default function Pagos() {
               size={20}
             />
 
-            <span className="text-sm text-green-700">
+            <span className="text-xs sm:text-sm font-semibold text-green-700">
               Total registrado
             </span>
           </div>
 
-          <p className="text-2xl text-green-800">
+          <p className="text-xl sm:text-2xl font-bold text-green-800">
             ${formatearDinero(totalPagos)}
           </p>
         </div>
@@ -1179,12 +1196,12 @@ export default function Pagos() {
               size={20}
             />
 
-            <span className="text-sm text-blue-700">
+            <span className="text-xs sm:text-sm font-semibold text-blue-700">
               Total aplicado
             </span>
           </div>
 
-          <p className="text-2xl text-blue-800">
+          <p className="text-xl sm:text-2xl font-bold text-blue-800">
             ${formatearDinero(totalAplicado)}
           </p>
         </div>
@@ -1196,12 +1213,12 @@ export default function Pagos() {
               size={20}
             />
 
-            <span className="text-sm text-yellow-700">
+            <span className="text-xs sm:text-sm font-semibold text-yellow-700">
               Monto sin aplicar
             </span>
           </div>
 
-          <p className="text-2xl text-yellow-800">
+          <p className="text-xl sm:text-2xl font-bold text-yellow-800">
             ${formatearDinero(totalRestante)}
           </p>
         </div>
@@ -1213,12 +1230,12 @@ export default function Pagos() {
               size={20}
             />
 
-            <span className="text-sm text-purple-700">
+            <span className="text-xs sm:text-sm font-semibold text-purple-700">
               Pagos completos
             </span>
           </div>
 
-          <p className="text-2xl text-purple-800">
+          <p className="text-xl sm:text-2xl font-bold text-purple-800">
             {pagosCompletos}
           </p>
         </div>
@@ -1227,11 +1244,64 @@ export default function Pagos() {
 
       {/* FILTROS */}
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl border border-gray-200 p-3.5 sm:p-4 space-y-3 sm:space-y-4">
+        {/* Filtro de Fechas */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar
+              size={18}
+              className="text-gray-400"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Filtrar por fecha:
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-600">
+              Desde:
+            </label>
+            <input
+              type="date"
+              value={fechaDesde}
+              onChange={(event) =>
+                setFechaDesde(event.target.value)
+              }
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs sm:text-sm text-gray-600">
+              Hasta:
+            </label>
+            <input
+              type="date"
+              value={fechaHasta}
+              onChange={(event) =>
+                setFechaHasta(event.target.value)
+              }
+              className="w-full sm:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
+            />
+          </div>
+
+          {(fechaDesde || fechaHasta) && (
+            <button
+              type="button"
+              onClick={() => {
+                setFechaDesde("");
+                setFechaHasta("");
+              }}
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 underline font-medium"
+            >
+              Limpiar fechas
+            </button>
+          )}
+        </div>
+
+        {/* Buscador y Estado */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3 border-t border-gray-100">
           <div className="relative flex-1">
-
-
             <input
               type="text"
               placeholder={`Buscar por número, ${tipoVista === "cliente" ? "cliente" : "proveedor"}, fecha o método...`}
@@ -1239,7 +1309,7 @@ export default function Pagos() {
               onChange={(event) =>
                 setSearchTerm(event.target.value)
               }
-              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
 
@@ -1248,22 +1318,18 @@ export default function Pagos() {
             onChange={(event) =>
               setFilterEstado(event.target.value)
             }
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="todos">
               Todos los estados
             </option>
 
-            <option value="pendiente">
-              Pendiente
+            <option value="pagado">
+              Pago completo
             </option>
 
             <option value="parcial">
-              Parcial
-            </option>
-
-            <option value="pagado">
-              Pagado
+              Pago parcial
             </option>
           </select>
         </div>
@@ -1272,53 +1338,53 @@ export default function Pagos() {
 
       {/* TABLA */}
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto w-full">
           {cargando ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-gray-500 text-sm">
               Cargando pagos...
             </div>
           ) : pagosFiltrados.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">
+            <div className="p-8 text-center text-gray-400 text-sm">
               No hay pagos para mostrar.
             </div>
           ) : (
-            <table className="w-full">
-              <thead className="bg-gray-100">
+            <table className="w-full min-w-[850px] text-left">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     N.º pago
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Fecha
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Monto
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Aplicado
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Restante
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Método
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Estado
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>

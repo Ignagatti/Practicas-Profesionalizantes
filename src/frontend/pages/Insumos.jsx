@@ -89,9 +89,9 @@ function Insumos() {
 
     const handleEliminar = async (id) => {
         const ok = await confirm({
-            title: "Desactivar Insumo",
-            message: "¿Está seguro que desea desactivar este insumo? Se preservarán los registros históricos donde se utilizó.",
-            confirmText: "Desactivar",
+            title: "Eliminar Insumo",
+            message: "¿Está seguro de que desea eliminar este insumo de la lista de precios?",
+            confirmText: "Eliminar",
             cancelText: "Cancelar",
             type: "danger"
         });
@@ -99,7 +99,7 @@ function Insumos() {
 
         try {
             await eliminarInsumo(id);
-            toast.success("Insumo desactivado con éxito.");
+            toast.success("Insumo eliminado con éxito.");
             cargarInsumos();
         } catch (error) {
             toast.error(error.message, "Error al eliminar");
@@ -133,37 +133,37 @@ function Insumos() {
             {/* Header Principal */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Lista de Precios</h2>
-                    <p className="text-gray-500 text-sm mt-1">{filteredInsumos.length} insumos registrados</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Lista de Precios</h2>
+                    <p className="text-gray-500 text-sm mt-0.5">{filteredInsumos.length} insumos registrados</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <button 
                         onClick={() => setShowAdjustModal(true)}
-                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-semibold text-sm"
+                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-semibold text-sm"
                     >
-                        <Percent size={18} /> Ajustar por %
+                        <Percent size={17} /> Ajustar por %
                     </button>
                     <button 
                         onClick={handleOpenAdd}
-                        className="flex items-center gap-2 bg-red-700 text-white px-5 py-2 rounded-lg hover:bg-red-800 transition-colors font-semibold text-sm"
+                        className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors font-semibold text-sm shadow-sm"
                     >
-                        <Plus size={20} /> Agregar Insumo
+                        <Plus size={18} /> Agregar Insumo
                     </button>
                 </div>
             </div>
 
             {/* Barra de Filtros */}
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-                <div className="flex gap-4">
+            <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <div className="relative flex-1">
                         <input 
-                            type="text" placeholder="Buscar por nombre..." 
-                            className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                            type="text" placeholder="Buscar por nombre de insumo o modelo..." 
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 text-sm"
                             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <select 
-                        className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 outline-none focus:ring-2 focus:ring-red-500 shadow-sm"
+                        className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 shadow-sm"
                         value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}
                     >
                         <option value="todos">Todas las Categorías</option>
@@ -176,14 +176,14 @@ function Insumos() {
 
             {/* TABLA PRINCIPAL */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left min-w-[600px]">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CATEGORÍA</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">NOMBRE DEL INSUMO</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">PRECIO UNITARIO</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ACCIONES</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CATEGORÍA</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">NOMBRE DEL INSUMO</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">PRECIO UNITARIO</th>
+                                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">

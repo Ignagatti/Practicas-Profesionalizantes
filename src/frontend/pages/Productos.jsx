@@ -363,28 +363,28 @@ function Productos() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Gestión de Productos</h2>
-                    <p className="text-gray-500 text-sm mt-1">{filteredProductos.length} productos registrados</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Gestión de Productos</h2>
+                    <p className="text-gray-500 text-sm mt-0.5">{filteredProductos.length} productos registrados</p>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={() => setShowSelectionModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm text-sm"><Printer size={18} /> Imprimir Planilla</button>
-                    <button onClick={() => setShowTerminarModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md text-sm"><CheckCircle2 size={18} /> Terminar Productos</button>
-                    <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-red-700 text-white px-5 py-2 rounded-lg hover:bg-red-800 font-semibold shadow-md text-sm"><Plus size={20} /> Agregar Producto</button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button onClick={() => setShowSelectionModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm text-sm"><Printer size={17} /> Imprimir Planilla</button>
+                    <button onClick={() => setShowTerminarModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3.5 py-2 rounded-lg font-semibold shadow-sm text-sm"><CheckCircle2 size={17} /> Terminar Productos</button>
+                    <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 font-semibold shadow-sm text-sm"><Plus size={18} /> Agregar Producto</button>
                 </div>
             </div>
 
-            {/* Buscador y Filtros (Sin lupa) */}
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex gap-4">
+            {/* Buscador y Filtros */}
+            <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <div className="flex-1">
                     <input 
                         type="text" 
-                        placeholder="Buscar productos..." 
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" 
+                        placeholder="Buscar por modelo, tela, cliente..." 
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 text-sm" 
                         value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)} 
                     />
                 </div>
-                <select className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 outline-none focus:ring-2 focus:ring-red-500 shadow-sm" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+                <select className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-600 outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 shadow-sm" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
                     <option value="todos">Todos los Estados</option>
                     <option value="pendiente">Pendiente</option>
                     <option value="en_produccion">En Producción</option>
@@ -394,18 +394,18 @@ function Productos() {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">CLIENTE</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">MODELO</th>
-                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">CANT.</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">TELA / TIPO</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">LUSTRE</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ESTADO</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">ACCIONES</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ID</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CLIENTE</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">MODELO</th>
+                                <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CANT.</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">TELA / TIPO</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">LUSTRE</th>
+                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ESTADO</th>
+                                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">

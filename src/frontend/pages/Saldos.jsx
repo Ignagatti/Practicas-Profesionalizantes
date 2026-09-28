@@ -639,21 +639,20 @@ export function Saldos() {
 
       {/* HEADER */}
 
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Saldos de proveedores
           </h2>
 
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-0.5">
             Control y verificación de las deudas con proveedores
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-200">
-            <Truck size={18} />
-
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 px-3.5 py-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-200 text-sm font-semibold">
+            <Truck size={17} />
             Proveedores
           </div>
 
@@ -664,10 +663,10 @@ export function Saldos() {
               recalculandoTodos ||
               cargando
             }
-            className="flex items-center justify-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50 text-sm font-semibold shadow-sm"
           >
             <RefreshCw
-              size={18}
+              size={17}
               className={
                 recalculandoTodos
                   ? "animate-spin"
@@ -685,7 +684,7 @@ export function Saldos() {
 
       {/* RESUMEN */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
 
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -694,12 +693,12 @@ export function Saldos() {
               size={20}
             />
 
-            <span className="text-sm text-red-700">
+            <span className="text-xs sm:text-sm font-semibold text-red-700">
               Deuda calculada
             </span>
           </div>
 
-          <p className="text-2xl text-red-800">
+          <p className="text-xl sm:text-2xl font-bold text-red-800">
             $
             {formatearDinero(
               totalSaldoCalculado
@@ -715,12 +714,12 @@ export function Saldos() {
               size={20}
             />
 
-            <span className="text-sm text-blue-700">
+            <span className="text-xs sm:text-sm font-semibold text-blue-700">
               Saldo guardado
             </span>
           </div>
 
-          <p className="text-2xl text-blue-800">
+          <p className="text-xl sm:text-2xl font-bold text-blue-800">
             $
             {formatearDinero(
               totalSaldoGuardado
@@ -736,12 +735,12 @@ export function Saldos() {
               size={20}
             />
 
-            <span className="text-sm text-yellow-700">
+            <span className="text-xs sm:text-sm font-semibold text-yellow-700">
               Facturas pendientes
             </span>
           </div>
 
-          <p className="text-2xl text-yellow-800">
+          <p className="text-xl sm:text-2xl font-bold text-yellow-800">
             {totalFacturasPendientes}
           </p>
         </div>
@@ -754,12 +753,12 @@ export function Saldos() {
               size={20}
             />
 
-            <span className="text-sm text-purple-700">
+            <span className="text-xs sm:text-sm font-semibold text-purple-700">
               Proveedores con deuda
             </span>
           </div>
 
-          <p className="text-2xl text-purple-800">
+          <p className="text-xl sm:text-2xl font-bold text-purple-800">
             {proveedoresConDeuda}
           </p>
         </div>
@@ -796,11 +795,10 @@ export function Saldos() {
 
       {/* FILTROS */}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
 
           <div className="relative flex-1">
-
             <input
               type="text"
               placeholder="Buscar proveedor..."
@@ -810,7 +808,7 @@ export function Saldos() {
                   event.target.value
                 )
               }
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
 
@@ -822,7 +820,7 @@ export function Saldos() {
                 event.target.value
               )
             }
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="todos">
               Todos los proveedores
@@ -848,39 +846,39 @@ export function Saldos() {
       {/* TABLA */}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full">
 
           {cargando ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-gray-500 text-sm">
               Cargando saldos...
             </div>
           ) : saldosFiltrados.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">
+            <div className="p-8 text-center text-gray-400 text-sm">
               No hay saldos para mostrar.
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full min-w-[780px] text-left">
 
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Facturas pendientes
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Saldo guardado
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Saldo calculado
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Verificación
                   </th>
 

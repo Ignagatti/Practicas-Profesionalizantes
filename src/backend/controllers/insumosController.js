@@ -64,7 +64,7 @@ const eliminarInsumo = async (req, res) => {
             [id]
         );
         if (resultado.rowCount === 0) return res.status(404).json({ error: 'Insumo no encontrado' });
-        res.json({ mensaje: `Insumo con ID ${id} desactivado con éxito`, insumo: resultado.rows[0] });
+        res.json({ mensaje: `Insumo con ID ${id} eliminado con éxito`, insumo: resultado.rows[0] });
     } catch (error) {
         console.error('Error en eliminarInsumo:', error.message);
         res.status(500).json({ error: 'Error al eliminar el insumo.' });

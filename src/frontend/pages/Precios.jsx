@@ -140,41 +140,42 @@ export function Precios() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
             Lista de Precios - Insumos
           </h2>
+          <p className="text-gray-500 text-sm mt-0.5">{filteredInsumos.length} insumos registrados</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowAjusteModal(true)}
-            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            className="flex items-center gap-2 bg-purple-600 text-white px-3.5 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold shadow-sm"
           >
-            <Percent size={20} />
+            <Percent size={17} />
             Ajuste por %
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
+            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
           >
-            <Plus size={20} />
+            <Plus size={18} />
             Agregar Insumo
           </button>
         </div>
       </div>
 
       {/* Resumen por categoría */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {Object.entries(conteosPorCategoria).map(([categoria, cantidad]) => (
           <div
             key={categoria}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center gap-3"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-3.5 sm:p-4 flex items-center justify-between"
           >
             <span
-              className={`px-3 py-1 rounded-full text-sm ${CATEGORIA_COLORS[categoria]}`}
+              className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${CATEGORIA_COLORS[categoria]}`}
             >
               {categoria}
             </span>
-            <span className="text-gray-600 text-sm">
+            <span className="text-gray-600 text-sm font-medium">
               {cantidad} insumo{cantidad !== 1 ? "s" : ""}
             </span>
           </div>
@@ -182,21 +183,21 @@ export function Precios() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Buscar insumos..."
+              placeholder="Buscar insumos por nombre o categoría..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-20 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
           <select
             value={filterCategoria}
             onChange={(e) => setFilterCategoria(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="todas">Todas las Categorías</option>
             <option value="Modelo">Modelos</option>
@@ -208,20 +209,20 @@ export function Precios() {
 
       {/* Tabla de Insumos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-[600px] text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Categoría
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Nombre del Insumo
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Precio Unitario
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"></th>
+                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">

@@ -653,19 +653,16 @@ export function Movimientos() {
 
       {/* FILTROS */}
 
-      <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-white rounded-xl shadow-sm p-3.5 sm:p-4 border border-gray-200">
+        <div className="flex items-center gap-2 mb-3">
           <Filter size={18} className="text-gray-500" />
-
-          <h3 className="text-gray-800">
+          <h3 className="text-sm sm:text-base font-bold text-gray-800">
             Filtros
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           <div className="relative">
-
             <input
               type="text"
               value={searchTerm}
@@ -673,17 +670,16 @@ export function Movimientos() {
                 setSearchTerm(event.target.value)
               }
               placeholder="Buscar proveedor o referencia"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
             />
           </div>
-
 
           <select
             value={tipoFiltro}
             onChange={(event) =>
               setTipoFiltro(event.target.value)
             }
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           >
             <option value="">
               Todos los movimientos
@@ -698,7 +694,6 @@ export function Movimientos() {
             </option>
           </select>
 
-
           <input
             type="number"
             min="1"
@@ -707,54 +702,40 @@ export function Movimientos() {
               setProveedorFiltro(event.target.value)
             }
             placeholder="ID del proveedor"
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
           />
 
-
           <div className="relative">
-            <Calendar
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-
             <input
               type="date"
               value={fechaDesde}
               onChange={(event) =>
                 setFechaDesde(event.target.value)
               }
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
               title="Fecha desde"
             />
           </div>
 
-
           <div className="relative">
-            <Calendar
-              size={17}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-
             <input
               type="date"
               value={fechaHasta}
               onChange={(event) =>
                 setFechaHasta(event.target.value)
               }
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-700 text-sm bg-white"
               title="Fecha hasta"
             />
           </div>
-
         </div>
-
 
         {hayFiltros && (
           <div className="mt-3">
             <button
               type="button"
               onClick={limpiarFiltros}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline"
             >
               Limpiar filtros
             </button>
@@ -762,40 +743,36 @@ export function Movimientos() {
         )}
       </div>
 
-
       {/* RESUMEN DE RESULTADOS */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-500">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500">
             Facturas del resultado
           </p>
 
-          <p className="text-lg text-blue-700 mt-1">
+          <p className="text-base sm:text-lg font-bold text-blue-700 mt-1">
             ${formatearDinero(totalFacturasFiltradas)}
           </p>
         </div>
 
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-500">
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500">
             Pagos del resultado
           </p>
 
-          <p className="text-lg text-green-700 mt-1">
+          <p className="text-base sm:text-lg font-bold text-green-700 mt-1">
             ${formatearDinero(totalPagosFiltrados)}
           </p>
         </div>
 
-
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-500">
+        <div className="bg-white border border-gray-200 rounded-xl p-3.5 sm:p-4 shadow-sm">
+          <p className="text-xs sm:text-sm text-gray-500">
             Impacto neto en saldo
           </p>
 
           <p
-            className={`text-lg mt-1 ${
+            className={`text-base sm:text-lg font-bold mt-1 ${
               impactoTotalFiltrado > 0
                 ? "text-red-700"
                 : impactoTotalFiltrado < 0
@@ -808,53 +785,49 @@ export function Movimientos() {
             )}
           </p>
         </div>
-
       </div>
-
 
       {/* TABLA */}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-
+        <div className="overflow-x-auto w-full">
           {cargando ? (
-            <div className="p-10 text-center text-gray-500">
+            <div className="p-10 text-center text-gray-500 text-sm">
               Cargando movimientos...
             </div>
           ) : movimientosFiltrados.length === 0 ? (
-            <div className="p-10 text-center text-gray-400">
+            <div className="p-10 text-center text-gray-400 text-sm">
               No hay movimientos para mostrar.
             </div>
           ) : (
-            <table className="w-full">
-
+            <table className="w-full min-w-[850px] text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Fecha
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Tipo
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Referencia
                   </th>
 
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Estado
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Monto
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Impacto
                   </th>
 

@@ -58,7 +58,9 @@ async function checkSystem() {
   console.log("\n--- Comprobando Endpoints API REST ---");
   for (const ep of endpoints) {
     try {
-      const response = await fetch(ep.url);
+      const response = await fetch(ep.url, {
+        headers: { "x-license-key": "ACUABER-FABRICA-2026" }
+      });
       if (response.ok) {
         const data = await response.json();
         const count = Array.isArray(data) ? data.length : (data.pagos || data.pedidos || data.facturas || []).length;

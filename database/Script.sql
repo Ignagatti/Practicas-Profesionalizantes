@@ -116,7 +116,7 @@ CREATE TABLE Proveedor (
     eliminado_en TIMESTAMP WITH TIME ZONE,
 
     CONSTRAINT chk_saldo_proveedor_rango
-        CHECK (Saldo BETWEEN 0 AND 1000000000),
+        CHECK (Saldo BETWEEN -1000000000 AND 1000000000),
 
     CONSTRAINT chk_email_proveedor
         CHECK (Email LIKE '%@%.%')

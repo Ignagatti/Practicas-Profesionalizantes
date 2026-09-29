@@ -55,6 +55,9 @@ const obtenerProveedores = async (req, res) => {
 const obtenerProveedorPorId = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: 'ID de proveedor inválido' });
+        }
 
         const resultado = await pool.query(
             `SELECT 

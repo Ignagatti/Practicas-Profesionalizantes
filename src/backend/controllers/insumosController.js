@@ -43,6 +43,9 @@ const crearInsumo = async (req, res) => {
 // ACTUALIZAR (EDITAR)
 const actualizarInsumo = async (req, res) => {
     const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: 'ID de insumo inválido' });
+    }
     const { nombre, categoria, precio_unitario } = req.body;
 
     // VALIDACIONES
@@ -70,6 +73,9 @@ const actualizarInsumo = async (req, res) => {
 // BORRAR (Soft Delete / Baja lógica para preservar históricos)
 const eliminarInsumo = async (req, res) => {
     const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ error: 'ID de insumo inválido' });
+    }
     try {
         const resultado = await pool.query(
             'UPDATE Insumo SET Activo = false, Eliminado_En = NOW() WHERE Id_Insumo = $1 RETURNING *',

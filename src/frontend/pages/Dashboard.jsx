@@ -465,27 +465,31 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
           title="Productos Pendientes"
           value={productosPendientes.toString()}
           icon={AlertCircle}
-          color="bg-red-700"
+          bgLight="bg-red-50"
+          textDark="text-red-700"
         />
         <StatCard
           title="Productos Terminados"
           value={productosTerminados.toString()}
           change="Listos para envío"
           icon={CheckCircle}
-          color="bg-green-500"
+          bgLight="bg-green-50"
+          textDark="text-green-600"
         />
         <StatCard
           title="Productos en Producción"
           value={productosEnProduccion.toString()}
           icon={Package}
-          color="bg-blue-500"
+          bgLight="bg-blue-50"
+          textDark="text-blue-600"
         />
         <StatCard
           title="Facturación Total"
           value={`$${formatMoney(totalFacturacion)}`}
           change={`${pedidosFacturados.length} pedido(s) facturado(s)`}
           icon={DollarSign}
-          color="bg-purple-500"
+          bgLight="bg-purple-50"
+          textDark="text-purple-600"
         />
       </div>
 
@@ -903,7 +907,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
 }
 
 // ── Componente auxiliar StatCard ──────────────────────────────────────────────
-function StatCard({ title, value, change, icon: Icon, color }) {
+function StatCard({ title, value, change, icon: Icon, bgLight = "bg-gray-50", textDark = "text-gray-700" }) {
   const valueStr = String(value || "");
   const fontSizeClass =
     valueStr.length > 16
@@ -913,18 +917,16 @@ function StatCard({ title, value, change, icon: Icon, color }) {
       : "text-xl sm:text-2xl lg:text-3xl";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 min-w-0">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-gray-500 text-xs sm:text-sm mb-1 font-medium">{title}</p>
-          <p className={`${fontSizeClass} font-bold mb-1 text-gray-800 break-words whitespace-normal`} title={valueStr}>
-            {value}
-          </p>
-          {change && <p className="text-xs text-gray-400 font-normal">{change}</p>}
-        </div>
-        <div className={`${color} text-white p-2.5 sm:p-3 rounded-xl shrink-0`}>
-          <Icon size={22} />
-        </div>
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 min-w-0 flex items-center justify-between gap-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-gray-500 text-xs sm:text-sm mb-1 font-semibold">{title}</p>
+        <p className={`${fontSizeClass} font-bold mb-0.5 text-gray-900 break-words whitespace-normal`} title={valueStr}>
+          {value}
+        </p>
+        {change && <p className="text-xs text-gray-400 font-normal">{change}</p>}
+      </div>
+      <div className={`${bgLight} ${textDark} p-2.5 sm:p-3 rounded-xl shrink-0 flex items-center justify-center`}>
+        <Icon size={22} />
       </div>
     </div>
   );

@@ -416,13 +416,13 @@ function Productos() {
             {/* Header con Indicador y Botones de Acción en la misma línea */}
             <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
                 {/* Indicador de Cantidad de Pedidos Realizados compacto */}
-                <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-                    <div className="p-2 bg-red-50 rounded-lg text-red-700">
-                        <Package size={18} />
-                    </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[200px]">
                     <div>
-                        <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">Cantidad de Pedidos Realizados</p>
+                        <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">Pedidos Realizados</p>
                         <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">{productos.length}</p>
+                    </div>
+                    <div className="p-2 bg-red-50 text-red-700 rounded-lg flex items-center justify-center shrink-0">
+                        <Package size={18} />
                     </div>
                 </div>
 

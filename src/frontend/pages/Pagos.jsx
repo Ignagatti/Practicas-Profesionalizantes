@@ -1139,17 +1139,17 @@ export default function Pagos() {
       {/* HEADER con Indicador y Botones de Acción en la misma línea */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         {/* Indicador de Cantidad de Pagos Registrados compacto */}
-        <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-          <div className="p-2 bg-red-50 rounded-lg text-red-700 flex items-center justify-center shrink-0">
-            <DollarSign size={18} />
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[200px]">
           <div>
-            <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
-              Cantidad de Pagos Registrados
+            <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+              Pagos Registrados
             </p>
             <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
               {pagos.length}
             </p>
+          </div>
+          <div className="p-2 bg-red-50 text-red-700 rounded-lg flex items-center justify-center shrink-0">
+            <DollarSign size={18} />
           </div>
         </div>
 
@@ -1203,74 +1203,53 @@ export default function Pagos() {
 
 
       {/* RESUMEN */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <DollarSign
-              className="text-green-600 shrink-0"
-              size={18}
-            />
-
-            <span className="text-xs sm:text-sm font-semibold text-green-700 whitespace-normal">
-              Total registrado
-            </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 min-w-0 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-500 text-xs sm:text-sm mb-1 font-semibold">Total registrado</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+              ${formatearDinero(totalPagos)}
+            </p>
           </div>
-
-          <p className="text-base sm:text-lg lg:text-xl font-bold text-green-800 break-words">
-            ${formatearDinero(totalPagos)}
-          </p>
+          <div className="bg-green-50 text-green-600 p-2.5 sm:p-3 rounded-xl shrink-0 flex items-center justify-center">
+            <DollarSign size={22} />
+          </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <CheckCircle
-              className="text-blue-600 shrink-0"
-              size={18}
-            />
-
-            <span className="text-xs sm:text-sm font-semibold text-blue-700 whitespace-normal">
-              Total aplicado
-            </span>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 min-w-0 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-500 text-xs sm:text-sm mb-1 font-semibold">Total aplicado</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+              ${formatearDinero(totalAplicado)}
+            </p>
           </div>
-
-          <p className="text-base sm:text-lg lg:text-xl font-bold text-blue-800 break-words">
-            ${formatearDinero(totalAplicado)}
-          </p>
+          <div className="bg-blue-50 text-blue-600 p-2.5 sm:p-3 rounded-xl shrink-0 flex items-center justify-center">
+            <CheckCircle size={22} />
+          </div>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 sm:p-4 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Clock
-              className="text-yellow-600 shrink-0"
-              size={18}
-            />
-
-            <span className="text-xs sm:text-sm font-semibold text-yellow-700 whitespace-normal">
-              Monto sin aplicar
-            </span>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 min-w-0 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-500 text-xs sm:text-sm mb-1 font-semibold">Monto sin aplicar</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+              ${formatearDinero(totalRestante)}
+            </p>
           </div>
-
-          <p className="text-base sm:text-lg lg:text-xl font-bold text-yellow-800 break-words">
-            ${formatearDinero(totalRestante)}
-          </p>
+          <div className="bg-amber-50 text-amber-600 p-2.5 sm:p-3 rounded-xl shrink-0 flex items-center justify-center">
+            <Clock size={22} />
+          </div>
         </div>
 
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 sm:p-4 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <FileText
-              className="text-purple-600 shrink-0"
-              size={18}
-            />
-
-            <span className="text-xs sm:text-sm font-semibold text-purple-700 whitespace-normal">
-              Pagos completos
-            </span>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 min-w-0 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-gray-500 text-xs sm:text-sm mb-1 font-semibold">Pagos completos</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
+              {pagosCompletos}
+            </p>
           </div>
-
-          <p className="text-base sm:text-lg lg:text-xl font-bold text-purple-800 break-words">
-            {pagosCompletos}
-          </p>
+          <div className="bg-purple-50 text-purple-600 p-2.5 sm:p-3 rounded-xl shrink-0 flex items-center justify-center">
+            <FileText size={22} />
+          </div>
         </div>
       </div>
 

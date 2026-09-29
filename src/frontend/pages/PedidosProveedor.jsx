@@ -845,45 +845,45 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
       <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
         {/* Indicadores de Facturas (Pagas, Parciales, Impagas) compactos */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-green-50 rounded-lg text-green-600 flex items-center justify-center shrink-0">
-              <DollarSign size={18} />
-            </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[150px]">
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
+              <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">
                 Facturas Pagas
               </p>
-              <p className="text-lg font-extrabold text-green-700 leading-tight mt-0.5">
+              <p className="text-lg font-extrabold text-green-600 leading-tight mt-0.5">
                 {facturas.filter((f) => f.estado_pago === "pagado").length}
               </p>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex items-center justify-center shrink-0">
+            <div className="p-2 bg-green-50 text-green-600 rounded-lg flex items-center justify-center shrink-0">
               <DollarSign size={18} />
             </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[150px]">
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
+              <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">
                 Parcialmente Pagas
               </p>
-              <p className="text-lg font-extrabold text-amber-700 leading-tight mt-0.5">
+              <p className="text-lg font-extrabold text-amber-600 leading-tight mt-0.5">
                 {facturas.filter((f) => f.estado_pago === "parcial").length}
               </p>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-red-50 rounded-lg text-red-600 flex items-center justify-center shrink-0">
+            <div className="p-2 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
               <DollarSign size={18} />
             </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[150px]">
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
+              <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">
                 Facturas Impagas
               </p>
-              <p className="text-lg font-extrabold text-red-700 leading-tight mt-0.5">
+              <p className="text-lg font-extrabold text-red-600 leading-tight mt-0.5">
                 {facturas.filter((f) => f.estado_pago === "pendiente").length}
               </p>
+            </div>
+            <div className="p-2 bg-red-50 text-red-600 rounded-lg flex items-center justify-center shrink-0">
+              <DollarSign size={18} />
             </div>
           </div>
         </div>

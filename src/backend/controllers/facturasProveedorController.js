@@ -33,6 +33,9 @@ const obtenerFacturas = async (req, res) => {
 // Obtener una factura por ID
 const obtenerFacturaPorId = async (req, res) => {
     const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ mensaje: "ID de factura inválido." });
+    }
 
     try {
         const resultado = await db.query(

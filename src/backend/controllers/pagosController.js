@@ -74,6 +74,9 @@ const obtenerPagos = async (req, res) => {
 
 const obtenerPagoPorId = async (req, res) => {
     const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ mensaje: "ID de pago inválido." });
+    }
     const { tipo } = req.query;
 
     try {

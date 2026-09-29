@@ -194,7 +194,7 @@ function Insumos() {
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CATEGORÍA</th>
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">NOMBRE DEL INSUMO</th>
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">PRECIO UNITARIO</th>
-                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap w-28 sm:w-36">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -219,8 +219,8 @@ function Insumos() {
                                     <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800">
                                         $ {(Number(i.precio_unitario || i.Precio_Unitario) || 0).toLocaleString()}
                                     </td>
-                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center">
-                                        <div className="flex justify-center items-center gap-1">
+                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center w-28 sm:w-36">
+                                        <div className="flex justify-center items-center gap-1.5 w-full mx-auto text-center">
                                             <button 
                                                 onClick={() => handleOpenEdit(i)}
                                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

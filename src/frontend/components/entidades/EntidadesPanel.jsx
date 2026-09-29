@@ -729,7 +729,7 @@ export function EntidadesPanel({
                   <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Estado
                   </th>
-                  <th className="px-2.5 sm:px-3 py-2.5 text-center text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-center text-xs text-gray-500 uppercase font-bold whitespace-nowrap w-20 sm:w-28">
                     Acciones
                   </th>
                 </tr>
@@ -805,8 +805,8 @@ export function EntidadesPanel({
                         )}
                       </span>
                     </td>
-                    <td className="px-2.5 sm:px-3 py-2 text-center text-xs sm:text-sm">
-                      <div className="flex items-center justify-center">
+                    <td className="px-2.5 sm:px-3 py-2 text-center text-xs sm:text-sm w-20 sm:w-28">
+                      <div className="flex items-center justify-center w-full mx-auto text-center">
                         <button
                           onClick={() => handleView(entidad)}
                           className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"

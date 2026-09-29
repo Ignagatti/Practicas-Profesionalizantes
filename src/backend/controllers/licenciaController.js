@@ -124,11 +124,16 @@ async function obtenerEstadoLicencia(req, res) {
  * Middleware de seguridad que protege todas las rutas comerciales y operativas
  */
 async function validarLicenciaMiddleware(req, res, next) {
-  // Rutas públicas que no requieren clave previa
+  const normalizedPath = req.path ? req.path.replace(/\/+/g, '/').toLowerCase() : '';
+
+  // Rutas públicas exactas o prefijadas sin manipulación de traversal
   if (
-    req.path.startsWith('/licencia') ||
-    req.path.startsWith('/health') ||
-    req.path.startsWith('/uploads') ||
+    normalizedPath === '/licencia' ||
+    normalizedPath.startsWith('/licencia/') ||
+    normalizedPath === '/health' ||
+    normalizedPath.startsWith('/health/') ||
+    normalizedPath === '/uploads' ||
+    normalizedPath.startsWith('/uploads/') ||
     req.method === 'OPTIONS'
   ) {
     return next();

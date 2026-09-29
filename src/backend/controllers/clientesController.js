@@ -61,6 +61,9 @@ const obtenerClientes = async (req, res) => {
 const obtenerClientePorId = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: 'ID de cliente inválido' });
+        }
 
         const resultado = await pool.query(
             `SELECT 
@@ -342,6 +345,9 @@ const eliminarDireccionCliente = async (req, res) => {
 const eliminarCliente = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: 'ID de cliente inválido' });
+        }
 
         // Verificar dependencias: ¿Tiene pedidos activos o muertos?
         const historial = await pool.query(
@@ -350,7 +356,6 @@ const eliminarCliente = async (req, res) => {
         );
 
         if (historial.rows.length > 0) {
-            // Regla amigable pedida por el usuario: Aviso crudo en lugar de bloqueo silencioso
             return res.status(400).json({
                 error: "No se puede eliminar porque este cliente posee detalles e historial (pedidos). Si desea inhabilitarlo, utilice la función de Bloquear."
             });
@@ -379,12 +384,22 @@ const eliminarCliente = async (req, res) => {
             });
         } catch (error) {
             await client.query('ROLLBACK');
+            if (error.code === '23503') {
+                return res.status(400).json({
+                    error: "No se puede eliminar porque este cliente posee datos vinculados (pagos u operaciones). Utilice la función de Bloquear."
+                });
+            }
             throw error;
         } finally {
             client.release();
         }
     } catch (error) {
         console.error('Error en eliminarCliente:', error.message);
+        if (error.code === '23503') {
+            return res.status(400).json({
+                error: "No se puede eliminar porque este cliente posee datos vinculados en el sistema. Utilice la función de Bloquear."
+            });
+        }
         res.status(500).json({ error: 'Error al intentar eliminar el cliente' });
     }
 };

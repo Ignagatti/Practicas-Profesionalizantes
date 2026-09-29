@@ -152,18 +152,23 @@ async function restaurarBackup(req, res) {
     });
   }
 
-  // Validación de seguridad básica del script
-  if (!sqlContent.includes("BEGIN;") && !sqlContent.includes("INSERT INTO") && !sqlContent.includes("TRUNCATE TABLE")) {
+  // Validación de seguridad de estructura del script
+  if (!sqlContent.includes("TRUNCATE TABLE") && !sqlContent.includes("INSERT INTO")) {
     return res.status(400).json({
       ok: false,
       error: "El archivo no parece ser un archivo de respaldo SQL válido de Acuaber."
     });
   }
 
+  // Limpiar BEGIN y COMMIT redundantes del string para evitar transacciones anidadas desincronizadas
+  const cleanSql = sqlContent
+    .replace(/^\s*BEGIN\s*;/gim, "")
+    .replace(/^\s*COMMIT\s*;/gim, "");
+
   const client = await pool.connect();
   try {
     await client.query("BEGIN;");
-    await client.query(sqlContent);
+    await client.query(cleanSql);
     await client.query("COMMIT;");
 
     return res.status(200).json({

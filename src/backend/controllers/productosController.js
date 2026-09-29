@@ -142,6 +142,11 @@ const terminarProductosMasivo = async (req, res) => {
         return res.status(400).json({ error: 'Debe proporcionar una lista de IDs válida.' });
     }
 
+    const idsOrdenados = [...ids].map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (idsOrdenados.length === 0) {
+        return res.status(400).json({ error: 'La lista de IDs no contiene identificadores válidos.' });
+    }
+
     try {
         const query = `
             UPDATE Producto 
@@ -149,7 +154,7 @@ const terminarProductosMasivo = async (req, res) => {
             WHERE Id_Producto = ANY($1) AND Estado = 'en_produccion'
             RETURNING *
         `;
-        const resultado = await pool.query(query, [ids]);
+        const resultado = await pool.query(query, [idsOrdenados]);
 
         if (resultado.rowCount === 0) {
             return res.status(404).json({ mensaje: 'No se encontraron productos en producción para actualizar.' });
@@ -173,6 +178,11 @@ const enviarProductosMasivo = async (req, res) => {
         return res.status(400).json({ error: 'Debe proporcionar una lista de IDs válida.' });
     }
 
+    const idsOrdenados = [...ids].map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (idsOrdenados.length === 0) {
+        return res.status(400).json({ error: 'La lista de IDs no contiene identificadores válidos.' });
+    }
+
     try {
         const query = `
             UPDATE Producto 
@@ -180,7 +190,7 @@ const enviarProductosMasivo = async (req, res) => {
             WHERE Id_Producto = ANY($1) AND Estado = 'terminado'
             RETURNING *
         `;
-        const resultado = await pool.query(query, [ids]);
+        const resultado = await pool.query(query, [idsOrdenados]);
 
         if (resultado.rowCount === 0) {
             return res.status(404).json({ mensaje: 'No se encontraron productos terminados para marcar como enviados.' });

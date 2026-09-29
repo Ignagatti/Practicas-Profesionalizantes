@@ -141,6 +141,9 @@ const obtenerPedidos = async (req, res) => {
 const obtenerPedidoPorId = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!id || isNaN(Number(id))) {
+            return res.status(400).json({ error: 'ID de pedido inválido' });
+        }
 
         const resultado = await pool.query(
             `

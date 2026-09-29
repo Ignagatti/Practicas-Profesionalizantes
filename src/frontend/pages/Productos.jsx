@@ -520,176 +520,195 @@ function Productos() {
                             <button onClick={() => setShowFormModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Cliente <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <select 
-                                        required
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                                        value={formData.id_cliente || ''}
-                                        onChange={(e) => setFormData({...formData, id_cliente: e.target.value})}
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        {clientes.map(c => {
-                                             const nombre = (c.nombre || c.Nombre || "").trim();
-                                             const apellido = (c.apellido || c.Apellido || "").trim();
-                                             const contacto = `${nombre} ${apellido}`.trim();
-                                             const razonSocial = (c.razon_social || c.Razon_Social || "").trim();
-                                             const label = contacto || razonSocial || `Cliente #${c.id_cliente || c.Id_Cliente}`;
-                                             return (
-                                                 <option key={c.id_cliente || c.Id_Cliente} value={c.id_cliente || c.Id_Cliente}>
-                                                     {label}
-                                                 </option>
-                                             );
-                                         })}
-                                    </select>
-                                </div>
-
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Fecha de Pedido <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <input 
-                                        type="date" 
-                                        required 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.fecha_pedido || ''} 
-                                        onChange={(e) => setFormData({...formData, fecha_pedido: e.target.value})} 
-                                    />
-                                </div>
-
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Cantidad <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <input 
-                                        type="number" 
-                                        min="1"
-                                        required 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.cantidad} 
-                                        onChange={(e) => setFormData({...formData, cantidad: e.target.value})} 
-                                    />
-                                </div>
-
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Modelo <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <select 
-                                        required 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.modelo} 
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormData({...formData, modelo: val, precio: calcularPrecioTotal(val, formData.tipo_tela, formData.lustre)});
-                                        }}
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        {formData.modelo && !modelosRegistrados.includes(formData.modelo) && (
-                                            <option value={formData.modelo}>{formData.modelo} (No registrado)</option>
+                            {(() => {
+                                const estadoOrig = isEditing && selectedProducto ? (selectedProducto.estado || selectedProducto.Estado || 'pendiente').toLowerCase() : 'pendiente';
+                                const esSoloEstado = isEditing && estadoOrig !== 'pendiente';
+                                return (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {esSoloEstado && (
+                                            <div className="col-span-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl font-medium">
+                                                ⚠️ El producto está en estado <span className="font-bold uppercase">{estadoOrig.replace('_', ' ')}</span>. Solo se permite modificar su estado de producción.
+                                            </div>
                                         )}
-                                        {listaPrecios.filter(lp => lp.categoria === 'Modelo').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
-                                    </select>
-                                </div>
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Cliente <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <select 
+                                                required
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                                value={formData.id_cliente || ''}
+                                                onChange={(e) => setFormData({...formData, id_cliente: e.target.value})}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                {clientes.map(c => {
+                                                     const nombre = (c.nombre || c.Nombre || "").trim();
+                                                     const apellido = (c.apellido || c.Apellido || "").trim();
+                                                     const contacto = `${nombre} ${apellido}`.trim();
+                                                     const razonSocial = (c.razon_social || c.Razon_Social || "").trim();
+                                                     const label = contacto || razonSocial || `Cliente #${c.id_cliente || c.Id_Cliente}`;
+                                                     return (
+                                                         <option key={c.id_cliente || c.Id_Cliente} value={c.id_cliente || c.Id_Cliente}>
+                                                             {label}
+                                                         </option>
+                                                     );
+                                                 })}
+                                            </select>
+                                        </div>
 
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Tipo de Tela <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <select 
-                                        required 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.tipo_tela} 
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormData({...formData, tipo_tela: val, precio: calcularPrecioTotal(formData.modelo, val, formData.lustre)});
-                                        }}
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Sin tela">Sin tela</option>
-                                        {formData.tipo_tela && formData.tipo_tela !== 'Sin tela' && !telasRegistradas.includes(formData.tipo_tela) && (
-                                            <option value={formData.tipo_tela}>{formData.tipo_tela} (No registrado)</option>
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Fecha de Pedido <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <input 
+                                                type="date" 
+                                                required 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.fecha_pedido || ''} 
+                                                onChange={(e) => setFormData({...formData, fecha_pedido: e.target.value})} 
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Cantidad <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <input 
+                                                type="number" 
+                                                min="1"
+                                                required 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.cantidad} 
+                                                onChange={(e) => setFormData({...formData, cantidad: e.target.value})} 
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Modelo <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <select 
+                                                required 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.modelo} 
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFormData({...formData, modelo: val, precio: calcularPrecioTotal(val, formData.tipo_tela, formData.lustre)});
+                                                }}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                {formData.modelo && !modelosRegistrados.includes(formData.modelo) && (
+                                                    <option value={formData.modelo}>{formData.modelo} (No registrado)</option>
+                                                )}
+                                                {listaPrecios.filter(lp => lp.categoria === 'Modelo').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Tipo de Tela <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <select 
+                                                required 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.tipo_tela} 
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFormData({...formData, tipo_tela: val, precio: calcularPrecioTotal(formData.modelo, val, formData.lustre)});
+                                                }}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                <option value="Sin tela">Sin tela</option>
+                                                {formData.tipo_tela && formData.tipo_tela !== 'Sin tela' && !telasRegistradas.includes(formData.tipo_tela) && (
+                                                    <option value={formData.tipo_tela}>{formData.tipo_tela} (No registrado)</option>
+                                                )}
+                                                {listaPrecios.filter(lp => lp.categoria === 'Tela').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Nombre de Tela (Estampado / Color)
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="" 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.nombre_tela} 
+                                                onChange={(e) => setFormData({...formData, nombre_tela: e.target.value})} 
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Lustre <span className="text-red-600 font-bold">*</span>
+                                            </label>
+                                            <select 
+                                                required 
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.lustre} 
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFormData({...formData, lustre: val, precio: calcularPrecioTotal(formData.modelo, formData.tipo_tela, val)});
+                                                }}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                <option value="Sin lustre">Sin lustre</option>
+                                                {formData.lustre && formData.lustre !== 'Sin lustre' && !lustresRegistrados.includes(formData.lustre) && (
+                                                    <option value={formData.lustre}>{formData.lustre} (No registrado)</option>
+                                                )}
+                                                {listaPrecios.filter(lp => lp.categoria === 'Lustre').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="col-span-1">
+                                            <div className="p-2.5 bg-green-50 border border-green-200 rounded-xl flex flex-col justify-center h-full shadow-inner">
+                                                <span className="text-[11px] font-bold text-green-700 uppercase tracking-wider">Costo Total</span>
+                                                <span className="text-lg font-black text-green-800">$ {(Number(formData.precio) * Number(formData.cantidad || 1)).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+
+                                        {isEditing && (
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                    Estado <span className="text-red-600 font-bold">*</span>
+                                                </label>
+                                                <select 
+                                                    className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all capitalize" 
+                                                    value={formData.estado || 'pendiente'} 
+                                                    onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                                                >
+                                                    <option value="pendiente">Pendiente</option>
+                                                    <option value="en_produccion">En Producción</option>
+                                                    <option value="terminado">Terminado</option>
+                                                    <option value="enviado">Enviado</option>
+                                                    <option value="cancelado">Cancelado</option>
+                                                </select>
+                                            </div>
                                         )}
-                                        {listaPrecios.filter(lp => lp.categoria === 'Tela').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
-                                    </select>
-                                </div>
 
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Nombre de Tela (Estampado / Color)
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="" 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.nombre_tela} 
-                                        onChange={(e) => setFormData({...formData, nombre_tela: e.target.value})} 
-                                    />
-                                </div>
-
-                                <div className="col-span-1">
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Lustre <span className="text-red-600 font-bold">*</span>
-                                    </label>
-                                    <select 
-                                        required 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.lustre} 
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormData({...formData, lustre: val, precio: calcularPrecioTotal(formData.modelo, formData.tipo_tela, val)});
-                                        }}
-                                    >
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Sin lustre">Sin lustre</option>
-                                        {formData.lustre && formData.lustre !== 'Sin lustre' && !lustresRegistrados.includes(formData.lustre) && (
-                                            <option value={formData.lustre}>{formData.lustre} (No registrado)</option>
-                                        )}
-                                        {listaPrecios.filter(lp => lp.categoria === 'Lustre').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="col-span-1">
-                                    <div className="p-2.5 bg-green-50 border border-green-200 rounded-xl flex flex-col justify-center h-full shadow-inner">
-                                        <span className="text-[11px] font-bold text-green-700 uppercase tracking-wider">Costo Total</span>
-                                        <span className="text-lg font-black text-green-800">$ {(Number(formData.precio) * Number(formData.cantidad || 1)).toLocaleString()}</span>
+                                        <div className={isEditing ? "col-span-2 sm:col-span-1" : "col-span-2"}>
+                                            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
+                                                Observaciones (Opcional)
+                                            </label>
+                                            <textarea 
+                                                rows={2}
+                                                disabled={esSoloEstado}
+                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                value={formData.observaciones || ''} 
+                                                onChange={(e) => setFormData({...formData, observaciones: e.target.value})} 
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-
-                                {isEditing && (
-                                    <div className="col-span-2 sm:col-span-1">
-                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                            Estado <span className="text-red-600 font-bold">*</span>
-                                        </label>
-                                        <select 
-                                            className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all capitalize" 
-                                            value={formData.estado || 'pendiente'} 
-                                            onChange={(e) => setFormData({...formData, estado: e.target.value})}
-                                        >
-                                            <option value="pendiente">Pendiente</option>
-                                            <option value="en_produccion">En Producción</option>
-                                            <option value="terminado">Terminado</option>
-                                            <option value="enviado">Enviado</option>
-                                            <option value="cancelado">Cancelado</option>
-                                        </select>
-                                    </div>
-                                )}
-
-                                <div className={isEditing ? "col-span-2 sm:col-span-1" : "col-span-2"}>
-                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">
-                                        Observaciones (Opcional)
-                                    </label>
-                                    <textarea 
-                                        rows={2}
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all" 
-                                        value={formData.observaciones || ''} 
-                                        onChange={(e) => setFormData({...formData, observaciones: e.target.value})} 
-                                    />
-                                </div>
-                            </div>
+                                );
+                            })()}
 
                             <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
                                 <button type="button" onClick={() => setShowFormModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>

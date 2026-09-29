@@ -57,20 +57,45 @@ const actualizarProducto = async (req, res) => {
     const { id } = req.params;
     const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente } = req.body;
 
-    if (Number(cantidad) <= 0) {
-        return res.status(400).json({ error: 'La cantidad debe ser mayor a cero.' });
-    }
-    const precioNum = Number(precio);
-    if (precio !== undefined && (isNaN(precioNum) || precioNum < 0)) {
-        return res.status(400).json({ error: 'El precio del producto debe ser un número válido mayor o igual a cero.' });
-    }
-
     try {
-        const prodActual = await pool.query('SELECT Estado FROM Producto WHERE Id_Producto = $1', [id]);
+        const prodActual = await pool.query('SELECT * FROM Producto WHERE Id_Producto = $1', [id]);
         if (prodActual.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
 
+        const actual = prodActual.rows[0];
+        const estadoActual = (actual.estado || actual.Estado || 'pendiente').toLowerCase();
+
+        let modeloFinal = modelo;
+        let telaFinal = tela;
+        let lustreFinal = color_lustre;
+        let cantidadFinal = cantidad;
+        let precioFinal = precio;
+        let obsFinal = observaciones;
+        let fechaFinal = fecha_pedido;
+        let idClienteFinal = id_cliente;
+
+        // Si el estado actual NO es 'pendiente', solo se permite cambiar el estado (los demás campos se preservan)
+        if (estadoActual !== 'pendiente') {
+            modeloFinal = actual.modelo || actual.Modelo;
+            telaFinal = actual.tela || actual.Tela;
+            lustreFinal = actual.color_lustre || actual.Color_Lustre;
+            cantidadFinal = actual.cantidad || actual.Cantidad;
+            precioFinal = actual.precio || actual.Precio;
+            obsFinal = actual.observaciones || actual.Observaciones;
+            fechaFinal = actual.fecha_pedido || actual.Fecha_Pedido;
+            idClienteFinal = actual.id_cliente || actual.Id_Cliente;
+        } else {
+            if (Number(cantidad) <= 0) {
+                return res.status(400).json({ error: 'La cantidad debe ser mayor a cero.' });
+            }
+            const precioNum = Number(precio);
+            if (precio !== undefined && (isNaN(precioNum) || precioNum < 0)) {
+                return res.status(400).json({ error: 'El precio del producto debe ser un número válido mayor o igual a cero.' });
+            }
+            precioFinal = isNaN(precioNum) ? 0 : precioNum;
+        }
+
         const query = 'UPDATE Producto SET Modelo = $1, Tela = $2, Color_Lustre = $3, Estado = COALESCE($4, Estado), Cantidad = $5, Precio = $6, Observaciones = $7, Fecha_Pedido = $8, Id_Cliente = $9 WHERE Id_Producto = $10 RETURNING *';
-        const valores = [modelo, tela, color_lustre, estado, cantidad, isNaN(precioNum) ? 0 : precioNum, observaciones, fecha_pedido, id_cliente || null, id];
+        const valores = [modeloFinal, telaFinal, lustreFinal, estado, cantidadFinal, precioFinal, obsFinal, fechaFinal, idClienteFinal || null, id];
         const resultado = await pool.query(query, valores);
 
         res.json(resultado.rows[0]);

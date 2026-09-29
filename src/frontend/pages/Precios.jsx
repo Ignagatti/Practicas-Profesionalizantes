@@ -222,7 +222,7 @@ export function Precios() {
                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Precio Unitario
                 </th>
-                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -259,8 +259,8 @@ export function Precios() {
                         {insumo.precioUnitario.toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center text-xs sm:text-sm">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => {
                             setEditingInsumo({ ...insumo });

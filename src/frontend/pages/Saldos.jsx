@@ -882,7 +882,7 @@ export function Saldos() {
                     Verificación
                   </th>
 
-                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
 
@@ -973,7 +973,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center text-xs sm:text-sm">
                         <button
                           type="button"
                           onClick={() =>

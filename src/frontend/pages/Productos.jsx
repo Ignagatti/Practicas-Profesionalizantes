@@ -458,7 +458,7 @@ function Productos() {
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">TELA</th>
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">LUSTRE</th>
                                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ESTADO</th>
-                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -499,7 +499,7 @@ function Productos() {
                                                     'bg-red-100 text-red-700'
                                                 }`}>{ estadoStr.replace('_',' ') }</span>
                                             </td>
-                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right">
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center">
                                                 <button onClick={() => handleOpenDetail(p)} className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Visualizar detalles"><Eye size={17} /></button>
                                             </td>
                                         </tr>

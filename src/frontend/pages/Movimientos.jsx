@@ -831,7 +831,7 @@ export function Movimientos() {
                     Impacto
                   </th>
 
-                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -951,7 +951,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center">
                           <button
                             type="button"
                             onClick={() =>

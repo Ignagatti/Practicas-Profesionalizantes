@@ -1192,7 +1192,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Monto Adeudado
                 </th>
-                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
 
@@ -1265,7 +1265,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         </span>
                       </td>
 
-                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center text-xs sm:text-sm">
                         <button
                           onClick={() => handleView(pedido)}
                           className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"

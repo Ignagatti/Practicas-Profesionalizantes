@@ -1398,7 +1398,7 @@ export default function Pagos() {
                     Estado
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
@@ -1487,8 +1487,8 @@ export default function Pagos() {
                         </span>
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-right">
-                        <div className="flex justify-end gap-1">
+                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-center">
+                        <div className="flex justify-center items-center gap-1">
                           <button
                             type="button"
                             onClick={() =>

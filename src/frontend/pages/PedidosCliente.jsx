@@ -1266,13 +1266,15 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       </td>
 
                       <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center text-xs sm:text-sm">
-                        <button
-                          onClick={() => handleView(pedido)}
-                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
-                          title="Ver detalles"
-                        >
-                          <Eye size={16} />
-                        </button>
+                        <div className="flex items-center justify-center">
+                          <button
+                            onClick={() => handleView(pedido)}
+                            className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                            title="Ver detalles"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

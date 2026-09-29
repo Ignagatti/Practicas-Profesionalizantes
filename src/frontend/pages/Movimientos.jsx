@@ -952,16 +952,18 @@ export function Movimientos() {
 
 
                         <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-center">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              verDetalle(movimiento)
-                            }
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Ver detalle"
-                          >
-                            <Eye size={17} />
-                          </button>
+                          <div className="flex items-center justify-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                verDetalle(movimiento)
+                              }
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Ver detalle"
+                            >
+                              <Eye size={17} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

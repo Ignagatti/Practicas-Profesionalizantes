@@ -1185,71 +1185,71 @@ export default function Pagos() {
 
       {/* RESUMEN */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3.5 sm:p-4 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
             <DollarSign
-              className="text-green-600"
-              size={20}
+              className="text-green-600 shrink-0"
+              size={18}
             />
 
-            <span className="text-xs sm:text-sm font-semibold text-green-700">
+            <span className="text-xs sm:text-sm font-semibold text-green-700 truncate">
               Total registrado
             </span>
           </div>
 
-          <p className="text-xl sm:text-2xl font-bold text-green-800">
+          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-800 break-words">
             ${formatearDinero(totalPagos)}
           </p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 sm:p-4 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
             <CheckCircle
-              className="text-blue-600"
-              size={20}
+              className="text-blue-600 shrink-0"
+              size={18}
             />
 
-            <span className="text-xs sm:text-sm font-semibold text-blue-700">
+            <span className="text-xs sm:text-sm font-semibold text-blue-700 truncate">
               Total aplicado
             </span>
           </div>
 
-          <p className="text-xl sm:text-2xl font-bold text-blue-800">
+          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-800 break-words">
             ${formatearDinero(totalAplicado)}
           </p>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3.5 sm:p-4 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
             <Clock
-              className="text-yellow-600"
-              size={20}
+              className="text-yellow-600 shrink-0"
+              size={18}
             />
 
-            <span className="text-xs sm:text-sm font-semibold text-yellow-700">
+            <span className="text-xs sm:text-sm font-semibold text-yellow-700 truncate">
               Monto sin aplicar
             </span>
           </div>
 
-          <p className="text-xl sm:text-2xl font-bold text-yellow-800">
+          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-800 break-words">
             ${formatearDinero(totalRestante)}
           </p>
         </div>
 
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-3.5 sm:p-4 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
             <FileText
-              className="text-purple-600"
-              size={20}
+              className="text-purple-600 shrink-0"
+              size={18}
             />
 
-            <span className="text-xs sm:text-sm font-semibold text-purple-700">
+            <span className="text-xs sm:text-sm font-semibold text-purple-700 truncate">
               Pagos completos
             </span>
           </div>
 
-          <p className="text-xl sm:text-2xl font-bold text-purple-800">
+          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-800 break-words">
             {pagosCompletos}
           </p>
         </div>

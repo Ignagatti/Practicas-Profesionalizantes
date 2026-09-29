@@ -906,24 +906,24 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
 function StatCard({ title, value, change, icon: Icon, color }) {
   const valueStr = String(value || "");
   const fontSizeClass =
-    valueStr.length > 14
+    valueStr.length > 16
+      ? "text-base sm:text-lg"
+      : valueStr.length > 12
       ? "text-lg sm:text-xl"
-      : valueStr.length > 10
-      ? "text-xl sm:text-2xl"
-      : "text-2xl sm:text-3xl";
+      : "text-xl sm:text-2xl lg:text-3xl";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 min-w-0">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-gray-500 text-sm mb-1 truncate">{title}</p>
-          <p className={`${fontSizeClass} font-bold mb-2 text-gray-800 truncate`} title={valueStr}>
+          <p className="text-gray-500 text-xs sm:text-sm mb-1 font-medium">{title}</p>
+          <p className={`${fontSizeClass} font-bold mb-1 text-gray-800 break-words whitespace-normal`} title={valueStr}>
             {value}
           </p>
-          {change && <p className="text-xs text-gray-400 truncate">{change}</p>}
+          {change && <p className="text-xs text-gray-400 font-normal">{change}</p>}
         </div>
-        <div className={`${color} text-white p-3 rounded-xl shrink-0`}>
-          <Icon size={24} />
+        <div className={`${color} text-white p-2.5 sm:p-3 rounded-xl shrink-0`}>
+          <Icon size={22} />
         </div>
       </div>
     </div>

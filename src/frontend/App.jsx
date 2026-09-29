@@ -181,7 +181,7 @@ function App() {
 
   const obtenerTituloSeccion = () => {
     const titulos = {
-      dashboard: "Dashboard",
+      dashboard: "Panel de control",
       productos: "Productos",
       insumos: "Insumos",
       clientes: "Clientes",
@@ -193,7 +193,7 @@ function App() {
       saldos: "Control de Saldos",
     };
 
-    return titulos[seccion] || "Dashboard";
+    return titulos[seccion] || "Panel de control";
   };
 
   const renderContenido = () => {

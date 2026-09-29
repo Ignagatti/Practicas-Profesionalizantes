@@ -1136,66 +1136,68 @@ export default function Pagos() {
 
       {/* HEADER */}
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => {
-              setTipoVista("cliente");
-              setSearchTerm("");
-              setFechaDesde("");
-              setFechaHasta("");
-            }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
-              tipoVista === "cliente"
-                ? "bg-white text-red-700 shadow-sm font-semibold"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
-          >
-            Clientes
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTipoVista("proveedor");
-              setSearchTerm("");
-              setFechaDesde("");
-              setFechaHasta("");
-            }}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
-              tipoVista === "proveedor"
-                ? "bg-white text-red-700 shadow-sm font-semibold"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
-          >
-            Proveedores
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={abrirAdd}
-          className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
-        >
-          <Plus size={18} />
-          Registrar pago
-        </button>
-      </div>
-
-      {/* Indicador de Cantidad de Pagos Registrados */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 flex items-center justify-between">
+      {/* HEADER con Indicador y Botones de Acción en la misma línea */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        {/* Indicador de Cantidad de Pagos Registrados compacto */}
+        <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
+          <div className="p-2 bg-red-50 rounded-lg text-red-700">
+            <DollarSign size={18} />
+          </div>
           <div>
-            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">
+            <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
               Cantidad de Pagos Registrados
             </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+            <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
               {pagos.length}
             </p>
           </div>
-          <div className="p-3 bg-red-50 rounded-xl text-red-700">
-            <DollarSign size={26} />
+        </div>
+
+        {/* Botones de Acción */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setTipoVista("cliente");
+                setSearchTerm("");
+                setFechaDesde("");
+                setFechaHasta("");
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
+                tipoVista === "cliente"
+                  ? "bg-white text-red-700 shadow-sm font-semibold"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Clientes
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTipoVista("proveedor");
+                setSearchTerm("");
+                setFechaDesde("");
+                setFechaHasta("");
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
+                tipoVista === "proveedor"
+                  ? "bg-white text-red-700 shadow-sm font-semibold"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              Proveedores
+            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={abrirAdd}
+            className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
+          >
+            <Plus size={18} />
+            Registrar pago
+          </button>
         </div>
       </div>
 

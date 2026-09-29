@@ -841,74 +841,78 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
       {/* HEADER */}
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <div className="flex bg-gray-100 rounded-lg p-1">
+      {/* Header con Indicadores y Botones de Acción en la misma línea */}
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+        {/* Indicadores de Facturas (Pagas, Parciales, Impagas) compactos */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
+            <div className="p-2 bg-green-50 rounded-lg text-green-600">
+              <DollarSign size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] sm:text-xs font-bold text-green-600 uppercase tracking-wider leading-none">
+                Facturas Pagas
+              </p>
+              <p className="text-lg font-extrabold text-green-700 leading-tight mt-0.5">
+                {facturas.filter((f) => f.estado_pago === "pagado").length}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
+            <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
+              <DollarSign size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] sm:text-xs font-bold text-amber-600 uppercase tracking-wider leading-none">
+                Parcialmente Pagas
+              </p>
+              <p className="text-lg font-extrabold text-amber-700 leading-tight mt-0.5">
+                {facturas.filter((f) => f.estado_pago === "parcial").length}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg text-red-600">
+              <DollarSign size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] sm:text-xs font-bold text-red-600 uppercase tracking-wider leading-none">
+                Facturas Impagas
+              </p>
+              <p className="text-lg font-extrabold text-red-700 leading-tight mt-0.5">
+                {facturas.filter((f) => f.estado_pago === "pendiente").length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Botones de Acción */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setTipoVista && setTipoVista("cliente")}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
+            >
+              Clientes
+            </button>
+            <button
+              onClick={() => setTipoVista && setTipoVista("proveedor")}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
+            >
+              Proveedores
+            </button>
+          </div>
+
           <button
-            onClick={() => setTipoVista && setTipoVista("cliente")}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
+            type="button"
+            onClick={abrirAdd}
+            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
           >
-            Clientes
+            <Plus size={18} />
+            Agregar factura
           </button>
-          <button
-            onClick={() => setTipoVista && setTipoVista("proveedor")}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
-          >
-            Proveedores
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={abrirAdd}
-          className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
-        >
-          <Plus size={18} />
-          Agregar factura
-        </button>
-      </div>
-
-      {/* Indicadores de Facturas / Remitos */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs sm:text-sm font-semibold text-green-600 uppercase tracking-wider">
-              Facturas Pagas
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-green-700 mt-1">
-              {facturas.filter((f) => f.estado_pago === "pagado").length}
-            </p>
-          </div>
-          <div className="p-3 bg-green-50 rounded-xl text-green-600">
-            <DollarSign size={24} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs sm:text-sm font-semibold text-amber-600 uppercase tracking-wider">
-              Parcialmente Pagas
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-amber-700 mt-1">
-              {facturas.filter((f) => f.estado_pago === "parcial").length}
-            </p>
-          </div>
-          <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
-            <DollarSign size={24} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
-          <div>
-            <p className="text-xs sm:text-sm font-semibold text-red-600 uppercase tracking-wider">
-              Facturas Impagas
-            </p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-red-700 mt-1">
-              {facturas.filter((f) => f.estado_pago === "pendiente").length}
-            </p>
-          </div>
-          <div className="p-3 bg-red-50 rounded-xl text-red-600">
-            <DollarSign size={24} />
-          </div>
         </div>
       </div>
 

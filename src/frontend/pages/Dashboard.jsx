@@ -460,7 +460,7 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
     <div className="space-y-4 sm:space-y-5">
 
       {/* Cards Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3.5">
         <StatCard
           title="Productos Pendientes"
           value={productosPendientes.toString()}

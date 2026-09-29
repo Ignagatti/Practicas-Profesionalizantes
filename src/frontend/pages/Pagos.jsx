@@ -1355,56 +1355,56 @@ export default function Pagos() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm w-full min-w-0">
         <div className="overflow-x-auto w-full max-w-full">
           {cargando ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
+            <div className="p-8 text-center text-gray-500 text-xs sm:text-sm">
               Cargando pagos...
             </div>
           ) : pagosFiltrados.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 text-sm">
+            <div className="p-8 text-center text-gray-400 text-xs sm:text-sm">
               No hay pagos para mostrar.
             </div>
           ) : (
-            <table className="w-full text-left min-w-[650px] lg:min-w-0">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     N.º pago
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     {tipoVista === "cliente" ? "Cliente" : "Proveedor"}
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Fecha
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Monto
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Aplicado
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Restante
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Método
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-left text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Estado
                   </th>
 
-                  <th className="px-2 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-1.5 py-2 sm:px-2.5 sm:py-2.5 text-center text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-tight whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-gray-200">
                 {pagosFiltrados.map((pago) => {
                   const montoAplicado =
                     Number(pago.monto) -
@@ -1422,49 +1422,51 @@ export default function Pagos() {
                       pago.estado_pago
                     ];
 
+                  const nombreEntidad = obtenerNombreEntidadPago(pago, tipoVista);
+
                   return (
                     <tr
                       key={pago.id_pago_insumo}
-                      className="border-t hover:bg-gray-50"
+                      className="border-t hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         P-
                         {String(
                           pago.id_pago_insumo
                         ).padStart(4, "0")}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm font-semibold text-gray-800">
-                        {obtenerNombreEntidadPago(pago, tipoVista)}
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 max-w-[140px] sm:max-w-[180px] truncate text-xs font-semibold text-gray-800" title={nombreEntidad}>
+                        {nombreEntidad}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         {formatearFecha(
                           pago.fecha_pago
                         )}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500 font-medium">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-600 font-medium">
                         ${formatearDinero(
                           pago.monto
                         )}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         ${formatearDinero(
                           montoAplicado
                         )}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         ${formatearDinero(
                           pago.monto_restante
                         )}
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs ${
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] ${
                             configMetodo?.color ||
                             "bg-gray-100 text-gray-700"
                           }`}
@@ -1475,9 +1477,9 @@ export default function Pagos() {
                         </span>
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs ${
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] ${
                             configEstado?.color ||
                             "bg-gray-100 text-gray-700"
                           }`}
@@ -1487,8 +1489,8 @@ export default function Pagos() {
                         </span>
                       </td>
 
-                      <td className="px-2 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500 text-center">
-                        <div className="flex justify-center items-center gap-1">
+                      <td className="px-1.5 py-1.5 sm:px-2.5 sm:py-2 whitespace-nowrap text-xs text-gray-500 text-center">
+                        <div className="flex justify-center items-center gap-0.5 sm:gap-1">
                           <button
                             type="button"
                             onClick={() =>
@@ -1496,10 +1498,10 @@ export default function Pagos() {
                                 pago
                               )
                             }
-                            className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                            className="p-1 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
                             title="Ver detalle del pago"
                           >
-                            <Eye size={17} />
+                            <Eye size={16} />
                           </button>
 
                           <button
@@ -1509,10 +1511,10 @@ export default function Pagos() {
                                 pago.id_pago_insumo
                               )
                             }
-                            className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                            className="p-1 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
                             title="Eliminar pago"
                           >
-                            <Trash2 size={17} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>

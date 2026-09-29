@@ -277,7 +277,7 @@ function App() {
               onClose={() => setSidebarOpen(false)}
             />
 
-            <main className="flex-1 w-full min-w-0 lg:ml-64 p-3 sm:p-4 lg:p-5 min-h-screen flex flex-col">
+            <main className="flex-1 w-full min-w-0 lg:ml-56 xl:ml-64 p-2.5 sm:p-3.5 lg:p-4 min-h-screen flex flex-col">
               <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 sm:mb-6">
                 <div className="flex items-center gap-3">
                   <button

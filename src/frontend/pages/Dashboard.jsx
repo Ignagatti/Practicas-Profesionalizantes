@@ -567,32 +567,6 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
                   Año
                 </button>
               </div>
-
-              {periodoModelos === "mensual" ? (
-                <select
-                  value={mesModelos}
-                  onChange={(e) => setMesModelos(e.target.value)}
-                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-700"
-                >
-                  {mesesDisponibles.map((m) => (
-                    <option key={m} value={m}>
-                      {formatPeriodoLabel(m)}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select
-                  value={anioModelos}
-                  onChange={(e) => setAnioModelos(e.target.value)}
-                  className="px-2.5 py-1 text-xs border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-red-700"
-                >
-                  {aniosDisponibles.map((a) => (
-                    <option key={a} value={a}>
-                      Año {a}
-                    </option>
-                  ))}
-                </select>
-              )}
             </div>
           </div>
 

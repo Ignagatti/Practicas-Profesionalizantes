@@ -75,14 +75,23 @@ const eliminarInsumo = async (req, res) => {
 const ajustarPrecios = async (req, res) => {
     const { porcentaje, categoria } = req.body;
     
-    if (porcentaje === undefined) {
+    if (porcentaje === undefined || porcentaje === null) {
         return res.status(400).json({ error: 'Falta el porcentaje de ajuste' });
+    }
+
+    const pct = parseFloat(porcentaje);
+    if (isNaN(pct)) {
+        return res.status(400).json({ error: 'El porcentaje debe ser un número válido' });
+    }
+
+    if (pct <= -100) {
+        return res.status(400).json({ error: 'El descuento no puede ser mayor o igual al 100%' });
     }
 
     try {
         let query;
         let valores;
-        const factor = 1 + (porcentaje / 100);
+        const factor = 1 + (pct / 100);
 
         if (categoria && categoria !== 'todos' && categoria !== '') {
             query = 'UPDATE Insumo SET Precio_Unitario = ROUND((Precio_Unitario * $1)::numeric, 2) WHERE Categoria = $2 AND (activo = true OR activo IS NULL) RETURNING *';

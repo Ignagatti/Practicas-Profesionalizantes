@@ -23,8 +23,7 @@
       "src/backend/**/*",
       "src/electron/**/*",
       "assets/**/*",
-      "package.json",
-      ".env"
+      "package.json"
     ],
     "win": {
       "target": [

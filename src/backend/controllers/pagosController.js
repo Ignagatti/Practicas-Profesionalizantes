@@ -249,6 +249,42 @@ const crearPago = async (req, res) => {
         // =============================================
         await client.query("BEGIN");
 
+        // Validar que todas las facturas/pedidos pertenezcan al mismo cliente o proveedor
+        let targetEntidadId = null;
+        if (Tipo === "cliente") {
+            const idPedidos = facturas.map(f => f.Id_Pedido || f.id_pedido).filter(Boolean);
+            if (idPedidos.length === 0) {
+                throw new Error("No se especificaron pedidos válidos para el pago.");
+            }
+            const clientCheck = await client.query(
+                `SELECT DISTINCT Id_Cliente FROM Pedido WHERE Id_Pedido = ANY($1::int[])`,
+                [idPedidos]
+            );
+            if (clientCheck.rows.length === 0) {
+                throw new Error("No se encontraron los pedidos especificados.");
+            }
+            if (clientCheck.rows.length > 1) {
+                throw new Error("Todas las facturas/pedidos seleccionados deben pertenecer al mismo cliente.");
+            }
+            targetEntidadId = clientCheck.rows[0].id_cliente;
+        } else {
+            const idFacturas = facturas.map(f => f.Id_Factura_Proveedor || f.id_factura_proveedor).filter(Boolean);
+            if (idFacturas.length === 0) {
+                throw new Error("No se especificaron facturas de proveedor válidas.");
+            }
+            const provCheck = await client.query(
+                `SELECT DISTINCT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = ANY($1::int[])`,
+                [idFacturas]
+            );
+            if (provCheck.rows.length === 0) {
+                throw new Error("No se encontraron las facturas de proveedor especificadas.");
+            }
+            if (provCheck.rows.length > 1) {
+                throw new Error("Todas las facturas seleccionadas deben pertenecer al mismo proveedor.");
+            }
+            targetEntidadId = provCheck.rows[0].id_proveedor;
+        }
+
         // Verificar método de pago si hay monto nuevo
         if (montoPago > 0) {
             const metodoPago = await client.query(
@@ -349,15 +385,6 @@ const crearPago = async (req, res) => {
         // Si se usa saldo a favor, buscar y bloquear los pagos existentes con saldo restante
         if (montoFavorUsado > 0) {
             if (Tipo === "cliente") {
-                const idClienteResult = await client.query(
-                    'SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1',
-                    [facturas[0].Id_Pedido]
-                );
-                if (idClienteResult.rows.length === 0) {
-                    throw new Error("No se pudo obtener el cliente del pedido.");
-                }
-                const idCliente = idClienteResult.rows[0].id_cliente;
-
                 // Bloqueo de concurrencia: FOR UPDATE en pagos con saldo a favor del cliente
                 const pagosAFAvor = await client.query(
                     `
@@ -371,7 +398,7 @@ const crearPago = async (req, res) => {
                     ORDER BY Fecha_Pago ASC, Id_Pago_Pedido ASC
                     FOR UPDATE
                     `,
-                    [idCliente]
+                    [targetEntidadId]
                 );
 
                 for (const row of pagosAFAvor.rows) {
@@ -383,15 +410,6 @@ const crearPago = async (req, res) => {
                 }
             } else {
                 // Proveedor
-                const idProveedorResult = await client.query(
-                    'SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1',
-                    [facturas[0].Id_Factura_Proveedor]
-                );
-                if (idProveedorResult.rows.length === 0) {
-                    throw new Error("No se pudo obtener el proveedor de la factura.");
-                }
-                const idProveedor = idProveedorResult.rows[0].id_proveedor;
-
                 // Bloqueo de concurrencia: FOR UPDATE en pagos con saldo a favor del proveedor
                 const pagosAFAvor = await client.query(
                     `
@@ -405,7 +423,7 @@ const crearPago = async (req, res) => {
                     ORDER BY Fecha_Pago ASC, Id_Pago_Insumo ASC
                     FOR UPDATE
                     `,
-                    [idProveedor]
+                    [targetEntidadId]
                 );
 
                 for (const row of pagosAFAvor.rows) {
@@ -609,39 +627,25 @@ const crearPago = async (req, res) => {
         }
 
         // 5. Actualizar el saldo global de la entidad con bloqueo FOR UPDATE
-        if (montoPago > 0) {
+        if (montoPago > 0 && targetEntidadId) {
             if (Tipo === "cliente") {
-                const idClienteResult = await client.query(
-                    'SELECT Id_Cliente FROM Pedido WHERE Id_Pedido = $1',
-                    [facturas[0].Id_Pedido]
+                await client.query(
+                    `SELECT Id_Cliente FROM Cliente WHERE Id_Cliente = $1 FOR UPDATE`,
+                    [targetEntidadId]
                 );
-                if (idClienteResult.rows.length > 0) {
-                    const idClienteGlobal = idClienteResult.rows[0].id_cliente;
-                    await client.query(
-                        `SELECT Id_Cliente FROM Cliente WHERE Id_Cliente = $1 FOR UPDATE`,
-                        [idClienteGlobal]
-                    );
-                    await client.query(
-                        `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
-                        [montoPago, idClienteGlobal]
-                    );
-                }
+                await client.query(
+                    `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
+                    [montoPago, targetEntidadId]
+                );
             } else {
-                const idProveedorResult = await client.query(
-                    'SELECT Id_Proveedor FROM Factura_Proveedor WHERE Id_Factura_Proveedor = $1',
-                    [facturas[0].Id_Factura_Proveedor]
+                await client.query(
+                    `SELECT Id_Proveedor FROM Proveedor WHERE Id_Proveedor = $1 FOR UPDATE`,
+                    [targetEntidadId]
                 );
-                if (idProveedorResult.rows.length > 0) {
-                    const idProveedorGlobal = idProveedorResult.rows[0].id_proveedor;
-                    await client.query(
-                        `SELECT Id_Proveedor FROM Proveedor WHERE Id_Proveedor = $1 FOR UPDATE`,
-                        [idProveedorGlobal]
-                    );
-                    await client.query(
-                        `UPDATE Proveedor SET Saldo = Saldo - $1 WHERE Id_Proveedor = $2`,
-                        [montoPago, idProveedorGlobal]
-                    );
-                }
+                await client.query(
+                    `UPDATE Proveedor SET Saldo = Saldo - $1 WHERE Id_Proveedor = $2`,
+                    [montoPago, targetEntidadId]
+                );
             }
         }
 

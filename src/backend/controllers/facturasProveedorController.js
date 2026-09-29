@@ -366,6 +366,7 @@ const eliminarFactura = async (req, res) => {
         );
 
         if (pagos.rows.length > 0) {
+            await client.query("ROLLBACK");
             return res.status(400).json({
                 error: "No se puede eliminar esta factura porque posee pagos registrados. Debe anular los pagos primero."
             });

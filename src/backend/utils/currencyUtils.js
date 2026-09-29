@@ -17,22 +17,40 @@ function parseMoney(val) {
 
   // Remover símbolos de moneda y caracteres invisibles/espacios
   str = str.replace(/[^0-9.,\-+]/g, "");
+  if (!str) return 0;
 
-  // Si tiene tanto punto como coma, determinar cuál es el separador decimal
   const lastDot = str.lastIndexOf(".");
   const lastComma = str.lastIndexOf(",");
 
   if (lastDot !== -1 && lastComma !== -1) {
     if (lastComma > lastDot) {
-      // Formato argentino/europeo: 1.250,50 -> remover puntos, cambiar coma por punto
+      // Formato argentino/europeo: 1.250.000,50 -> remover puntos, cambiar coma por punto
       str = str.replace(/\./g, "").replace(",", ".");
     } else {
-      // Formato anglosajón: 1,250.50 -> remover comas
+      // Formato anglosajón: 1,250,000.50 -> remover comas
       str = str.replace(/,/g, "");
     }
   } else if (lastComma !== -1) {
-    // Solo tiene coma: 1250,50 -> 1250.50
-    str = str.replace(",", ".");
+    // Solo tiene coma(s): 1250,50 o 1,250,000
+    const commaCount = (str.match(/,/g) || []).length;
+    if (commaCount > 1) {
+      str = str.replace(/,/g, "");
+    } else {
+      str = str.replace(",", ".");
+    }
+  } else if (lastDot !== -1) {
+    // Solo tiene punto(s): 1.250.000 o 1250.50
+    const dotCount = (str.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      // Múltiples puntos son separadores de miles: 1.250.000 -> 1250000
+      str = str.replace(/\./g, "");
+    } else {
+      // Un solo punto: verificar si es separador de miles latino (ej: 1.250, 15.000) o decimal (ej: 1250.50, 1.25)
+      const matchThousand = str.match(/^(\d{1,3})\.(\d{3})$/);
+      if (matchThousand) {
+        str = matchThousand[1] + matchThousand[2];
+      }
+    }
   }
 
   const num = parseFloat(str);

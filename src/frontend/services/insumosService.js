@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:4000/api/insumos';
+import { API_URL as BASE_API_URL } from '../config/apiConfig.js';
+const API_URL = `${BASE_API_URL}/insumos`;
 
 // Función auxiliar para manejar la respuesta del servidor de forma segura
 const manejarRespuesta = async (respuesta) => {

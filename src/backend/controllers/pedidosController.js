@@ -449,6 +449,31 @@ const crearPedido = async (req, res) => {
             [precioTotal, Id_Cliente]
         );
 
+        // Si el pedido nace como 'pagado', generar el comprobante de pago y compensar el saldo del cliente
+        if (estadoPagoFinal === 'pagado') {
+            const pagoRes = await client.query(
+                `
+                INSERT INTO PagoPedido
+                (Fecha_Pago, Estado_Pago, Monto, Monto_Restante, Id_Medio_Pago)
+                VALUES (NOW(), 'pagado', $1, 0, NULL)
+                RETURNING Id_Pago_Pedido
+                `,
+                [precioTotal]
+            );
+            const idPago = pagoRes.rows[0].id_pago_pedido || pagoRes.rows[0].Id_Pago_Pedido;
+            await client.query(
+                `
+                INSERT INTO Detalle_Pago_Pedido (Id_Pago_Pedido, Id_Pedido, Monto_Usado)
+                VALUES ($1, $2, $3)
+                `,
+                [idPago, pedidoCreado.id_pedido, precioTotal]
+            );
+            await client.query(
+                `UPDATE Cliente SET Saldo = Saldo + $1 WHERE Id_Cliente = $2`,
+                [precioTotal, Id_Cliente]
+            );
+        }
+
         await client.query('COMMIT');
 
         res.status(201).json({
@@ -700,7 +725,17 @@ const actualizarPedido = async (req, res) => {
 
         const diferenciaPrecio = subMoney(nuevoPrecioTotal, precioAnterior);
 
-        let montoAdeudadoFinal = Monto_Adeudado !== undefined ? roundMoney(parseMoney(Monto_Adeudado)) : nuevoPrecioTotal;
+        const montoAdeudadoAnterior = roundMoney(parseMoney(pedidoExiste.rows[0].monto_adeudado));
+        const montoPagadoAnterior = Math.max(0, subMoney(precioAnterior, montoAdeudadoAnterior));
+
+        let montoAdeudadoFinal;
+        if (Monto_Adeudado !== undefined && Monto_Adeudado !== null) {
+            montoAdeudadoFinal = roundMoney(parseMoney(Monto_Adeudado));
+        } else {
+            // Preservar los pagos acumulados y recalcular la deuda restante en función del nuevo precio total
+            montoAdeudadoFinal = Math.max(0, roundMoney(subMoney(nuevoPrecioTotal, montoPagadoAnterior)));
+        }
+
         if (estadoPagoFinal === 'pagado') {
             montoAdeudadoFinal = 0;
         }
@@ -836,6 +871,32 @@ const subirFactura = async (req, res) => {
     }
 };
 
+function detectarMimeComprobante(buf) {
+    if (!Buffer.isBuffer(buf) || buf.length < 4) {
+        return { mime: "application/pdf", ext: "pdf" };
+    }
+    // PDF: %PDF
+    if (buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46) {
+        return { mime: "application/pdf", ext: "pdf" };
+    }
+    // PNG: 89 50 4E 47
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) {
+        return { mime: "image/png", ext: "png" };
+    }
+    // JPEG: FF D8 FF
+    if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) {
+        return { mime: "image/jpeg", ext: "jpg" };
+    }
+    // WEBP: RIFF....WEBP
+    if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 && buf.length >= 12) {
+        const webpStr = buf.toString("ascii", 8, 12);
+        if (webpStr === "WEBP") {
+            return { mime: "image/webp", ext: "webp" };
+        }
+    }
+    return { mime: "application/pdf", ext: "pdf" };
+}
+
 const descargarPdfFactura = async (req, res) => {
     try {
         const { id } = req.params;
@@ -852,17 +913,18 @@ const descargarPdfFactura = async (req, res) => {
         const pedido = resultado.rows[0];
 
         if (!pedido.factura) {
-            return res.status(404).send("Este pedido no tiene un PDF de factura registrado");
+            return res.status(404).send("Este pedido no tiene un comprobante registrado");
         }
 
-        const filename = pedido.nro_factura ? `factura_${pedido.nro_factura}.pdf` : `factura_${id}.pdf`;
+        const { mime, ext } = detectarMimeComprobante(pedido.factura);
+        const filename = pedido.nro_factura ? `factura_${pedido.nro_factura}.${ext}` : `factura_${id}.${ext}`;
 
-        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Type", mime);
         res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
         res.send(pedido.factura);
     } catch (error) {
         console.error("Error en descargarPdfFactura:", error.message);
-        res.status(500).send("Error al descargar el PDF");
+        res.status(500).send("Error al descargar el comprobante");
     }
 };
 
@@ -924,7 +986,7 @@ const eliminarPedido = async (req, res) => {
         const precioTotal = roundMoney(parseMoney(pedido.precio_total));
 
         // 2. Prohibir eliminación si ya fue pagado o tiene saldo parcial
-        if (pedido.estado_pago !== 'pendiente' && pedido.estado_pago !== 'no_se_factura') {
+        if (pedido.estado_pago !== 'pendiente') {
             await client.query('ROLLBACK');
             return res.status(400).json({ 
                 error: "No se puede eliminar un pedido que registra pagos. Por favor, anule los pagos primero." 

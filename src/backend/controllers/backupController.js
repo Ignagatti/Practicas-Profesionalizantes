@@ -86,6 +86,7 @@ async function exportarBackup(req, res) {
           if (typeof val === "boolean") return val ? "true" : "false";
           if (typeof val === "number") return val;
           if (val instanceof Date) return `'${val.toISOString()}'`;
+          if (Buffer.isBuffer(val)) return `'\\x${val.toString("hex")}'`;
           // Escapar comillas simples
           const escaped = String(val).replace(/'/g, "''");
           return `'${escaped}'`;

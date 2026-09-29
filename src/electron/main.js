@@ -1,9 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-// Silenciar advertencias de consola no deseadas
-process.removeAllListeners('warning');
-
 // Cargar backend Node.js
 require(path.join(__dirname, '../backend/server.js'));
 

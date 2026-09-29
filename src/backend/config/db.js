@@ -14,9 +14,15 @@ if (!connectionString) {
     process.exit(1);
 }
 
+const isLocalDb = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+const sslOption = isLocalDb
+    ? false
+    : { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' || process.env.NODE_ENV === 'production' };
+
 const pool = new Pool({
     connectionString: connectionString,
-    ssl: { rejectUnauthorized: false }
+    ssl: sslOption
 });
 
 module.exports = pool;

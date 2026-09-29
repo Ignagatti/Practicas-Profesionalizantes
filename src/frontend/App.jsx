@@ -17,7 +17,7 @@ import LicenciaModal from "./components/LicenciaModal.jsx";
 import logoAcuaber from "./assets/logo-acuaber.png";
 import { Loader2, Menu } from "lucide-react";
 
-const API_URL = "http://localhost:4000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 function App() {
   const [seccion, setSeccion] = useState("dashboard");
@@ -269,7 +269,7 @@ function App() {
     <ErrorBoundary onReset={() => setSeccion("dashboard")}>
       <ToastProvider>
         <ConfirmProvider>
-          <div className="flex bg-gray-100 min-h-screen">
+          <div className="flex bg-gray-100 min-h-screen w-full overflow-x-hidden">
             <Sidebar
               seccionActual={seccion}
               setSeccion={setSeccion}
@@ -277,7 +277,7 @@ function App() {
               onClose={() => setSidebarOpen(false)}
             />
 
-            <main className="flex-1 w-full min-w-0 lg:ml-64 p-4 sm:p-6 lg:p-8 min-h-screen flex flex-col">
+            <main className="flex-1 w-full min-w-0 lg:ml-64 p-3 sm:p-5 lg:p-6 min-h-screen flex flex-col">
               <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
                 <div className="flex items-center gap-3">
                   <button

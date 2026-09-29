@@ -15,7 +15,7 @@ const fileFilter = (req, file, cb) => {
     const allowedExts = [".pdf", ".jpg", ".jpeg", ".png", ".webp"];
     const ext = path.extname(file.originalname).toLowerCase();
 
-    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+    if (allowedMimes.includes(file.mimetype) && allowedExts.includes(ext)) {
         cb(null, true);
     } else {
         cb(new Error("Tipo de archivo no permitido. Solo se admiten documentos PDF e imágenes (JPG, PNG, WEBP)."), false);

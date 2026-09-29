@@ -21,14 +21,17 @@ const crearInsumo = async (req, res) => {
     const { nombre, categoria, precio_unitario } = req.body;
 
     // VALIDACIONES
-    if (!nombre || !categoria || precio_unitario === undefined) {
+    if (!nombre || !categoria || precio_unitario === undefined || precio_unitario === null) {
         return res.status(400).json({ error: 'Faltan datos obligatorios' });
     }
-    if (precio_unitario < 0) return res.status(400).json({ error: 'El precio no puede ser negativo' });
+    const precioNum = parseFloat(precio_unitario);
+    if (isNaN(precioNum) || precioNum < 0) {
+        return res.status(400).json({ error: 'El precio no puede ser negativo o inválido' });
+    }
 
     try {
         const query = 'INSERT INTO Insumo (Nombre, Categoria, Precio_Unitario, Activo) VALUES ($1, $2, $3, true) RETURNING *';
-        const valores = [nombre, categoria, precio_unitario];
+        const valores = [nombre, categoria, precioNum];
         const resultado = await pool.query(query, valores);
         res.status(201).json(resultado.rows[0]);
     } catch (error) {
@@ -42,9 +45,18 @@ const actualizarInsumo = async (req, res) => {
     const { id } = req.params;
     const { nombre, categoria, precio_unitario } = req.body;
 
+    // VALIDACIONES
+    if (!nombre || !categoria || precio_unitario === undefined || precio_unitario === null) {
+        return res.status(400).json({ error: 'Faltan datos obligatorios' });
+    }
+    const precioNum = parseFloat(precio_unitario);
+    if (isNaN(precioNum) || precioNum < 0) {
+        return res.status(400).json({ error: 'El precio no puede ser negativo o inválido' });
+    }
+
     try {
         const query = 'UPDATE Insumo SET Nombre = $1, Categoria = $2, Precio_Unitario = $3 WHERE Id_Insumo = $4 RETURNING *';
-        const valores = [nombre, categoria, precio_unitario, id];
+        const valores = [nombre, categoria, precioNum, id];
         const resultado = await pool.query(query, valores);
 
         if (resultado.rowCount === 0) return res.status(404).json({ error: 'Insumo no encontrado' });

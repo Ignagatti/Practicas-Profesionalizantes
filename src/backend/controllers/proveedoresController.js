@@ -248,7 +248,7 @@ const crearDireccionProveedor = async (req, res) => {
         const { id } = req.params;
         const { Calle, Codigo_Postal, Provincia, Ciudad, Numero } = req.body;
 
-        if (!Calle || !Provincia || !Ciudad || !Numero) {
+        if (!Calle || !Provincia || !Ciudad || Numero === undefined || Numero === null || String(Numero).trim() === '') {
             return res.status(400).json({
                 error: 'Calle, Provincia, Ciudad y Número son obligatorios'
             });
@@ -283,7 +283,7 @@ const actualizarDireccionProveedor = async (req, res) => {
         const { idDireccion } = req.params;
         const { Calle, Codigo_Postal, Provincia, Ciudad, Numero } = req.body;
 
-        if (!Calle || !Provincia || !Ciudad || !Numero) {
+        if (!Calle || !Provincia || !Ciudad || Numero === undefined || Numero === null || String(Numero).trim() === '') {
             return res.status(400).json({
                 error: 'Calle, Provincia, Ciudad y Número son obligatorios'
             });

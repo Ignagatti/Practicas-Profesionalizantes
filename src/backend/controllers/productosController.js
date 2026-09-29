@@ -36,10 +36,14 @@ const crearProducto = async (req, res) => {
     if (Number(cantidad) <= 0) {
         return res.status(400).json({ error: 'La cantidad del producto debe ser mayor a cero (no se permiten cantidades en cero o negativas).' });
     }
+    const precioNum = Number(precio);
+    if (precio !== undefined && (isNaN(precioNum) || precioNum < 0)) {
+        return res.status(400).json({ error: 'El precio del producto debe ser un número válido mayor o igual a cero.' });
+    }
 
     try {
         const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido, Id_Cliente, Activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING *';
-        const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, precio || 0, observaciones || '', fecha_pedido || new Date(), id_cliente || null];
+        const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, isNaN(precioNum) ? 0 : precioNum, observaciones || '', fecha_pedido || new Date(), id_cliente || null];
         const resultado = await pool.query(query, valores);
         res.status(201).json(resultado.rows[0]);
     } catch (error) {
@@ -56,13 +60,17 @@ const actualizarProducto = async (req, res) => {
     if (Number(cantidad) <= 0) {
         return res.status(400).json({ error: 'La cantidad debe ser mayor a cero.' });
     }
+    const precioNum = Number(precio);
+    if (precio !== undefined && (isNaN(precioNum) || precioNum < 0)) {
+        return res.status(400).json({ error: 'El precio del producto debe ser un número válido mayor o igual a cero.' });
+    }
 
     try {
         const prodActual = await pool.query('SELECT Estado FROM Producto WHERE Id_Producto = $1', [id]);
         if (prodActual.rowCount === 0) return res.status(404).json({ error: 'Producto no encontrado' });
 
         const query = 'UPDATE Producto SET Modelo = $1, Tela = $2, Color_Lustre = $3, Estado = COALESCE($4, Estado), Cantidad = $5, Precio = $6, Observaciones = $7, Fecha_Pedido = $8, Id_Cliente = $9 WHERE Id_Producto = $10 RETURNING *';
-        const valores = [modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente || null, id];
+        const valores = [modelo, tela, color_lustre, estado, cantidad, isNaN(precioNum) ? 0 : precioNum, observaciones, fecha_pedido, id_cliente || null, id];
         const resultado = await pool.query(query, valores);
 
         res.json(resultado.rows[0]);

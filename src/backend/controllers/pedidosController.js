@@ -86,7 +86,7 @@ const obtenerPedidos = async (req, res) => {
                 p.Monto_Adeudado,
                 p.Estado_Pago,
                 CASE 
-                    WHEN p.Factura IS NOT NULL THEN 'http://localhost:4000/api/pedidos/' || p.Id_Pedido || '/factura/pdf'
+                    WHEN p.Factura IS NOT NULL THEN '/api/pedidos/' || p.Id_Pedido || '/factura/pdf'
                     ELSE NULL 
                 END AS pdf_factura_url,
                 CASE 
@@ -155,7 +155,7 @@ const obtenerPedidoPorId = async (req, res) => {
                 p.Monto_Adeudado,
                 p.Estado_Pago,
                 CASE 
-                    WHEN p.Factura IS NOT NULL THEN 'http://localhost:4000/api/pedidos/' || p.Id_Pedido || '/factura/pdf'
+                    WHEN p.Factura IS NOT NULL THEN '/api/pedidos/' || p.Id_Pedido || '/factura/pdf'
                     ELSE NULL 
                 END AS pdf_factura_url,
                 CASE 

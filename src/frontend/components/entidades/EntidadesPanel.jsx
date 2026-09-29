@@ -624,16 +624,7 @@ export function EntidadesPanel({
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Gestión de {obtenerNombrePlural(tipoVista)}
-          </h2>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {filtradas.length} {obtenerNombrePlural(tipoVista)} registrados
-          </p>
-        </div>
-
+      <div className="flex justify-end items-center">
         <div className="flex flex-wrap items-center gap-2">
           {mostrarSelector && (
             <div className="flex bg-gray-100 rounded-lg p-1">
@@ -681,6 +672,23 @@ export function EntidadesPanel({
             <Plus size={18} />
             Agregar {obtenerNombreEntidad(tipoVista)}
           </button>
+        </div>
+      </div>
+
+      {/* Indicador KPI: Cantidad de Clientes / Proveedores Registrados */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              Cantidad de {obtenerNombrePlural(tipoVista)} Registrados
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+              {entidades.length}
+            </p>
+          </div>
+          <div className="p-3 bg-red-50 rounded-xl text-red-700">
+            {tipoVista === "cliente" ? <Users size={26} /> : <Truck size={26} />}
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Printer, X, Eye, CheckCircle2, Send } from "lucide-react";
+import { Plus, Edit, Trash2, Printer, X, Eye, CheckCircle2, Send, Package } from "lucide-react";
 import { 
     obtenerProductos, 
     crearProducto, 
@@ -413,16 +413,23 @@ function Productos() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Gestión de Productos</h2>
-                    <p className="text-gray-500 text-sm mt-0.5">{filteredProductos.length} productos registrados</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <button onClick={() => setShowSelectionModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm text-sm"><Printer size={17} /> Imprimir Planilla</button>
-                    <button onClick={() => setShowTerminarModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3.5 py-2 rounded-lg font-semibold shadow-sm text-sm"><CheckCircle2 size={17} /> Terminar Productos</button>
-                    <button onClick={() => setShowEnviarModal(true)} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-lg font-semibold shadow-sm text-sm"><Send size={17} /> Marcar como Enviado</button>
-                    <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 font-semibold shadow-sm text-sm"><Plus size={18} /> Agregar Producto</button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+                <button onClick={() => setShowSelectionModal(true)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 font-semibold shadow-sm text-sm"><Printer size={17} /> Imprimir Planilla</button>
+                <button onClick={() => setShowTerminarModal(true)} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3.5 py-2 rounded-lg font-semibold shadow-sm text-sm"><CheckCircle2 size={17} /> Terminar Productos</button>
+                <button onClick={() => setShowEnviarModal(true)} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-lg font-semibold shadow-sm text-sm"><Send size={17} /> Marcar como Enviado</button>
+                <button onClick={handleOpenAdd} className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 font-semibold shadow-sm text-sm"><Plus size={18} /> Agregar Producto</button>
+            </div>
+
+            {/* Indicador de Cantidad de Pedidos Realizados */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Cantidad de Pedidos Realizados</p>
+                        <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">{productos.length}</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-xl text-red-700">
+                        <Package size={26} />
+                    </div>
                 </div>
             </div>
 

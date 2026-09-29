@@ -322,6 +322,18 @@ export default function Pagos() {
   const confirm = useConfirm();
 
   const [tipoVista, setTipoVista] = useState("cliente");
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("acuaber:cambiar_titulo", {
+        detail:
+          tipoVista === "cliente"
+            ? "Gestión de Pagos - Clientes"
+            : "Gestión de Pagos - Proveedores",
+      })
+    );
+  }, [tipoVista]);
+
   const [pagos, setPagos] = useState([]);
   const [facturas, setFacturas] = useState([]);
   const [clientesTotales, setClientesTotales] = useState([]);
@@ -1124,61 +1136,66 @@ export default function Pagos() {
 
       {/* HEADER */}
 
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Pagos a {tipoVista === "proveedor" ? "proveedores" : "clientes"}
-          </h2>
-
-          <p className="text-gray-500 text-sm mt-0.5">
-            {pagosFiltrados.length} pagos registrados
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setTipoVista("cliente");
-                setSearchTerm("");
-                setFechaDesde("");
-                setFechaHasta("");
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
-                tipoVista === "cliente"
-                  ? "bg-white text-red-700 shadow-sm font-semibold"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              Clientes
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setTipoVista("proveedor");
-                setSearchTerm("");
-                setFechaDesde("");
-                setFechaHasta("");
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
-                tipoVista === "proveedor"
-                  ? "bg-white text-red-700 shadow-sm font-semibold"
-                  : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              Proveedores
-            </button>
-          </div>
-
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex bg-gray-100 rounded-lg p-1">
           <button
             type="button"
-            onClick={abrirAdd}
-            className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
+            onClick={() => {
+              setTipoVista("cliente");
+              setSearchTerm("");
+              setFechaDesde("");
+              setFechaHasta("");
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
+              tipoVista === "cliente"
+                ? "bg-white text-red-700 shadow-sm font-semibold"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
           >
-            <Plus size={18} />
-            Registrar pago
+            Clientes
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setTipoVista("proveedor");
+              setSearchTerm("");
+              setFechaDesde("");
+              setFechaHasta("");
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ${
+              tipoVista === "proveedor"
+                ? "bg-white text-red-700 shadow-sm font-semibold"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Proveedores
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={abrirAdd}
+          className="bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
+        >
+          <Plus size={18} />
+          Registrar pago
+        </button>
+      </div>
+
+      {/* Indicador de Cantidad de Pagos Registrados */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-5 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              Cantidad de Pagos Registrados
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+              {pagos.length}
+            </p>
+          </div>
+          <div className="p-3 bg-red-50 rounded-xl text-red-700">
+            <DollarSign size={26} />
+          </div>
         </div>
       </div>
 

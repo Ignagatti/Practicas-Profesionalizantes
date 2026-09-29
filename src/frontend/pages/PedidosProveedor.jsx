@@ -244,6 +244,11 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
   };
 
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('acuaber:cambiar_titulo', { detail: 'Gestión de Pedidos - Proveedores' }));
+  }, []);
+
   const [filterEstado, setFilterEstado] = useState("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
@@ -836,41 +841,74 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
 
       {/* HEADER */}
 
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Compras (Pedidos a Proveedores)
-          </h2>
-
-          <p className="text-gray-500 text-sm mt-0.5">
-            {facturasFiltradas.length} facturas registradas
-          </p>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setTipoVista && setTipoVista("cliente")}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
+          >
+            Clientes
+          </button>
+          <button
+            onClick={() => setTipoVista && setTipoVista("proveedor")}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
+          >
+            Proveedores
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setTipoVista && setTipoVista("cliente")}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors text-gray-600 hover:text-gray-800"
-            >
-              Clientes
-            </button>
-            <button
-              onClick={() => setTipoVista && setTipoVista("proveedor")}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors bg-white text-red-700 shadow-sm font-semibold"
-            >
-              Proveedores
-            </button>
-          </div>
+        <button
+          type="button"
+          onClick={abrirAdd}
+          className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
+        >
+          <Plus size={18} />
+          Agregar factura
+        </button>
+      </div>
 
-          <button
-            type="button"
-            onClick={abrirAdd}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
-          >
-            <Plus size={18} />
-            Agregar factura
-          </button>
+      {/* Indicadores de Facturas / Remitos */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-green-600 uppercase tracking-wider">
+              Facturas Pagas
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-green-700 mt-1">
+              {facturas.filter((f) => f.estado_pago === "pagado").length}
+            </p>
+          </div>
+          <div className="p-3 bg-green-50 rounded-xl text-green-600">
+            <DollarSign size={24} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-amber-600 uppercase tracking-wider">
+              Parcialmente Pagas
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-amber-700 mt-1">
+              {facturas.filter((f) => f.estado_pago === "parcial").length}
+            </p>
+          </div>
+          <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+            <DollarSign size={24} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-red-600 uppercase tracking-wider">
+              Facturas Impagas
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-red-700 mt-1">
+              {facturas.filter((f) => f.estado_pago === "pendiente").length}
+            </p>
+          </div>
+          <div className="p-3 bg-red-50 rounded-xl text-red-600">
+            <DollarSign size={24} />
+          </div>
         </div>
       </div>
 

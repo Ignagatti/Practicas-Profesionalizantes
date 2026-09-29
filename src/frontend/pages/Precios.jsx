@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -7,6 +7,9 @@ import {
   Edit2,
   DollarSign,
   X,
+  Package,
+  Layers,
+  Palette
 } from "lucide-react";
 import { useToast } from "../components/ui/ToastContext.jsx";
 import { useConfirm } from "../components/ui/ConfirmContext.jsx";
@@ -134,52 +137,74 @@ export function Precios() {
     }
   };
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('acuaber:cambiar_titulo', { detail: 'Lista de Precios' }));
+  }, []);
+
   // ── Render ────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Lista de Precios - Insumos
-          </h2>
-          <p className="text-gray-500 text-sm mt-0.5">{filteredInsumos.length} insumos registrados</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowAjusteModal(true)}
-            className="flex items-center gap-2 bg-purple-600 text-white px-3.5 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold shadow-sm"
-          >
-            <Percent size={17} />
-            Ajuste por %
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
-          >
-            <Plus size={18} />
-            Agregar Insumo
-          </button>
-        </div>
+      <div className="flex justify-end gap-2 items-center">
+        <button
+          onClick={() => setShowAjusteModal(true)}
+          className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-semibold text-sm"
+        >
+          <Percent size={17} />
+          Ajustar por %
+        </button>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors text-sm font-semibold shadow-sm"
+        >
+          <Plus size={18} />
+          Agregar a Lista de Precios
+        </button>
       </div>
 
-      {/* Resumen por categoría */}
+      {/* Indicadores KPI: Modelos, Telas, Lustres */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        {Object.entries(conteosPorCategoria).map(([categoria, cantidad]) => (
-          <div
-            key={categoria}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-3.5 sm:p-4 flex items-center justify-between"
-          >
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${CATEGORIA_COLORS[categoria]}`}
-            >
-              {categoria}
-            </span>
-            <span className="text-gray-600 text-sm font-medium">
-              {cantidad} insumo{cantidad !== 1 ? "s" : ""}
-            </span>
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-red-700 uppercase tracking-wider">
+              Modelos Registrados
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+              {conteosPorCategoria.Modelo || 0}
+            </p>
           </div>
-        ))}
+          <div className="p-3 bg-red-50 rounded-xl text-red-700">
+            <Package size={24} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-pink-700 uppercase tracking-wider">
+              Telas Registradas
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+              {conteosPorCategoria.Tela || 0}
+            </p>
+          </div>
+          <div className="p-3 bg-pink-50 rounded-xl text-pink-700">
+            <Layers size={24} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-amber-700 uppercase tracking-wider">
+              Lustres Registrados
+            </p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+              {conteosPorCategoria.Lustre || 0}
+            </p>
+          </div>
+          <div className="p-3 bg-amber-50 rounded-xl text-amber-700">
+            <Palette size={24} />
+          </div>
+        </div>
       </div>
 
       {/* Filtros */}

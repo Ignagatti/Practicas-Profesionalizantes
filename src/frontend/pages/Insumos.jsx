@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, X, Percent } from "lucide-react";
+import { Search, Plus, Edit, Trash2, X, Percent, Package, Layers, Palette } from "lucide-react";
 import { 
     obtenerInsumos, 
     crearInsumo, 
@@ -141,25 +141,64 @@ function Insumos() {
 
     return (
         <div className="space-y-6">
-            {/* Header Principal */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Lista de Precios</h2>
-                    <p className="text-gray-500 text-sm mt-0.5">{filteredInsumos.length} insumos registrados</p>
+            {/* Header Principal con Botones de Acción */}
+            <div className="flex justify-end gap-2 items-center">
+                <button 
+                    onClick={() => setShowAdjustModal(true)}
+                    className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-semibold text-sm"
+                >
+                    <Percent size={17} /> Ajustar por %
+                </button>
+                <button 
+                    onClick={handleOpenAdd}
+                    className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors font-semibold text-sm shadow-sm"
+                >
+                    <Plus size={18} /> Agregar a Lista de Precios
+                </button>
+            </div>
+
+            {/* Indicadores KPI: Modelos, Telas, Lustres */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-semibold text-red-700 uppercase tracking-wider">
+                            Modelos Registrados
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+                            {insumos.filter(i => (i.categoria || i.Categoria) === 'Modelo').length}
+                        </p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-xl text-red-700">
+                        <Package size={24} />
+                    </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    <button 
-                        onClick={() => setShowAdjustModal(true)}
-                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3.5 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-semibold text-sm"
-                    >
-                        <Percent size={17} /> Ajustar por %
-                    </button>
-                    <button 
-                        onClick={handleOpenAdd}
-                        className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors font-semibold text-sm shadow-sm"
-                    >
-                        <Plus size={18} /> Agregar Insumo
-                    </button>
+
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-semibold text-pink-700 uppercase tracking-wider">
+                            Telas Registradas
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+                            {insumos.filter(i => (i.categoria || i.Categoria) === 'Tela').length}
+                        </p>
+                    </div>
+                    <div className="p-3 bg-pink-50 rounded-xl text-pink-700">
+                        <Layers size={24} />
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <p className="text-xs sm:text-sm font-semibold text-amber-700 uppercase tracking-wider">
+                            Lustres Registrados
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">
+                            {insumos.filter(i => (i.categoria || i.Categoria) === 'Lustre').length}
+                        </p>
+                    </div>
+                    <div className="p-3 bg-amber-50 rounded-xl text-amber-700">
+                        <Palette size={24} />
+                    </div>
                 </div>
             </div>
 

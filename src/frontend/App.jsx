@@ -179,17 +179,34 @@ function App() {
     }
   };
 
+  const [tituloPersonalizado, setTituloPersonalizado] = useState("");
+
+  useEffect(() => {
+    setTituloPersonalizado("");
+  }, [seccion]);
+
+  useEffect(() => {
+    const handleCambiarTitulo = (e) => {
+      if (e.detail) {
+        setTituloPersonalizado(e.detail);
+      }
+    };
+    window.addEventListener('acuaber:cambiar_titulo', handleCambiarTitulo);
+    return () => window.removeEventListener('acuaber:cambiar_titulo', handleCambiarTitulo);
+  }, []);
+
   const obtenerTituloSeccion = () => {
+    if (tituloPersonalizado) return tituloPersonalizado;
     const titulos = {
       dashboard: "Panel de control",
       productos: "Productos",
-      insumos: "Insumos",
+      insumos: "Lista de Precios",
       clientes: "Clientes",
       proveedores: "Proveedores",
       movimientos: "Historial de movimientos",
-      pagos: "Gestión de Pagos",
-      pedidos: "Gestión de Pedidos",
-      precios: "Historial de Precios",
+      pagos: "Gestión de Pagos - Clientes",
+      pedidos: "Gestión de Pedidos - Clientes",
+      precios: "Lista de Precios",
       saldos: "Control de Saldos",
     };
 
@@ -292,9 +309,6 @@ function App() {
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                       {obtenerTituloSeccion()}
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-500">
-                      Gestión Administrativa - Fabricación de Sillas y Sillones
-                    </p>
                   </div>
                 </div>
 

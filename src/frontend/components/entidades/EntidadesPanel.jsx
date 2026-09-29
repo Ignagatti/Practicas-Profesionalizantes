@@ -705,31 +705,31 @@ export function EntidadesPanel({
               No hay {obtenerNombrePlural(tipoVista)} para mostrar.
             </div>
           ) : (
-            <table className="w-full min-w-[780px] text-left">
+            <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Nombre
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Razón Social
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     CUIT/CUIL
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Teléfono
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Email
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Saldo
                   </th>
-                  <th className="px-4 py-3 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-left text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Estado
                   </th>
-                  <th className="px-4 py-3 text-right text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
+                  <th className="px-2.5 sm:px-3 py-2.5 text-right text-xs text-gray-500 uppercase font-bold whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
@@ -741,29 +741,29 @@ export function EntidadesPanel({
                     key={entidad.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-800">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold text-gray-800">
                       {entidad.nombre} {entidad.apellido}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-gray-600">
                       {entidad.razonSocial || "—"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-gray-600">
                       {entidad.cuit}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-gray-600">
                       {entidad.telefono}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-gray-600">
                       {entidad.email}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm">
                       {(() => {
                         const totalCredito = Number(entidad.total_a_favor || 0);
                         const totalDeuda = Number(entidad.total_en_contra || 0);
                         const saldoNeto = totalCredito - totalDeuda;
                         
                         return (
-                          <div className="flex flex-col gap-0.5 text-xs min-w-[130px]">
+                          <div className="flex flex-col gap-0.5 text-xs min-w-[120px]">
                             {totalCredito > 0 && (
                               <div className="flex justify-between gap-2 text-green-600 font-semibold">
                                 <span>A Favor:</span>
@@ -786,9 +786,9 @@ export function EntidadesPanel({
                         );
                       })()}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-2.5 sm:px-3 py-2 text-xs sm:text-sm">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
                           entidad.estado === "activo"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
@@ -805,10 +805,10 @@ export function EntidadesPanel({
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm">
+                    <td className="px-2.5 sm:px-3 py-2 text-right text-xs sm:text-sm">
                       <button
                         onClick={() => handleView(entidad)}
-                        className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                        className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
                         title={`Visualizar ${obtenerNombreEntidad(tipoVista).toLowerCase()}`}
                       >
                         <Eye size={16} />

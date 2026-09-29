@@ -1168,38 +1168,38 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-[800px] text-left">
+          <table className="w-full min-w-[650px] lg:min-w-0 text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   N° VENTA
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Cliente
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Fecha
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Pago
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Factura
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Total
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Monto Adeudado
                 </th>
-                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-200">
               {cargando ? (
                 <tr>
-                  <td colSpan="8" className="px-4 py-6 text-center text-gray-500">
+                  <td colSpan="8" className="px-4 py-6 text-center text-gray-500 text-xs sm:text-sm">
                     Cargando pedidos...
                   </td>
                 </tr>
@@ -1208,10 +1208,10 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                   <td colSpan="8" className="px-4 py-10 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Package size={36} className="text-gray-300" />
-                      <p className="text-gray-600 font-medium">
+                      <p className="text-gray-600 font-medium text-xs sm:text-sm">
                         No hay pedidos para mostrar
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-xs text-gray-400">
                         Probá modificar los filtros o agregá un nuevo pedido.
                       </p>
                     </div>
@@ -1227,48 +1227,48 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                       key={pedido.id_pedido}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-bold">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800 font-bold">
                         VENT-{String(pedido.id_pedido).padStart(3, "0")}
                       </td>
 
-                      <td className="px-6 py-4 text-sm text-gray-800 font-medium">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800 font-medium">
                         {getNombreCliente(pedido)}
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                         {formatearFecha(pedido.fecha_generacion)}
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-bold ${pagoInfo.color}`}
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold ${pagoInfo.color}`}
                         >
                           {pagoInfo.label}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-bold ${facturaInfo.color}`}
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold ${facturaInfo.color}`}
                         >
                           {facturaInfo.label}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800 font-semibold">
                         ${formatearPrecio(pedido.precio_total)}
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm font-semibold">
                         <span className={Number(pedido.monto_adeudado) > 0 ? "text-red-700 font-bold" : "text-green-700 font-bold"}>
                           ${formatearPrecio(pedido.monto_adeudado ?? 0)}
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
                         <button
                           onClick={() => handleView(pedido)}
-                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
                           title="Ver detalles"
                         >
                           <Eye size={16} />

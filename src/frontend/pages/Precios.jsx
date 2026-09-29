@@ -210,19 +210,19 @@ export function Precios() {
       {/* Tabla de Insumos */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-[600px] text-left">
+          <table className="w-full min-w-[500px] lg:min-w-0 text-left">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Categoría
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Nombre del Insumo
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                   Precio Unitario
                 </th>
-                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
+                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -230,7 +230,7 @@ export function Precios() {
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-3 py-8 text-center text-gray-400 text-sm"
+                    className="px-3 py-8 text-center text-gray-400 text-xs sm:text-sm"
                   >
                     No se encontraron insumos
                   </td>
@@ -241,32 +241,32 @@ export function Precios() {
                     key={insumo.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
+                        className={`px-2 py-0.5 rounded-full text-xs ${
                           CATEGORIA_COLORS[insumo.categoria] || "bg-gray-100 text-gray-700"
                         }`}
                       >
                         {insumo.categoria}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800">
                       {insumo.nombre}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800">
                       <div className="flex items-center gap-1">
                         <DollarSign size={16} className="text-green-600" />
                         {insumo.precioUnitario.toLocaleString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => {
                             setEditingInsumo({ ...insumo });
                             setShowEditModal(true);
                           }}
-                          className="p-2 hover:bg-orange-50 rounded-lg transition-colors text-orange-600"
+                          className="p-1.5 hover:bg-orange-50 rounded-lg transition-colors text-orange-600"
                           title="Editar insumo"
                         >
                           <Edit2 size={16} />

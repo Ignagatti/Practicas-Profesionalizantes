@@ -277,8 +277,8 @@ function App() {
               onClose={() => setSidebarOpen(false)}
             />
 
-            <main className="flex-1 w-full min-w-0 lg:ml-64 p-3 sm:p-5 lg:p-6 min-h-screen flex flex-col">
-              <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <main className="flex-1 w-full min-w-0 lg:ml-64 p-3 sm:p-4 lg:p-5 min-h-screen flex flex-col">
+              <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 sm:mb-6">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -292,7 +292,7 @@ function App() {
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                       {obtenerTituloSeccion()}
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       Gestión Administrativa - Fabricación de Sillas y Sillones
                     </p>
                   </div>
@@ -333,7 +333,7 @@ function App() {
                 </div>
               </header>
 
-              <div className="animate-in fade-in duration-300 flex-1 min-w-0">
+              <div className="animate-in fade-in duration-300 flex-1 min-w-0 w-full max-w-full">
                 <ErrorBoundary onReset={() => setSeccion("dashboard")}>
                   {renderContenido()}
                 </ErrorBoundary>

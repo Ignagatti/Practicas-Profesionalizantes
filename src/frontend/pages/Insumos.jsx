@@ -188,49 +188,49 @@ function Insumos() {
             {/* TABLA PRINCIPAL */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left min-w-[600px]">
+                    <table className="w-full text-left min-w-[500px] lg:min-w-0">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CATEGORÍA</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">NOMBRE DEL INSUMO</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">PRECIO UNITARIO</th>
-                                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CATEGORÍA</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">NOMBRE DEL INSUMO</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">PRECIO UNITARIO</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {cargando ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-10 text-center text-gray-500 font-medium">Cargando insumos...</td>
+                                    <td colSpan="4" className="px-4 py-8 text-center text-gray-500 font-medium text-xs sm:text-sm">Cargando insumos...</td>
                                 </tr>
                             ) : filteredInsumos.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-10 text-center text-gray-400 italic">No se encontraron insumos.</td>
+                                    <td colSpan="4" className="px-4 py-8 text-center text-gray-400 italic text-xs sm:text-sm">No se encontraron insumos.</td>
                                 </tr>
                             ) : filteredInsumos.map((i) => (
                                 <tr key={i.id_insumo || i.Id_Insumo} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 font-medium">
-                                        <span className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 font-medium">
+                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
                                             {i.categoria || i.Categoria}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-900 font-medium">
                                         {i.nombre || i.Nombre}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-800">
+                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800">
                                         $ {(Number(i.precio_unitario || i.Precio_Unitario) || 0).toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right">
                                         <div className="flex justify-end gap-1">
                                             <button 
                                                 onClick={() => handleOpenEdit(i)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                 title="Editar"
                                             >
                                                 <Edit size={16} />
                                             </button>
                                             <button 
                                                 onClick={() => handleEliminar(i.id_insumo || i.Id_Insumo)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                 title="Borrar"
                                             >
                                                 <Trash2 size={16} />

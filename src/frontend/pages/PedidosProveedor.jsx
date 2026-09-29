@@ -983,38 +983,38 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               No hay facturas para mostrar.
             </div>
           ) : (
-            <table className="w-full min-w-[760px] text-left">
+            <table className="w-full min-w-[650px] lg:min-w-0 text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     N° COMPRA
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Fecha
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Pago
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Tipo
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Total
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Monto Adeudado
                   </th>
 
-                  <th className="px-4 py-3 sm:px-5 sm:py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Acciones
                   </th>
                 </tr>
@@ -1028,23 +1028,23 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                     }
                     className="hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-800 font-bold">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800 font-bold">
                       COMP-{String(factura.id_factura_proveedor).padStart(3, '0')}
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-900 font-medium">
                       {factura.proveedor}
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                       {formatearFecha(
                         factura.fecha_emision
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                           estadoConfig[
                             factura.estado_pago
                           ]?.color ||
@@ -1058,32 +1058,32 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                       </span>
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-500 capitalize leading-[1.25]">
-                       <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${factura.tipo_comprobante === 'remito' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-500 capitalize leading-[1.25]">
+                       <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${factura.tipo_comprobante === 'remito' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                          {factura.tipo_comprobante}
                        </span>
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm text-gray-800 font-semibold">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-800 font-semibold">
                       ${formatearDinero(
                         factura.precio_total
                       )}
                     </td>
 
-                    <td className="px-4 py-3.5 sm:px-6 sm:py-4 whitespace-nowrap text-sm font-semibold">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm font-semibold">
                       <span className={Number(factura.monto_adeudado) > 0 ? "text-red-700 font-bold" : "text-green-700 font-bold"}>
                         ${formatearDinero(factura.monto_adeudado)}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() =>
                             abrirVer(factura)
                           }
-                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
                           title="Ver detalles"
                         >
                           <Eye size={16} />

@@ -800,38 +800,38 @@ export function Movimientos() {
               No hay movimientos para mostrar.
             </div>
           ) : (
-            <table className="w-full min-w-[850px] text-left">
+            <table className="w-full min-w-[650px] lg:min-w-0 text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Fecha
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Tipo
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Referencia
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Estado
                   </th>
 
-                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Monto
                   </th>
 
-                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Impacto
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -855,16 +855,16 @@ export function Movimientos() {
                         key={`${movimiento.tipo_movimiento}-${movimiento.id_movimiento}-${movimiento.id_proveedor}`}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-600">
                           {formatearFecha(
                             movimiento.fecha_movimiento
                           )}
                         </td>
 
 
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
                               esFactura
                                 ? "bg-blue-100 text-blue-700"
                                 : "bg-green-100 text-green-700"
@@ -883,7 +883,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-6 py-4 text-sm text-gray-800">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800">
                           <div className="flex items-center gap-2">
                             <Building2
                               size={15}
@@ -895,21 +895,21 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-6 py-4 text-sm text-gray-700">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-700">
                           {movimiento.referencia || "—"}
                         </td>
 
 
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${estado.clase}`}
+                            className={`px-2 py-0.5 rounded-full text-xs ${estado.clase}`}
                           >
                             {estado.texto}
                           </span>
                         </td>
 
 
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-800">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-right font-medium text-gray-800">
                           $
                           {formatearDinero(
                             movimiento.monto
@@ -917,7 +917,7 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-right">
                           <span
                             className={`inline-flex items-center justify-end gap-1 ${
                               movimiento.impacto_saldo > 0
@@ -951,13 +951,13 @@ export function Movimientos() {
                         </td>
 
 
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right">
                           <button
                             type="button"
                             onClick={() =>
                               verDetalle(movimiento)
                             }
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Ver detalle"
                           >
                             <Eye size={17} />

@@ -448,29 +448,29 @@ function Productos() {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left min-w-[800px]">
+                    <table className="w-full text-left min-w-[650px] lg:min-w-0">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">N° PRODUCTO</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CLIENTE</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">MODELO</th>
-                                <th className="px-5 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CANT.</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">TELA</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">LUSTRE</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ESTADO</th>
-                                <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">N° PRODUCTO</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CLIENTE</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">MODELO</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">CANT.</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">TELA</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">LUSTRE</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ESTADO</th>
+                                <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {cargando ? (
                                 <tr>
-                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500 font-medium">
+                                    <td colSpan="8" className="px-4 py-8 text-center text-gray-500 font-medium text-xs sm:text-sm">
                                         Cargando productos...
                                     </td>
                                 </tr>
                             ) : filteredProductos.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-400 italic">
+                                    <td colSpan="8" className="px-4 py-8 text-center text-gray-400 italic text-xs sm:text-sm">
                                         No hay productos para mostrar.
                                     </td>
                                 </tr>
@@ -481,17 +481,17 @@ function Productos() {
                                     const estadoStr = (p.estado || p.Estado || "pendiente").toLowerCase();
                                     return (
                                         <tr key={idProd} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 text-sm text-gray-700 font-bold whitespace-nowrap">{prodCodigo}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.cliente || 'Sin cliente'}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">{p.modelo || p.Modelo}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-800 text-center font-bold">{p.cantidad || p.Cantidad}</td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-800 font-medium">{p.tela || p.Tela || '-'}</div>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-700 font-bold whitespace-nowrap">{prodCodigo}</td>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-600 font-medium">{p.cliente || 'Sin cliente'}</td>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-900 font-medium">{p.modelo || p.Modelo}</td>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800 text-center font-bold">{p.cantidad || p.Cantidad}</td>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5">
+                                                <div className="text-xs sm:text-sm text-gray-800 font-medium">{p.tela || p.Tela || '-'}</div>
                                                 <div className="text-[10px] text-gray-400 font-bold uppercase">{p.tipo_tela || p.Tipo_Tela || '-'}</div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600 font-medium">{p.color_lustre || p.Color_Lustre || '-'}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-600 font-medium">{p.color_lustre || p.Color_Lustre || '-'}</td>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                                                     estadoStr === 'pendiente' ? 'bg-gray-100 text-gray-600' :
                                                     estadoStr === 'en_produccion' ? 'bg-blue-100 text-blue-700' : 
                                                     estadoStr === 'terminado' ? 'bg-green-100 text-green-700' : 
@@ -499,8 +499,8 @@ function Productos() {
                                                     'bg-red-100 text-red-700'
                                                 }`}>{ estadoStr.replace('_',' ') }</span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <button onClick={() => handleOpenDetail(p)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Visualizar detalles"><Eye size={18} /></button>
+                                            <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right">
+                                                <button onClick={() => handleOpenDetail(p)} className="p-1.5 hover:bg-blue-50 rounded-lg text-blue-600 transition-colors" title="Visualizar detalles"><Eye size={17} /></button>
                                             </td>
                                         </tr>
                                     );

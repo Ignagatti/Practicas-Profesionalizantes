@@ -857,32 +857,32 @@ export function Saldos() {
               No hay saldos para mostrar.
             </div>
           ) : (
-            <table className="w-full min-w-[780px] text-left">
+            <table className="w-full min-w-[650px] lg:min-w-0 text-left">
 
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Proveedor
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Facturas pendientes
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Saldo guardado
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Saldo calculado
                   </th>
 
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Verificación
                   </th>
 
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <th className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
 
@@ -903,15 +903,15 @@ export function Saldos() {
                       className="hover:bg-gray-50 transition-colors"
                     >
 
-                      <td className="px-6 py-4 text-sm text-gray-800">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm text-gray-800">
                         {saldo.proveedor}
                       </td>
 
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         {saldo.cantidad_facturas_pendientes >
                         0 ? (
-                          <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
+                          <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs">
                             {
                               saldo.cantidad_facturas_pendientes
                             }{" "}
@@ -922,14 +922,14 @@ export function Saldos() {
                               : ""}
                           </span>
                         ) : (
-                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
                             Al día
                           </span>
                         )}
                       </td>
 
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                         $
                         {formatearDinero(
                           saldo.saldo_guardado
@@ -937,7 +937,7 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         <div
                           className={`flex items-center gap-1 ${
                             saldo.saldo_calculado > 0
@@ -956,15 +956,15 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         {coincide ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
                             <CheckCircle size={13} />
 
                             Correcto
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs">
                             <AlertCircle size={13} />
 
                             Recalcular
@@ -973,13 +973,13 @@ export function Saldos() {
                       </td>
 
 
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-right text-xs sm:text-sm">
                         <button
                           type="button"
                           onClick={() =>
                             abrirDetalle(saldo)
                           }
-                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
                           title="Ver detalle"
                         >
                           <Eye size={17} />

@@ -63,6 +63,9 @@ const obtenerSaldosProveedores = async (req, res) => {
 
 const obtenerSaldoProveedor = async (req, res) => {
     const { id } = req.params;
+    if (!id || isNaN(Number(id))) {
+        return res.status(400).json({ mensaje: "ID de proveedor inválido." });
+    }
 
     try {
         const proveedor = await db.query(

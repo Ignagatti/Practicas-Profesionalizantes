@@ -220,7 +220,7 @@ function Insumos() {
                                         $ {(Number(i.precio_unitario || i.Precio_Unitario) || 0).toLocaleString()}
                                     </td>
                                     <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 text-center">
-                                        <div className="flex justify-center gap-1">
+                                        <div className="flex justify-center items-center gap-1">
                                             <button 
                                                 onClick={() => handleOpenEdit(i)}
                                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

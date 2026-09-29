@@ -1140,7 +1140,7 @@ export default function Pagos() {
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         {/* Indicador de Cantidad de Pagos Registrados compacto */}
         <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-          <div className="p-2 bg-red-50 rounded-lg text-red-700">
+          <div className="p-2 bg-red-50 rounded-lg text-red-700 flex items-center justify-center shrink-0">
             <DollarSign size={18} />
           </div>
           <div>

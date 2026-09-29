@@ -146,11 +146,11 @@ function Insumos() {
                 {/* Indicadores KPI: Modelos, Telas, Lustres compactos */}
                 <div className="flex flex-wrap items-center gap-2.5">
                     <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-                        <div className="p-2 bg-red-50 rounded-lg text-red-700">
+                        <div className="p-2 bg-red-50 rounded-lg text-red-700 flex items-center justify-center shrink-0">
                             <Package size={18} />
                         </div>
                         <div>
-                            <p className="text-[10px] sm:text-xs font-bold text-red-700 uppercase tracking-wider leading-none">
+                            <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                                 Modelos Registrados
                             </p>
                             <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
@@ -160,11 +160,11 @@ function Insumos() {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-                        <div className="p-2 bg-pink-50 rounded-lg text-pink-700">
+                        <div className="p-2 bg-pink-50 rounded-lg text-pink-700 flex items-center justify-center shrink-0">
                             <Layers size={18} />
                         </div>
                         <div>
-                            <p className="text-[10px] sm:text-xs font-bold text-pink-700 uppercase tracking-wider leading-none">
+                            <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                                 Telas Registradas
                             </p>
                             <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
@@ -174,11 +174,11 @@ function Insumos() {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-                        <div className="p-2 bg-amber-50 rounded-lg text-amber-700">
+                        <div className="p-2 bg-amber-50 rounded-lg text-amber-700 flex items-center justify-center shrink-0">
                             <Palette size={18} />
                         </div>
                         <div>
-                            <p className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider leading-none">
+                            <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                                 Lustres Registrados
                             </p>
                             <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">

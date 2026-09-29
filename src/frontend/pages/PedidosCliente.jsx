@@ -1067,11 +1067,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         {/* Indicadores de Pedidos (Pagos, Parciales, Impagos) compactos */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-green-50 rounded-lg text-green-600">
+            <div className="p-2 bg-green-50 rounded-lg text-green-600 flex items-center justify-center shrink-0">
               <DollarSign size={18} />
             </div>
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-green-600 uppercase tracking-wider leading-none">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                 Pedidos Pagos
               </p>
               <p className="text-lg font-extrabold text-green-700 leading-tight mt-0.5">
@@ -1081,11 +1081,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
+            <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex items-center justify-center shrink-0">
               <DollarSign size={18} />
             </div>
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-amber-600 uppercase tracking-wider leading-none">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                 Parcialmente Pagos
               </p>
               <p className="text-lg font-extrabold text-amber-700 leading-tight mt-0.5">
@@ -1095,11 +1095,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm px-3.5 py-2 border border-gray-200 flex items-center gap-3">
-            <div className="p-2 bg-red-50 rounded-lg text-red-600">
+            <div className="p-2 bg-red-50 rounded-lg text-red-600 flex items-center justify-center shrink-0">
               <DollarSign size={18} />
             </div>
             <div>
-              <p className="text-[10px] sm:text-xs font-bold text-red-600 uppercase tracking-wider leading-none">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider leading-none">
                 Pedidos Impagos
               </p>
               <p className="text-lg font-extrabold text-red-700 leading-tight mt-0.5">

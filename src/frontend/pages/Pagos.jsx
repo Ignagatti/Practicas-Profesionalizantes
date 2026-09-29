@@ -1099,7 +1099,7 @@ export default function Pagos() {
   // =====================================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {mensajeExito && (
         <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
           {mensajeExito}

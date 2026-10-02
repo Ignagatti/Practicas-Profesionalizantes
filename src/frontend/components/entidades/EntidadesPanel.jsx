@@ -195,6 +195,8 @@ export function EntidadesPanel({
 
   useEffect(() => {
     cargarEntidades();
+    const titulo = tipoVista === "cliente" ? "Gestión de Clientes" : "Gestión de Proveedores";
+    window.dispatchEvent(new CustomEvent("acuaber:cambiar_titulo", { detail: titulo }));
   }, [tipoVista]);
 
   useEffect(() => {

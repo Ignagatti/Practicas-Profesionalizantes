@@ -640,14 +640,20 @@ export function Saldos() {
       {/* HEADER */}
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            Saldos de proveedores
-          </h2>
-
-          <p className="text-gray-500 text-sm mt-0.5">
-            Control y verificación de las deudas con proveedores
-          </p>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-3.5 py-2 flex items-center justify-between gap-3 min-w-[200px]">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 whitespace-nowrap">
+                Proveedores Registrados
+              </p>
+              <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
+                {proveedores.length}
+              </p>
+            </div>
+            <div className="p-2 bg-purple-50 text-purple-700 rounded-lg flex items-center justify-center shrink-0">
+              <Truck size={18} />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

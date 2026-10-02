@@ -801,23 +801,12 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
                 <strong>Advertencia de Seguridad:</strong> Esta operación reemplazará los datos actuales por los contenidos en la copia seleccionada dentro de una transacción segura.
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModalRestaurarAbierto(false);
-                    setArchivoBackup(null);
-                  }}
-                  disabled={restaurandoBackup}
-                  className="w-1/2 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
+              <div className="flex items-center justify-end">
                 <button
                   type="button"
                   onClick={handleConfirmarRestauracion}
                   disabled={restaurandoBackup}
-                  className={`w-1/2 py-2.5 px-4 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md transition-all ${
+                  className={`w-full py-2.5 px-4 rounded-xl text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md transition-all ${
                     restaurandoBackup
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-[#8b0000] hover:bg-[#6b0000]"

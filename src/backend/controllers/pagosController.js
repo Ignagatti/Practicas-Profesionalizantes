@@ -303,7 +303,10 @@ const crearPago = async (req, res) => {
         // Calcular total aplicado con redondeo exacto
         const montoAplicado = roundMoney(
             facturas.reduce(
-                (total, factura) => total + roundMoney(parseMoney(factura.Monto_Usado)),
+                (total, factura) => {
+                    const val = factura.Monto_Usado !== undefined ? factura.Monto_Usado : (factura.monto_usado !== undefined ? factura.monto_usado : factura.monto_aplicado);
+                    return total + roundMoney(parseMoney(val));
+                },
                 0
             )
         );
@@ -451,8 +454,9 @@ const crearPago = async (req, res) => {
 
         for (const facturaPago of facturasOrdenadas) {
             if (Tipo === "cliente") {
-                const { Id_Pedido, Monto_Usado } = facturaPago;
-                const montoTotalDeFactura = roundMoney(parseMoney(Monto_Usado));
+                const Id_Pedido = facturaPago.Id_Pedido || facturaPago.id_pedido;
+                const rawMonto = facturaPago.Monto_Usado !== undefined ? facturaPago.Monto_Usado : (facturaPago.monto_usado !== undefined ? facturaPago.monto_usado : facturaPago.monto_aplicado);
+                const montoTotalDeFactura = roundMoney(parseMoney(rawMonto));
                 if (!Id_Pedido || montoTotalDeFactura <= 0) {
                     throw new Error("Los datos de uno de los pedidos son inválidos.");
                 }
@@ -530,8 +534,9 @@ const crearPago = async (req, res) => {
 
             } else {
                 // Proveedor
-                const { Id_Factura_Proveedor, Monto_Usado } = facturaPago;
-                const montoTotalDeFactura = roundMoney(parseMoney(Monto_Usado));
+                const Id_Factura_Proveedor = facturaPago.Id_Factura_Proveedor || facturaPago.id_factura_proveedor;
+                const rawMonto = facturaPago.Monto_Usado !== undefined ? facturaPago.Monto_Usado : (facturaPago.monto_usado !== undefined ? facturaPago.monto_usado : facturaPago.monto_aplicado);
+                const montoTotalDeFactura = roundMoney(parseMoney(rawMonto));
                 if (!Id_Factura_Proveedor || montoTotalDeFactura <= 0) {
                     throw new Error("Los datos de una de las facturas son inválidos.");
                 }

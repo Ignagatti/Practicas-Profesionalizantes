@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { AlertTriangle, Trash2, HelpCircle, X } from "lucide-react";
 
 const ConfirmContext = createContext(null);
@@ -74,7 +74,17 @@ export function useConfirm() {
 }
 
 function ConfirmDialog({ modalState, onConfirm, onCancel }) {
-  const { title, message, confirmText, cancelText, type } = modalState;
+  const { title, message, confirmText, type } = modalState;
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
 
   const typeConfig = {
     danger: {
@@ -122,14 +132,7 @@ function ConfirmDialog({ modalState, onConfirm, onCancel }) {
           </div>
         </div>
 
-        <div className="bg-gray-50/80 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-gray-300"
-          >
-            {cancelText}
-          </button>
+        <div className="bg-gray-50/80 px-6 py-4 flex justify-end border-t border-gray-100">
           <button
             type="button"
             onClick={onConfirm}

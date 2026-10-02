@@ -1,16 +1,16 @@
 import React from 'react';
 import logoAcuaber from './assets/logo-acuaber.png';
-import { 
-    LayoutGrid, 
-    Package, 
-    ShoppingCart, 
-    Wallet, 
-    List, 
+import {
+    LayoutGrid,
+    Package,
+    ShoppingCart,
+    Wallet,
+    List,
     Users,
     X
 } from 'lucide-react';
 
-const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => {} }) => {
+const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => { } }) => {
     const menuItems = [
         { id: 'dashboard', nombre: 'Panel de control', icono: LayoutGrid },
         { id: 'productos', nombre: 'Productos', icono: Package },
@@ -30,21 +30,20 @@ const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => {}
         <>
             {/* Backdrop para pantallas pequeñas / ventanas no maximizadas */}
             {isOpen && (
-                <div 
+                <div
                     onClick={onClose}
                     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
                     aria-hidden="true"
                 />
             )}
 
-            <div 
-                className={`w-56 xl:w-64 min-h-screen bg-[#8b0000] text-white flex flex-col fixed left-0 top-0 border-r border-black z-50 transition-transform duration-300 ease-in-out ${
-                    isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                }`}
+            <div
+                className={`w-56 xl:w-64 min-h-screen bg-[#8b0000] text-white flex flex-col fixed left-0 top-0 border-r border-black z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    }`}
             >
                 {/* Logo y Título */}
                 <div className="p-4 sm:p-5 bg-white border-b border-gray-200 flex flex-col items-center text-center shadow-sm relative">
-                    <button 
+                    <button
                         onClick={onClose}
                         className="lg:hidden absolute top-2.5 right-2.5 p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                         title="Cerrar menú"
@@ -65,11 +64,10 @@ const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => {}
                             <button
                                 key={item.id}
                                 onClick={() => handleSelect(item.id)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left ${
-                                    activo 
-                                    ? 'bg-red-600 shadow-lg text-white' 
-                                    : 'text-red-100 hover:bg-black/20'
-                                }`}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all text-left ${activo
+                                        ? 'bg-red-600 shadow-lg text-white'
+                                        : 'text-red-100 hover:bg-black/20'
+                                    }`}
                             >
                                 <Icono size={18} />
                                 <span className="text-xs sm:text-sm font-medium">{item.nombre}</span>
@@ -81,7 +79,7 @@ const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => {}
                 {/* Footer del Sidebar */}
                 <div className="p-4 text-[10px] text-red-300 border-t border-red-900">
                     <p>Esperanza, Santa Fe</p>
-                    <p>© 2025 Acuaber</p>
+                    <p>© 2026 Acuaber</p>
                 </div>
             </div>
         </>

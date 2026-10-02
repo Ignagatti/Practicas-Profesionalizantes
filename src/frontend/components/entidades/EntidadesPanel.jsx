@@ -106,7 +106,7 @@ function obtenerNombreEntidad(tipoVista) {
 }
 
 function obtenerNombrePlural(tipoVista) {
-  return tipoVista === "cliente" ? "clientes" : "proveedores";
+  return tipoVista === "cliente" ? "Clientes" : "Proveedores";
 }
 
 function validarEmail(email) {
@@ -696,7 +696,7 @@ export function EntidadesPanel({
         <div className="relative">
           <input
             type="text"
-            placeholder={`Buscar ${obtenerNombrePlural(tipoVista)} por nombre, razón social, CUIT o email...`}
+            placeholder={`Buscar ${obtenerNombrePlural(tipoVista).toLowerCase()} por nombre, razón social, CUIT o email...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 text-sm"
@@ -707,10 +707,10 @@ export function EntidadesPanel({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
           {cargando ? (
-            <div className="p-8 text-center text-gray-500 text-sm">Cargando {obtenerNombrePlural(tipoVista)}...</div>
+            <div className="p-8 text-center text-gray-500 text-sm">Cargando {obtenerNombrePlural(tipoVista).toLowerCase()}...</div>
           ) : filtradas.length === 0 ? (
             <div className="p-8 text-center text-gray-400 text-sm">
-              No hay {obtenerNombrePlural(tipoVista)} para mostrar.
+              No hay {obtenerNombrePlural(tipoVista).toLowerCase()} para mostrar.
             </div>
           ) : (
             <table className="w-full text-left">
@@ -892,16 +892,10 @@ export function EntidadesPanel({
               <br /><br />
               <strong>Atención:</strong> Si el registro posee historial (pedidos, facturas o guita involucrada), el sistema impedirá el borrado para proteger la balanza.
             </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowConfirmDeleteEntidadModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
+            <div className="flex justify-end">
               <button
                 onClick={handleEliminarEntidad}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-bold text-sm flex items-center justify-center gap-2 shadow-sm"
               >
                 <Trash2 size={16} />
                 Confirmar
@@ -1101,16 +1095,6 @@ function EntidadModal({
             {isEditando ? (
               <>
                 <button
-                  onClick={() => {
-                    setIsEditando(false);
-                    cancelarEdicionDireccion();
-                  }}
-                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Cancelar
-                </button>
-
-                <button
                   onClick={guardar}
                   className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm"
                 >
@@ -1307,20 +1291,12 @@ function DireccionesPanel({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex justify-end">
             <button
               type="submit"
               className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 text-sm font-semibold shadow-sm"
             >
-              {direccionEditandoId ? "Guardar dirección" : "Guardar dirección"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCancelar}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 text-sm font-medium text-gray-700"
-            >
-              Cancelar
+              Guardar dirección
             </button>
           </div>
         </form>
@@ -1358,7 +1334,7 @@ function AgregarEntidadModal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
             <InputForm
               label="Nombre *"
               value={entidad.nombre}
@@ -1406,12 +1382,12 @@ function AgregarEntidadModal({
             </div>
           </div>
 
-          <div className="pt-2.5 border-t border-gray-200 space-y-2.5 text-left">
+          <div className="pt-2 border-t border-gray-200 space-y-2 text-left">
             <div>
               <h4 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Dirección Principal</h4>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <InputForm
                 label="Calle *"
                 value={direccion.calle}
@@ -1452,14 +1428,7 @@ function AgregarEntidadModal({
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
-            <button
-              type="button"
-              onClick={cerrar}
-              className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              Cancelar
-            </button>
+          <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-2">
 
             <button
               type="submit"

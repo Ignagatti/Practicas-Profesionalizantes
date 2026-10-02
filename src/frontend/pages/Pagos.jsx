@@ -1978,14 +1978,7 @@ export default function Pagos() {
                 </div>
               </div>
               </div>
-              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={cerrarAdd}
-                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Cancelar
-                </button>
+              <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
 
                 <button
                   type="submit"

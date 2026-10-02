@@ -323,8 +323,7 @@ function Insumos() {
                                     />
                                 </div>
                             </div>
-                            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
-                                <button type="button" onClick={() => setShowFormModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                            <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-2">
                                 <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
                                     {isEditing ? 'Guardar Cambios' : 'Crear Insumo'}
                                 </button>
@@ -368,13 +367,7 @@ function Insumos() {
                                 </p>
                             </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <button 
-                                    onClick={() => setShowAdjustModal(false)}
-                                    className="flex-1 h-14 border border-gray-200 rounded-2xl font-bold text-gray-800 hover:bg-gray-50 transition-all text-base"
-                                >
-                                    Cancelar
-                                </button>
+                            <div className="flex gap-4 pt-4 justify-end">
                                 <button 
                                     onClick={handleAjustarPrecios}
                                     className="flex-1 h-14 bg-[#9900ff] text-white font-bold rounded-2xl hover:bg-[#8800ee] shadow-lg shadow-purple-100 transition-all text-base"

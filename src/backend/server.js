@@ -119,6 +119,16 @@ app.get("/api/health", async (req, res) => {
     }
 });
 
+// Middleware global para captura de errores
+app.use((err, req, res, next) => {
+    console.error("Error en la aplicación:", err.message);
+    const statusCode = err.status || err.statusCode || 500;
+    res.status(statusCode).json({
+        error: err.message || "Error interno del servidor",
+        ok: false
+    });
+});
+
 // =====================================================
 // INICIAR SERVIDOR Y SINCRONIZAR BASE DE DATOS
 // =====================================================

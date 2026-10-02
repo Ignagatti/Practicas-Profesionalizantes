@@ -283,17 +283,18 @@ function Productos() {
         if (seleccionados.length === 0) return;
         
         try {
+            const escapeHTML = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             const productosAImprimir = seleccionados.map(id => 
                 productos.find(prod => (prod.id_producto || prod.Id_Producto) === id)
             );
             
             const productosHTML = productosAImprimir.map(p => `
                 <tr>
-                    <td style="padding: 10px; border: 1px solid #ccc; text-align: center;">${p.cantidad || p.Cantidad}</td>
-                    <td style="padding: 10px; border: 1px solid #ccc;">${p.cliente || 'Sin cliente'}</td>
-                    <td style="padding: 10px; border: 1px solid #ccc;"><strong>${p.modelo || p.Modelo}</strong></td>
-                    <td style="padding: 10px; border: 1px solid #ccc;">${p.tela || p.Tela || '-'} ${p.tipo_tela || p.Tipo_Tela ? `(${p.tipo_tela || p.Tipo_Tela})` : ''}</td>
-                    <td style="padding: 10px; border: 1px solid #ccc;">${p.color_lustre || p.Color_Lustre || '-'}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc; text-align: center;">${escapeHTML(p.cantidad || p.Cantidad)}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${escapeHTML(p.cliente || 'Sin cliente')}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;"><strong>${escapeHTML(p.modelo || p.Modelo)}</strong></td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${escapeHTML(p.tela || p.Tela || '-')} ${p.tipo_tela || p.Tipo_Tela ? `(${escapeHTML(p.tipo_tela || p.Tipo_Tela)})` : ''}</td>
+                    <td style="padding: 10px; border: 1px solid #ccc;">${escapeHTML(p.color_lustre || p.Color_Lustre || '-')}</td>
                 </tr>
             `).join("");
             
@@ -721,8 +722,7 @@ function Productos() {
                                 );
                             })()}
 
-                            <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-3">
-                                <button type="button" onClick={() => setShowFormModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                            <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-2">
                                 <button type="submit" className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm">
                                     {isEditing ? 'Guardar Cambios' : 'Crear Producto'}
                                 </button>
@@ -890,8 +890,7 @@ function Productos() {
                                 </table>
                             </div>
                         </div>
-                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
-                            <button onClick={() => setShowSelectionModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                        <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
                             <button onClick={handleEnviarAProduccion} disabled={seleccionados.length === 0} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all shadow-sm">Imprimir y Producción</button>
                         </div>
                     </div>
@@ -971,8 +970,7 @@ function Productos() {
                                 </table>
                             </div>
                         </div>
-                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
-                            <button onClick={() => setShowTerminarModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                        <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
                             <button
                                 onClick={handlePasarATerminadosMasivo}
                                 disabled={seleccionadosTerminar.length === 0}
@@ -1058,8 +1056,7 @@ function Productos() {
                                 </table>
                             </div>
                         </div>
-                        <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
-                            <button onClick={() => setShowEnviarModal(false)} className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors">Cancelar</button>
+                        <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl">
                             <button
                                 onClick={handlePasarAEnviadosMasivo}
                                 disabled={seleccionadosEnviar.length === 0}
@@ -1080,25 +1077,17 @@ function Productos() {
                         <p className="text-sm text-gray-600 mb-6">{confirmModal.message}</p>
                         <div className="flex justify-end gap-3">
                             {confirmModal.type === 'confirm' ? (
-                                <>
-                                    <button 
-                                        onClick={() => setConfirmModal({ ...confirmModal, show: false })}
-                                        className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button 
-                                        onClick={() => {
-                                            if (confirmModal.onConfirm) confirmModal.onConfirm();
-                                            setConfirmModal({ ...confirmModal, show: false });
-                                        }}
-                                        className={`px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm ${
-                                            confirmModal.color === 'red' ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
-                                    >
-                                        Confirmar
-                                    </button>
-                                </>
+                                <button 
+                                    onClick={() => {
+                                        if (confirmModal.onConfirm) confirmModal.onConfirm();
+                                        setConfirmModal({ ...confirmModal, show: false });
+                                    }}
+                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm ${
+                                        confirmModal.color === 'red' ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-600 hover:bg-blue-700'
+                                    }`}
+                                >
+                                    Confirmar
+                                </button>
                             ) : (
                                 <button 
                                     onClick={() => setConfirmModal({ ...confirmModal, show: false })}

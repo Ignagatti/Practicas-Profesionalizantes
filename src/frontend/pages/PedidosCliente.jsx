@@ -990,12 +990,14 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
   const descargarPdfPedido = (pedido) => {
     if (!pedido) return;
 
+    const escapeHTML = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
     const productosHTML = pedido.productos
       .map(
         (producto) => `
           <tr>
-            <td>PROD-${String(producto.id_producto).padStart(3, "0")} - ${getDescripcionProducto(producto)}</td>
-            <td>${producto.cantidad}</td>
+            <td>PROD-${String(producto.id_producto).padStart(3, "0")} - ${escapeHTML(getDescripcionProducto(producto))}</td>
+            <td>${escapeHTML(producto.cantidad)}</td>
             <td>$${formatearPrecio(producto.precio)}</td>
             <td>$${formatearPrecio(getSubtotalProducto(producto))}</td>
           </tr>
@@ -1026,11 +1028,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
         </head>
         <body>
           <h1>Venta VENT-${String(pedido.id_pedido).padStart(3, "0")}</h1>
-          <p><strong>Cliente:</strong> ${getNombreCliente(pedido)}</p>
+          <p><strong>Cliente:</strong> ${escapeHTML(getNombreCliente(pedido))}</p>
           <p><strong>Fecha de generación:</strong> ${formatearFecha(pedido.fecha_generacion)}</p>
           <p><strong>Vencimiento:</strong> ${formatearFecha(pedido.vencimiento)}</p>
           <p><strong>Estado de pago:</strong> ${formatearEstado(pedido.estado_pago)}</p>
-          <p><strong>Factura:</strong> ${getEstadoFacturaInfo(pedido).label}</p>
+          <p><strong>Factura:</strong> ${escapeHTML(getEstadoFacturaInfo(pedido).label)}</p>
 
           <table>
             <thead>
@@ -1612,15 +1614,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 </div>
               </div>
 
-              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                >
-                  Cancelar
-                </button>
-
+              <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 <button
                   type="submit"
                   disabled={newPedido.productos.length === 0}
@@ -2113,14 +2107,6 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                 <>
                   <button
                     type="button"
-                    onClick={cancelarEdicionPedido}
-                    className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={guardarCambiosPedido}
                     className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center justify-center gap-2"
                   >
@@ -2173,12 +2159,6 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
               ¿Está seguro que desea eliminar este pedido? Esta acción no se puede deshacer. Los productos asociados quedarán libres y el saldo adeudado del cliente se revertirá si corresponde.
             </p>
             <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmDeleteModal(false)}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Cancelar
-              </button>
               <button
                 onClick={handleEliminarPedido}
                 className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-sm flex items-center justify-center gap-2"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import logoAcuaber from '../assets/logo-acuaber.png';
 
@@ -14,6 +14,16 @@ export function LicenciaModal({
   const [clave, setClave] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(errorInicial);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !esBloqueante && onCerrar) {
+        onCerrar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [esBloqueante, onCerrar]);
 
   if (!abierto) return null;
 
@@ -107,15 +117,6 @@ export function LicenciaModal({
             )}
 
             <div className="pt-2 flex items-center gap-2">
-              {!esBloqueante && (
-                <button
-                  type="button"
-                  onClick={onCerrar}
-                  className="w-1/3 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium text-xs hover:bg-gray-100 transition-all"
-                >
-                  Cancelar
-                </button>
-              )}
               <button
                 type="submit"
                 disabled={cargando || !clave.trim()}

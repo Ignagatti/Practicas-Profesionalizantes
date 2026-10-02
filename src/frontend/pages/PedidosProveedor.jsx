@@ -1136,7 +1136,8 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                           onClick={() => {
                             const ventana = window.open("", "_blank");
                             if (ventana) {
-                              ventana.document.write(`
+                                  const escapeHTML = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                                  ventana.document.write(`
                                 <html>
                                 <head>
                                   <title>Comprobante de Proveedor</title>
@@ -1151,12 +1152,12 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                                 <body>
                                   <h1>${factura.tipo_comprobante === 'remito' ? 'Remito' : 'Factura'} de Proveedor</h1>
                                   <div class="box">
-                                    <p><strong>Proveedor:</strong> ${factura.proveedor}</p>
-                                    ${factura.tipo_comprobante !== 'remito' ? `<p><strong>Nro. Factura:</strong> ${factura.nro_factura_proveedor || '-'}</p>` : ''}
+                                    <p><strong>Proveedor:</strong> ${escapeHTML(factura.proveedor)}</p>
+                                    ${factura.tipo_comprobante !== 'remito' ? `<p><strong>Nro. Factura:</strong> ${escapeHTML(factura.nro_factura_proveedor || '-')}</p>` : ''}
                                     <p><strong>Fecha de Emisión:</strong> ${formatearFecha(factura.fecha_emision)}</p>
                                     <p><strong>Vencimiento:</strong> ${formatearFecha(factura.vencimiento)}</p>
-                                    <p><strong>Estado:</strong> ${estadoConfig[factura.estado_pago]?.label || factura.estado_pago}</p>
-                                    <p><strong>Observaciones:</strong> ${factura.observaciones || '---'}</p>
+                                    <p><strong>Estado:</strong> ${escapeHTML(estadoConfig[factura.estado_pago]?.label || factura.estado_pago)}</p>
+                                    <p><strong>Observaciones:</strong> ${escapeHTML(factura.observaciones || '---')}</p>
                                     <p class="total">Monto Total: $${formatearDinero(factura.precio_total)}</p>
                                     <p class="total" style="color: #b91c1c;">Monto Adeudado: $${formatearDinero(factura.monto_adeudado)}</p>
                                   </div>
@@ -1410,16 +1411,7 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               </div>
 
               </div>
-              <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
-                <button
-                  type="button"
-                  onClick={cerrarAdd}
-                  disabled={guardando}
-                  className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-
+              <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl">
                 <button
                   type="submit"
                   disabled={guardando}
@@ -1772,18 +1764,6 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                   <>
                     <button
                       type="button"
-                      onClick={() => {
-                        setIsEditandoFactura(false);
-                        setErrorForm("");
-                      }}
-                      disabled={guardando}
-                      className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-                    >
-                      Cancelar
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={handleSaveFacturaChanges}
                       disabled={guardando}
                       className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm"
@@ -1830,13 +1810,6 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
               ¿Estás seguro de que deseas eliminar este comprobante? Esta acción no se puede deshacer.
             </p>
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowConfirmDeleteModal(false)}
-                className="px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Cancelar
-              </button>
               <button
                 type="button"
                 onClick={() => handleDelete(viewingFactura?.id_factura_proveedor)}

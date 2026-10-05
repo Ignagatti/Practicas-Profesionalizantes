@@ -882,7 +882,7 @@ export function EntidadesPanel({
 
       {/* Modal Confirmar Eliminación Entidad */}
       {showConfirmDeleteEntidadModal && selectedEntidad && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
             <button
               type="button"

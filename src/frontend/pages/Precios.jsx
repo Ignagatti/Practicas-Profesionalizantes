@@ -9,7 +9,8 @@ import {
   X,
   Package,
   Layers,
-  Palette
+  Palette,
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "../components/ui/ToastContext.jsx";
 import { useConfirm } from "../components/ui/ConfirmContext.jsx";
@@ -43,6 +44,8 @@ export function Precios() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [porcentaje, setPorcentaje] = useState("");
   const [editingInsumo, setEditingInsumo] = useState(null);
+  const [fieldErrorsAdd, setFieldErrorsAdd] = useState({});
+  const [fieldErrorsEdit, setFieldErrorsEdit] = useState({});
   const [newInsumo, setNewInsumo] = useState({
     categoria: "Modelo",
     nombre: "",
@@ -113,17 +116,31 @@ export function Precios() {
 
   const handleAddInsumo = (e) => {
     e.preventDefault();
+    const errors = {};
+    if (!newInsumo.categoria) errors.categoria = "La categoría es obligatoria";
+    if (!newInsumo.nombre || !newInsumo.nombre.trim()) errors.nombre = "El nombre es obligatorio";
+    if (newInsumo.precioUnitario === "" || newInsumo.precioUnitario === null || newInsumo.precioUnitario < 0) errors.precioUnitario = "Ingrese un precio válido (≥ 0)";
+    setFieldErrorsAdd(errors);
+    if (Object.keys(errors).length > 0) return;
+
     const newId =
       insumos.length > 0 ? Math.max(...insumos.map((i) => i.id)) + 1 : 1;
     setInsumos([...insumos, { ...newInsumo, id: newId }]);
     setShowAddModal(false);
     setNewInsumo({ categoria: "Modelo", nombre: "", precioUnitario: 0 });
+    setFieldErrorsAdd({});
     toast.success("Insumo agregado con éxito.");
   };
 
   const handleEditInsumo = (e) => {
     e.preventDefault();
     if (!editingInsumo) return;
+    const errors = {};
+    if (!editingInsumo.categoria) errors.categoria = "La categoría es obligatoria";
+    if (!editingInsumo.nombre || !editingInsumo.nombre.trim()) errors.nombre = "El nombre es obligatorio";
+    if (editingInsumo.precioUnitario === "" || editingInsumo.precioUnitario === null || editingInsumo.precioUnitario < 0) errors.precioUnitario = "Ingrese un precio válido (≥ 0)";
+    setFieldErrorsEdit(errors);
+    if (Object.keys(errors).length > 0) return;
 
     setInsumos((prev) =>
       prev.map((insumo) =>
@@ -132,6 +149,7 @@ export function Precios() {
     );
     setShowEditModal(false);
     setEditingInsumo(null);
+    setFieldErrorsEdit({});
     toast.success("Insumo actualizado con éxito.");
   };
 
@@ -348,16 +366,22 @@ export function Precios() {
                 </label>
                 <select
                   value={newInsumo.categoria}
-                  onChange={(e) =>
-                    setNewInsumo({ ...newInsumo, categoria: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                  required
+                  onChange={(e) => {
+                    setNewInsumo({ ...newInsumo, categoria: e.target.value });
+                    if (fieldErrorsAdd.categoria) setFieldErrorsAdd(prev => ({ ...prev, categoria: null }));
+                  }}
+                  className={`w-full px-4 py-2.5 border ${fieldErrorsAdd.categoria ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                 >
                   <option value="Modelo">Modelo</option>
                   <option value="Tela">Tela</option>
                   <option value="Lustre">Lustre y Acabado</option>
                 </select>
+                {fieldErrorsAdd.categoria && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsAdd.categoria}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -367,13 +391,19 @@ export function Precios() {
                 <input
                   type="text"
                   value={newInsumo.nombre}
-                  onChange={(e) =>
-                    setNewInsumo({ ...newInsumo, nombre: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                  onChange={(e) => {
+                    setNewInsumo({ ...newInsumo, nombre: e.target.value });
+                    if (fieldErrorsAdd.nombre) setFieldErrorsAdd(prev => ({ ...prev, nombre: null }));
+                  }}
+                  className={`w-full px-4 py-2.5 border ${fieldErrorsAdd.nombre ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                   placeholder="Ej: Silla Moderna, Tela Premium, Lustre Natural"
-                  required
                 />
+                {fieldErrorsAdd.nombre && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsAdd.nombre}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -388,19 +418,25 @@ export function Precios() {
                   <input
                     type="number"
                     value={newInsumo.precioUnitario || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewInsumo({
                         ...newInsumo,
                         precioUnitario: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                      });
+                      if (fieldErrorsAdd.precioUnitario) setFieldErrorsAdd(prev => ({ ...prev, precioUnitario: null }));
+                    }}
+                    className={`w-full pl-10 pr-4 py-2.5 border ${fieldErrorsAdd.precioUnitario ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                     placeholder="0"
                     min="0"
                     step="0.01"
-                    required
                   />
                 </div>
+                {fieldErrorsAdd.precioUnitario && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsAdd.precioUnitario}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">
                   Usar 0 para telas provistas o sin acabado
                 </p>
@@ -440,19 +476,25 @@ export function Precios() {
                 </label>
                 <select
                   value={editingInsumo.categoria}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditingInsumo({
                       ...editingInsumo,
                       categoria: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                  required
+                    });
+                    if (fieldErrorsEdit.categoria) setFieldErrorsEdit(prev => ({ ...prev, categoria: null }));
+                  }}
+                  className={`w-full px-4 py-2.5 border ${fieldErrorsEdit.categoria ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                 >
                   <option value="Modelo">Modelo</option>
                   <option value="Tela">Tela</option>
                   <option value="Lustre">Lustre y Acabado</option>
                 </select>
+                {fieldErrorsEdit.categoria && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsEdit.categoria}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -462,15 +504,21 @@ export function Precios() {
                 <input
                   type="text"
                   value={editingInsumo.nombre}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditingInsumo({
                       ...editingInsumo,
                       nombre: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                  required
+                    });
+                    if (fieldErrorsEdit.nombre) setFieldErrorsEdit(prev => ({ ...prev, nombre: null }));
+                  }}
+                  className={`w-full px-4 py-2.5 border ${fieldErrorsEdit.nombre ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                 />
+                {fieldErrorsEdit.nombre && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsEdit.nombre}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -485,18 +533,24 @@ export function Precios() {
                   <input
                     type="number"
                     value={editingInsumo.precioUnitario}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setEditingInsumo({
                         ...editingInsumo,
                         precioUnitario: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
+                      });
+                      if (fieldErrorsEdit.precioUnitario) setFieldErrorsEdit(prev => ({ ...prev, precioUnitario: null }));
+                    }}
+                    className={`w-full pl-10 pr-4 py-2.5 border ${fieldErrorsEdit.precioUnitario ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                     min="0"
                     step="0.01"
-                    required
                   />
                 </div>
+                {fieldErrorsEdit.precioUnitario && (
+                  <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                    <AlertCircle size={13} className="shrink-0" />
+                    {fieldErrorsEdit.precioUnitario}
+                  </p>
+                )}
               </div>
 
               <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 rounded-b-2xl -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 mt-3">

@@ -11,6 +11,7 @@ import {
   Download,
   FileText,
   Calendar,
+  AlertCircle,
 } from "lucide-react";
 import {
   parseMoney,
@@ -249,6 +250,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
   const [mensajeErrorAddModal, setMensajeErrorAddModal] = useState("");
   const [mensajeExitoAddModal, setMensajeExitoAddModal] = useState("");
+  const [fieldErrorsAdd, setFieldErrorsAdd] = useState({});
 
   const [mensajeErrorModal, setMensajeErrorModal] = useState("");
   const [mensajeExitoModal, setMensajeExitoModal] = useState("");
@@ -429,6 +431,7 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     setMensajeExito("");
     setMensajeErrorAddModal("");
     setMensajeExitoAddModal("");
+    setFieldErrorsAdd({});
     setProductosDisponibles([]);
 
     setNewPedido({
@@ -623,14 +626,18 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
   const handleCreatePedido = async (e) => {
     e.preventDefault();
 
+    const errors = {};
     if (!newPedido.Id_Cliente) {
-      setMensajeErrorAddModal("Debe seleccionar un cliente.");
-      scrollToTopAddModal();
-      return;
+      errors.Id_Cliente = "Debe seleccionar un cliente.";
+    }
+    if (newPedido.productos.length === 0) {
+      errors.productos = "Debe seleccionar al menos un producto.";
     }
 
-    if (newPedido.productos.length === 0) {
-      setMensajeErrorAddModal("Debe seleccionar al menos un producto.");
+    setFieldErrorsAdd(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setMensajeErrorAddModal("Por favor complete los campos obligatorios.");
       scrollToTopAddModal();
       return;
     }
@@ -1386,9 +1393,11 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
 
                     <select
                       value={newPedido.Id_Cliente}
-                      onChange={(e) => handleSeleccionarCliente(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                      required
+                      onChange={(e) => {
+                        handleSeleccionarCliente(e.target.value);
+                        if (fieldErrorsAdd.Id_Cliente) setFieldErrorsAdd(prev => ({ ...prev, Id_Cliente: null }));
+                      }}
+                      className={`w-full px-4 py-2.5 border ${fieldErrorsAdd.Id_Cliente ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
                     >
                       <option value="">Seleccionar...</option>
 
@@ -1406,6 +1415,12 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                         );
                       })}
                     </select>
+                    {fieldErrorsAdd.Id_Cliente && (
+                      <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                        <AlertCircle size={13} className="shrink-0" />
+                        {fieldErrorsAdd.Id_Cliente}
+                      </p>
+                    )}
                   </div>
 
                   <div>

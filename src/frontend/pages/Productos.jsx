@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Printer, X, Eye, CheckCircle2, Send, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Printer, X, Eye, CheckCircle2, Send, Package, AlertCircle } from "lucide-react";
 import { 
     obtenerProductos, 
     crearProducto, 
@@ -29,6 +29,7 @@ function Productos() {
     const [cargando, setCargando] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filtroEstado, setFiltroEstado] = useState("todos");
+    const [fieldErrors, setFieldErrors] = useState({});
     
     // Modales
     const [showFormModal, setShowFormModal] = useState(false);
@@ -129,6 +130,7 @@ function Productos() {
             ...PRODUCTO_VACIO,
             fecha_pedido: new Date().toISOString().split('T')[0]
         });
+        setFieldErrors({});
         setIsEditing(false);
         setShowFormModal(true);
     };
@@ -157,6 +159,7 @@ function Productos() {
             precio: p.precio || p.Precio || 0,
             estado: estado
         });
+        setFieldErrors({});
         setIsEditing(true);
         setShowDetailModal(false);
         setShowFormModal(true);
@@ -183,20 +186,22 @@ function Productos() {
         }
     };
 
+    const validateForm = () => {
+        const errors = {};
+        if (!formData.id_cliente) errors.id_cliente = "Debe seleccionar un cliente";
+        if (!formData.fecha_pedido) errors.fecha_pedido = "La fecha es obligatoria";
+        if (!formData.cantidad || Number(formData.cantidad) <= 0) errors.cantidad = "La cantidad debe ser mayor a 0";
+        if (!formData.modelo) errors.modelo = "Debe seleccionar un modelo";
+        if (!formData.tipo_tela) errors.tipo_tela = "Debe seleccionar tipo de tela";
+        if (!formData.lustre) errors.lustre = "Debe seleccionar lustre";
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.cantidad || Number(formData.cantidad) <= 0) {
-            setConfirmModal({
-                show: true,
-                title: 'Cantidad inválida',
-                message: 'La cantidad del producto debe ser mayor a cero (0). No se permiten cantidades en cero o negativas.',
-                type: 'alert',
-                color: 'red',
-                onConfirm: null
-            });
-            return;
-        }
+        if (!validateForm()) return;
 
         const payload = {
             ...formData,
@@ -547,11 +552,13 @@ function Productos() {
                                                 Cliente <span className="text-red-600 font-bold">*</span>
                                             </label>
                                             <select 
-                                                required
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.id_cliente ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`}
                                                 value={formData.id_cliente || ''}
-                                                onChange={(e) => setFormData({...formData, id_cliente: e.target.value})}
+                                                onChange={(e) => {
+                                                    setFormData({...formData, id_cliente: e.target.value});
+                                                    if (fieldErrors.id_cliente) setFieldErrors(prev => ({...prev, id_cliente: null}));
+                                                }}
                                             >
                                                 <option value="">Seleccionar...</option>
                                                 {clientes.map(c => {
@@ -567,6 +574,12 @@ function Productos() {
                                                      );
                                                  })}
                                             </select>
+                                            {fieldErrors.id_cliente && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.id_cliente}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-1">
@@ -575,12 +588,20 @@ function Productos() {
                                             </label>
                                             <input 
                                                 type="date" 
-                                                required 
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.fecha_pedido ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`} 
                                                 value={formData.fecha_pedido || ''} 
-                                                onChange={(e) => setFormData({...formData, fecha_pedido: e.target.value})} 
+                                                onChange={(e) => {
+                                                    setFormData({...formData, fecha_pedido: e.target.value});
+                                                    if (fieldErrors.fecha_pedido) setFieldErrors(prev => ({...prev, fecha_pedido: null}));
+                                                }} 
                                             />
+                                            {fieldErrors.fecha_pedido && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.fecha_pedido}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-1">
@@ -590,12 +611,20 @@ function Productos() {
                                             <input 
                                                 type="number" 
                                                 min="1"
-                                                required 
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.cantidad ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`} 
                                                 value={formData.cantidad} 
-                                                onChange={(e) => setFormData({...formData, cantidad: e.target.value})} 
+                                                onChange={(e) => {
+                                                    setFormData({...formData, cantidad: e.target.value});
+                                                    if (fieldErrors.cantidad) setFieldErrors(prev => ({...prev, cantidad: null}));
+                                                }} 
                                             />
+                                            {fieldErrors.cantidad && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.cantidad}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-1">
@@ -603,13 +632,13 @@ function Productos() {
                                                 Modelo <span className="text-red-600 font-bold">*</span>
                                             </label>
                                             <select 
-                                                required 
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.modelo ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`} 
                                                 value={formData.modelo} 
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     setFormData({...formData, modelo: val, precio: calcularPrecioTotal(val, formData.tipo_tela, formData.lustre)});
+                                                    if (fieldErrors.modelo) setFieldErrors(prev => ({...prev, modelo: null}));
                                                 }}
                                             >
                                                 <option value="">Seleccionar...</option>
@@ -618,6 +647,12 @@ function Productos() {
                                                 )}
                                                 {listaPrecios.filter(lp => lp.categoria === 'Modelo').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
                                             </select>
+                                            {fieldErrors.modelo && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.modelo}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-1">
@@ -625,13 +660,13 @@ function Productos() {
                                                 Tipo de Tela <span className="text-red-600 font-bold">*</span>
                                             </label>
                                             <select 
-                                                required 
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.tipo_tela ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`} 
                                                 value={formData.tipo_tela} 
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     setFormData({...formData, tipo_tela: val, precio: calcularPrecioTotal(formData.modelo, val, formData.lustre)});
+                                                    if (fieldErrors.tipo_tela) setFieldErrors(prev => ({...prev, tipo_tela: null}));
                                                 }}
                                             >
                                                 <option value="">Seleccionar...</option>
@@ -641,6 +676,12 @@ function Productos() {
                                                 )}
                                                 {listaPrecios.filter(lp => lp.categoria === 'Tela').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
                                             </select>
+                                            {fieldErrors.tipo_tela && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.tipo_tela}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-2">
@@ -662,13 +703,13 @@ function Productos() {
                                                 Lustre <span className="text-red-600 font-bold">*</span>
                                             </label>
                                             <select 
-                                                required 
                                                 disabled={esSoloEstado}
-                                                className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                                className={`w-full px-3.5 py-1.5 border ${fieldErrors.lustre ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed`} 
                                                 value={formData.lustre} 
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     setFormData({...formData, lustre: val, precio: calcularPrecioTotal(formData.modelo, formData.tipo_tela, val)});
+                                                    if (fieldErrors.lustre) setFieldErrors(prev => ({...prev, lustre: null}));
                                                 }}
                                             >
                                                 <option value="">Seleccionar...</option>
@@ -678,6 +719,12 @@ function Productos() {
                                                 )}
                                                 {listaPrecios.filter(lp => lp.categoria === 'Lustre').map(lp => <option key={lp.id_insumo} value={lp.nombre}>{lp.nombre}</option>)}
                                             </select>
+                                            {fieldErrors.lustre && (
+                                                <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                                    <AlertCircle size={13} className="shrink-0" />
+                                                    {fieldErrors.lustre}
+                                                </p>
+                                            )}
                                         </div>
 
                                         <div className="col-span-1">

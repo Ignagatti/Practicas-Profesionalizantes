@@ -114,31 +114,40 @@ function validarEmail(email) {
 }
 
 function validarCampos(entidad) {
-  if (
-    !entidad.nombre ||
-    !entidad.apellido ||
-    !entidad.cuit ||
-    !entidad.telefono ||
-    !entidad.email
-  ) {
-    return "Nombre, apellido, CUIT/CUIL, teléfono y email son obligatorios.";
+  const fields = {};
+  if (!entidad.nombre?.trim()) fields.nombre = "El nombre es obligatorio.";
+  if (!entidad.apellido?.trim()) fields.apellido = "El apellido es obligatorio.";
+  if (!entidad.cuit?.trim()) fields.cuit = "El CUIT/CUIL es obligatorio.";
+  if (!entidad.telefono?.trim()) fields.telefono = "El teléfono es obligatorio.";
+  if (!entidad.email?.trim()) {
+    fields.email = "El email es obligatorio.";
+  } else if (!validarEmail(entidad.email)) {
+    fields.email = "El email no tiene un formato válido.";
   }
 
-  if (!validarEmail(entidad.email)) {
-    return "El email no tiene un formato válido.";
+  if (Object.keys(fields).length > 0) {
+    const isOnlyEmail = Object.keys(fields).length === 1 && fields.email === "El email no tiene un formato válido.";
+    return {
+      message: isOnlyEmail ? "El email no tiene un formato válido." : "Por favor complete los campos obligatorios indicados en rojo.",
+      fields
+    };
   }
 
   return null;
 }
 
 function validarDireccion(direccion) {
-  if (
-    !direccion.calle ||
-    !direccion.numero ||
-    !direccion.ciudad ||
-    !direccion.provincia
-  ) {
-    return "Calle, número, ciudad y provincia son obligatorios.";
+  const fields = {};
+  if (!direccion.calle?.trim()) fields.calle = "La calle es obligatoria.";
+  if (!direccion.numero?.trim()) fields.numero = "El número es obligatorio.";
+  if (!direccion.ciudad?.trim()) fields.ciudad = "La ciudad es obligatoria.";
+  if (!direccion.provincia?.trim()) fields.provincia = "La provincia es obligatoria.";
+
+  if (Object.keys(fields).length > 0) {
+    return {
+      message: "Por favor complete los datos de la dirección en rojo.",
+      fields
+    };
   }
 
   return null;
@@ -177,6 +186,7 @@ export function EntidadesPanel({
   const [direccionEditandoId, setDireccionEditandoId] = useState(null);
 
   const [errorForm, setErrorForm] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [mensajeExito, setMensajeExito] = useState(null);
 
   useEffect(() => {
@@ -188,6 +198,7 @@ export function EntidadesPanel({
     setSelectedEntidad(null);
     setIsEditando(false);
     setErrorForm(null);
+    setFieldErrors({});
     setDirecciones([]);
     setNuevaDireccion(DIRECCION_VACIA);
     setDireccionEditandoId(null);
@@ -207,10 +218,12 @@ export function EntidadesPanel({
         } else if (showAddModal) {
           setShowAddModal(false);
           setErrorForm(null);
+          setFieldErrors({});
         } else if (showViewModal) {
           setShowViewModal(false);
           setIsEditando(false);
           setErrorForm(null);
+          setFieldErrors({});
         }
       }
     };
@@ -282,6 +295,7 @@ export function EntidadesPanel({
     setSelectedEntidad({ ...entidad });
     setIsEditando(false);
     setErrorForm(null);
+    setFieldErrors({});
     setDirecciones([]);
     setNuevaDireccion(DIRECCION_VACIA);
     setDireccionEditandoId(null);
@@ -297,16 +311,19 @@ export function EntidadesPanel({
   async function handleAddEntidad(e) {
     e.preventDefault();
     setErrorForm(null);
+    setFieldErrors({});
 
     const errorEntidad = validarCampos(newEntidad);
     if (errorEntidad) {
-      setErrorForm(errorEntidad);
+      setErrorForm(errorEntidad.message);
+      setFieldErrors(errorEntidad.fields);
       return;
     }
 
     const errorDireccion = validarDireccion(direccionNuevaEntidad);
     if (errorDireccion) {
-      setErrorForm(errorDireccion);
+      setErrorForm(errorDireccion.message);
+      setFieldErrors(errorDireccion.fields);
       return;
     }
 
@@ -370,11 +387,14 @@ export function EntidadesPanel({
 
   async function handleSaveChanges() {
     if (!selectedEntidad) return;
+    setErrorForm(null);
+    setFieldErrors({});
 
     const errorValidacion = validarCampos(selectedEntidad);
 
     if (errorValidacion) {
-      setErrorForm(errorValidacion);
+      setErrorForm(errorValidacion.message);
+      setFieldErrors(errorValidacion.fields);
       return;
     }
 
@@ -847,6 +867,8 @@ export function EntidadesPanel({
             setDireccionEditandoId(null);
           }}
           errorForm={errorForm}
+          fieldErrors={fieldErrors}
+          setFieldErrors={setFieldErrors}
           guardar={handleSaveChanges}
           cambiarEstado={handleCambiarEstadoDesdeModal}
           direcciones={direcciones}
@@ -873,9 +895,12 @@ export function EntidadesPanel({
           cerrar={() => {
             setShowAddModal(false);
             setErrorForm(null);
+            setFieldErrors({});
             setDireccionNuevaEntidad(DIRECCION_VACIA);
           }}
           errorForm={errorForm}
+          fieldErrors={fieldErrors}
+          setFieldErrors={setFieldErrors}
           guardar={handleAddEntidad}
         />
       )}
@@ -924,6 +949,8 @@ function EntidadModal({
   setIsEditando,
   cerrar,
   errorForm,
+  fieldErrors = {},
+  setFieldErrors = () => {},
   guardar,
   cambiarEstado,
   direcciones,
@@ -940,6 +967,13 @@ function EntidadModal({
 }) {
   const [activeTab, setActiveTab] = useState("info");
   const nombreTitulo = `${entidad.nombre} ${entidad.apellido}`.trim() || entidad.razonSocial || `ID #${entidad.id}`;
+
+  const handleChangeField = (field, value) => {
+    setEntidad({ ...entidad, [field]: value });
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -997,17 +1031,19 @@ function EntidadModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                 <Campo
-                  label="Nombre"
+                  label="Nombre *"
                   value={entidad.nombre}
                   editando={isEditando}
-                  onChange={(v) => setEntidad({ ...entidad, nombre: v })}
+                  error={fieldErrors.nombre}
+                  onChange={(v) => handleChangeField("nombre", v)}
                 />
 
                 <Campo
-                  label="Apellido"
+                  label="Apellido *"
                   value={entidad.apellido}
                   editando={isEditando}
-                  onChange={(v) => setEntidad({ ...entidad, apellido: v })}
+                  error={fieldErrors.apellido}
+                  onChange={(v) => handleChangeField("apellido", v)}
                 />
 
                 <div className="sm:col-span-2">
@@ -1015,31 +1051,35 @@ function EntidadModal({
                     label="Razón Social"
                     value={entidad.razonSocial}
                     editando={isEditando}
-                    onChange={(v) => setEntidad({ ...entidad, razonSocial: v })}
+                    error={fieldErrors.razonSocial}
+                    onChange={(v) => handleChangeField("razonSocial", v)}
                   />
                 </div>
 
                 <Campo
-                  label="CUIT/CUIL"
+                  label="CUIT/CUIL *"
                   value={entidad.cuit}
                   editando={isEditando}
-                  onChange={(v) => setEntidad({ ...entidad, cuit: v })}
+                  error={fieldErrors.cuit}
+                  onChange={(v) => handleChangeField("cuit", v)}
                 />
 
                 <Campo
-                  label="Teléfono"
+                  label="Teléfono *"
                   value={entidad.telefono}
                   editando={isEditando}
-                  onChange={(v) => setEntidad({ ...entidad, telefono: v })}
+                  error={fieldErrors.telefono}
+                  onChange={(v) => handleChangeField("telefono", v)}
                 />
 
                 <div className="sm:col-span-2">
                   <Campo
-                    label="Email"
+                    label="Email *"
                     value={entidad.email}
                     type="email"
                     editando={isEditando}
-                    onChange={(v) => setEntidad({ ...entidad, email: v })}
+                    error={fieldErrors.email}
+                    onChange={(v) => handleChangeField("email", v)}
                   />
                 </div>
 
@@ -1322,8 +1362,24 @@ function AgregarEntidadModal({
   setDireccion,
   cerrar,
   errorForm,
+  fieldErrors = {},
+  setFieldErrors = () => {},
   guardar,
 }) {
+  const handleChangeEntidad = (field, value) => {
+    setEntidad({ ...entidad, [field]: value });
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const handleChangeDireccion = (field, value) => {
+    setDireccion({ ...direccion, [field]: value });
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
@@ -1348,21 +1404,24 @@ function AgregarEntidadModal({
               label="Nombre *"
               value={entidad.nombre}
               required
-              onChange={(v) => setEntidad({ ...entidad, nombre: v })}
+              error={fieldErrors.nombre}
+              onChange={(v) => handleChangeEntidad("nombre", v)}
             />
 
             <InputForm
               label="Apellido *"
               value={entidad.apellido}
               required
-              onChange={(v) => setEntidad({ ...entidad, apellido: v })}
+              error={fieldErrors.apellido}
+              onChange={(v) => handleChangeEntidad("apellido", v)}
             />
 
             <div className="sm:col-span-2">
               <InputForm
                 label="Razón Social"
                 value={entidad.razonSocial}
-                onChange={(v) => setEntidad({ ...entidad, razonSocial: v })}
+                error={fieldErrors.razonSocial}
+                onChange={(v) => handleChangeEntidad("razonSocial", v)}
               />
             </div>
 
@@ -1370,14 +1429,16 @@ function AgregarEntidadModal({
               label="CUIT/CUIL *"
               value={entidad.cuit}
               required
-              onChange={(v) => setEntidad({ ...entidad, cuit: v })}
+              error={fieldErrors.cuit}
+              onChange={(v) => handleChangeEntidad("cuit", v)}
             />
 
             <InputForm
               label="Teléfono *"
               value={entidad.telefono}
               required
-              onChange={(v) => setEntidad({ ...entidad, telefono: v })}
+              error={fieldErrors.telefono}
+              onChange={(v) => handleChangeEntidad("telefono", v)}
             />
 
             <div className="sm:col-span-2">
@@ -1386,7 +1447,8 @@ function AgregarEntidadModal({
                 type="email"
                 value={entidad.email}
                 required
-                onChange={(v) => setEntidad({ ...entidad, email: v })}
+                error={fieldErrors.email}
+                onChange={(v) => handleChangeEntidad("email", v)}
               />
             </div>
           </div>
@@ -1401,37 +1463,40 @@ function AgregarEntidadModal({
                 label="Calle *"
                 value={direccion.calle}
                 required
-                onChange={(v) => setDireccion({ ...direccion, calle: v })}
+                error={fieldErrors.calle}
+                onChange={(v) => handleChangeDireccion("calle", v)}
               />
 
               <InputForm
                 label="Número *"
                 value={direccion.numero}
                 required
-                onChange={(v) => setDireccion({ ...direccion, numero: v })}
+                error={fieldErrors.numero}
+                onChange={(v) => handleChangeDireccion("numero", v)}
               />
 
               <InputForm
                 label="Ciudad *"
                 value={direccion.ciudad}
                 required
-                onChange={(v) => setDireccion({ ...direccion, ciudad: v })}
+                error={fieldErrors.ciudad}
+                onChange={(v) => handleChangeDireccion("ciudad", v)}
               />
 
               <InputForm
                 label="Provincia *"
                 value={direccion.provincia}
                 required
-                onChange={(v) => setDireccion({ ...direccion, provincia: v })}
+                error={fieldErrors.provincia}
+                onChange={(v) => handleChangeDireccion("provincia", v)}
               />
 
               <div className="sm:col-span-2">
                 <InputForm
                   label="Código Postal"
                   value={direccion.codigoPostal}
-                  onChange={(v) =>
-                    setDireccion({ ...direccion, codigoPostal: v })
-                  }
+                  error={fieldErrors.codigoPostal}
+                  onChange={(v) => handleChangeDireccion("codigoPostal", v)}
                 />
               </div>
             </div>
@@ -1452,18 +1517,29 @@ function AgregarEntidadModal({
   );
 }
 
-function Campo({ label, value, editando, onChange, type = "text" }) {
+function Campo({ label, value, editando, onChange, type = "text", error }) {
   return (
     <div>
       <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">{label}</label>
 
       {editando ? (
-        <input
-          type={type}
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-        />
+        <div>
+          <input
+            type={type}
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            className={`w-full px-3.5 py-1.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
+              error
+                ? "border-red-500 bg-red-50/30 text-red-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600"
+                : "border-gray-300 focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+            }`}
+          />
+          {error && (
+            <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+              <AlertCircle size={12} /> {error}
+            </p>
+          )}
+        </div>
       ) : (
         <p className="text-sm font-medium text-gray-800 bg-gray-50 px-3.5 py-1.5 rounded-xl border border-gray-200">{value || "—"}</p>
       )}
@@ -1471,7 +1547,7 @@ function Campo({ label, value, editando, onChange, type = "text" }) {
   );
 }
 
-function InputForm({ label, value, onChange, type = "text", required = false }) {
+function InputForm({ label, value, onChange, type = "text", required = false, error }) {
   const labelLimpio = label.replace(/\s*\*$/, '');
   return (
     <div>
@@ -1482,9 +1558,17 @@ function InputForm({ label, value, onChange, type = "text", required = false }) 
         type={type}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-        required={required}
+        className={`w-full px-3.5 py-1.5 border rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none transition-all ${
+          error
+            ? "border-red-500 bg-red-50/30 text-red-900 focus:ring-2 focus:ring-red-500/20 focus:border-red-600"
+            : "border-gray-300 focus:ring-2 focus:ring-red-700/20 focus:border-red-700"
+        }`}
       />
+      {error && (
+        <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+          <AlertCircle size={12} /> {error}
+        </p>
+      )}
     </div>
   );
 }

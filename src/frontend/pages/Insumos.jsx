@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, X, Percent, Package, Layers, Palette } from "lucide-react";
+import { Search, Plus, Edit, Trash2, X, Percent, Package, Layers, Palette, AlertCircle } from "lucide-react";
 import { 
     obtenerInsumos, 
     crearInsumo, 
@@ -64,8 +64,11 @@ function Insumos() {
         }
     };
 
+    const [fieldErrors, setFieldErrors] = useState({});
+
     const handleOpenAdd = () => {
         setFormData(INSUMO_VACIO);
+        setFieldErrors({});
         setIsEditing(false);
         setShowFormModal(true);
     };
@@ -77,12 +80,25 @@ function Insumos() {
             categoria: insumo.categoria || insumo.Categoria,
             precio_unitario: insumo.precio_unitario || insumo.Precio_Unitario
         });
+        setFieldErrors({});
         setIsEditing(true);
         setShowFormModal(true);
     };
 
+    const validateForm = () => {
+        const errors = {};
+        if (!formData.categoria) errors.categoria = "La categoría es obligatoria";
+        if (!formData.nombre || !formData.nombre.trim()) errors.nombre = "El nombre del insumo es obligatorio";
+        if (formData.precio_unitario === '' || formData.precio_unitario === null || Number(formData.precio_unitario) < 0) {
+            errors.precio_unitario = "Ingrese un precio unitario válido (≥ 0)";
+        }
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validateForm()) return;
         try {
             if (isEditing) {
                 await actualizarInsumo(formData.id, formData);
@@ -298,28 +314,58 @@ function Insumos() {
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Categoría <span className="text-red-600 font-bold">*</span></label>
                                     <select 
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                                        required value={formData.categoria} onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                                        className={`w-full px-3.5 py-1.5 border ${fieldErrors.categoria ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
+                                        value={formData.categoria} 
+                                        onChange={(e) => {
+                                            setFormData({...formData, categoria: e.target.value});
+                                            if (fieldErrors.categoria) setFieldErrors(prev => ({...prev, categoria: null}));
+                                        }}
                                     >
                                         <option value="">Seleccionar...</option>
                                         {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
+                                    {fieldErrors.categoria && (
+                                        <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            {fieldErrors.categoria}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Nombre del Insumo <span className="text-red-600 font-bold">*</span></label>
                                     <input 
-                                        type="text" required placeholder=""
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                                        value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                                        type="text" placeholder=""
+                                        className={`w-full px-3.5 py-1.5 border ${fieldErrors.nombre ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
+                                        value={formData.nombre} 
+                                        onChange={(e) => {
+                                            setFormData({...formData, nombre: e.target.value});
+                                            if (fieldErrors.nombre) setFieldErrors(prev => ({...prev, nombre: null}));
+                                        }}
                                     />
+                                    {fieldErrors.nombre && (
+                                        <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            {fieldErrors.nombre}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1">Precio Unitario ($) <span className="text-red-600 font-bold">*</span></label>
                                     <input 
-                                        type="number" required step="0.01"
-                                        className="w-full px-3.5 py-1.5 border border-gray-300 rounded-xl text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all"
-                                        value={formData.precio_unitario} onChange={(e) => setFormData({...formData, precio_unitario: e.target.value})}
+                                        type="number" step="0.01"
+                                        className={`w-full px-3.5 py-1.5 border ${fieldErrors.precio_unitario ? 'border-red-500 bg-red-50/30' : 'border-gray-300 bg-white'} rounded-xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-700/20 focus:border-red-700 transition-all`}
+                                        value={formData.precio_unitario} 
+                                        onChange={(e) => {
+                                            setFormData({...formData, precio_unitario: e.target.value});
+                                            if (fieldErrors.precio_unitario) setFieldErrors(prev => ({...prev, precio_unitario: null}));
+                                        }}
                                     />
+                                    {fieldErrors.precio_unitario && (
+                                        <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                            <AlertCircle size={13} className="shrink-0" />
+                                            {fieldErrors.precio_unitario}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-3 shrink-0 rounded-b-2xl -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-2">

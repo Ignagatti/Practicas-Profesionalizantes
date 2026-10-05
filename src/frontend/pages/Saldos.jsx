@@ -529,6 +529,7 @@ export function Saldos() {
       title: "Recalcular Saldos",
       message: "¿Desea recalcular automáticamente los saldos de todos los proveedores en base a sus facturas?",
       confirmText: "Recalcular Saldos",
+      cancelText: "Cancelar",
       type: "warning"
     });
 
@@ -657,7 +658,7 @@ export function Saldos() {
                 Proveedores Registrados
               </p>
               <p className="text-lg font-extrabold text-gray-900 leading-tight mt-0.5">
-                {proveedores.length}
+                {saldos.length}
               </p>
             </div>
             <div className="p-2 bg-purple-50 text-purple-700 rounded-lg flex items-center justify-center shrink-0">
@@ -926,14 +927,14 @@ export function Saldos() {
 
                       <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         {saldo.cantidad_facturas_pendientes >
-                        0 ? (
+                          0 ? (
                           <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs">
                             {
                               saldo.cantidad_facturas_pendientes
                             }{" "}
                             pendiente
                             {saldo.cantidad_facturas_pendientes !==
-                            1
+                              1
                               ? "s"
                               : ""}
                           </span>
@@ -955,11 +956,10 @@ export function Saldos() {
 
                       <td className="px-2.5 py-2 sm:px-3 sm:py-2.5 whitespace-nowrap text-xs sm:text-sm">
                         <div
-                          className={`flex items-center gap-1 ${
-                            saldo.saldo_calculado > 0
-                              ? "text-red-700"
-                              : "text-green-700"
-                          }`}
+                          className={`flex items-center gap-1 ${saldo.saldo_calculado > 0
+                            ? "text-red-700"
+                            : "text-green-700"
+                            }`}
                         >
                           <DollarSign size={16} />
 
@@ -1089,7 +1089,7 @@ export function Saldos() {
                     Saldo pendiente
                   </p>
                   <p className="text-2xl font-black text-amber-900">
-                    ${formatearDinero(saldoPendienteDetalle)}
+                    ${formatearDinero(totalAdeudadoDetalle)}
                   </p>
                 </div>
 
@@ -1098,7 +1098,7 @@ export function Saldos() {
                     Facturas registradas
                   </p>
                   <p className="text-2xl font-black text-purple-900">
-                    {cantidadFacturasDetalle}
+                    {facturasDetalle.length}
                   </p>
                 </div>
               </div>
@@ -1160,10 +1160,9 @@ export function Saldos() {
 
                               <td className="p-3 text-center">
                                 <span
-                                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                    estadoConfig[factura.estado_pago]?.color ||
+                                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${estadoConfig[factura.estado_pago]?.color ||
                                     "bg-gray-100 text-gray-700"
-                                  }`}
+                                    }`}
                                 >
                                   {estadoConfig[factura.estado_pago]?.label ||
                                     factura.estado_pago}

@@ -103,7 +103,6 @@ function Insumos() {
             title: "Eliminar Insumo",
             message: "¿Está seguro de que desea eliminar este insumo de la lista de precios?",
             confirmText: "Eliminar",
-            cancelText: "Cancelar",
             type: "danger"
         });
         if (!ok) return;

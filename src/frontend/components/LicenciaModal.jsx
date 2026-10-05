@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, X } from 'lucide-react';
 import logoAcuaber from '../assets/logo-acuaber.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -17,13 +17,13 @@ export function LicenciaModal({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !esBloqueante && onCerrar) {
+      if (e.key === 'Escape' && onCerrar) {
         onCerrar();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [esBloqueante, onCerrar]);
+  }, [onCerrar]);
 
   if (!abierto) return null;
 
@@ -72,7 +72,17 @@ export function LicenciaModal({
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 transform transition-all">
         
         {/* Cabecera */}
-        <div className="bg-[#8b0000] p-6 text-center text-white">
+        <div className="bg-[#8b0000] p-6 text-center text-white relative">
+          {onCerrar && (
+            <button
+              type="button"
+              onClick={onCerrar}
+              className="absolute top-4 right-4 text-red-200 hover:text-white p-1 rounded-lg transition-colors"
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
+          )}
           <div className="mx-auto w-16 h-16 bg-white rounded-2xl shadow-md p-2 flex items-center justify-center mb-3">
             <img src={logoAcuaber} alt="Acuaber" className="max-h-full max-w-full object-contain" />
           </div>

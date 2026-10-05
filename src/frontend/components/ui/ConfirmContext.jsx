@@ -9,7 +9,6 @@ export function ConfirmProvider({ children }) {
     title: "Confirmar acción",
     message: "¿Está seguro que desea continuar?",
     confirmText: "Confirmar",
-    cancelText: "Cancelar",
     type: "danger", // 'danger' | 'warning' | 'info'
     resolve: null,
   });
@@ -19,7 +18,6 @@ export function ConfirmProvider({ children }) {
       title = "Confirmar acción",
       message = "¿Está seguro que desea realizar esta acción?",
       confirmText = "Confirmar",
-      cancelText = "Cancelar",
       type = "danger",
     }) => {
       return new Promise((resolve) => {
@@ -28,7 +26,6 @@ export function ConfirmProvider({ children }) {
           title,
           message,
           confirmText,
-          cancelText,
           type,
           resolve,
         });

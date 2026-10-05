@@ -1072,7 +1072,15 @@ function Productos() {
             {/* POPUP DE CONFIRMACIÓN O ALERTA */}
             {confirmModal.show && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-left border border-gray-100 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-left border border-gray-100 animate-in zoom-in-95 duration-200 relative">
+                        <button
+                            type="button"
+                            onClick={() => setConfirmModal({ ...confirmModal, show: false })}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+                            title="Cerrar"
+                        >
+                            <X size={20} />
+                        </button>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
                         <p className="text-sm text-gray-600 mb-6">{confirmModal.message}</p>
                         <div className="flex justify-end gap-3">
@@ -1082,7 +1090,7 @@ function Productos() {
                                         if (confirmModal.onConfirm) confirmModal.onConfirm();
                                         setConfirmModal({ ...confirmModal, show: false });
                                     }}
-                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm ${
+                                    className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-sm ${
                                         confirmModal.color === 'red' ? 'bg-red-700 hover:bg-red-800' : 'bg-blue-600 hover:bg-blue-700'
                                     }`}
                                 >
@@ -1091,7 +1099,7 @@ function Productos() {
                             ) : (
                                 <button 
                                     onClick={() => setConfirmModal({ ...confirmModal, show: false })}
-                                    className="px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-bold transition-colors"
+                                    className="w-full sm:w-auto px-5 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-bold transition-colors"
                                 >
                                     Entendido
                                 </button>

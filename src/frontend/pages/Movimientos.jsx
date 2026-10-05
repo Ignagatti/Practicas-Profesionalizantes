@@ -222,6 +222,17 @@ export function Movimientos() {
   const [showDetalleModal, setShowDetalleModal] =
     useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && showDetalleModal) {
+        setShowDetalleModal(false);
+        setMovimientoDetalle(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDetalleModal]);
+
 
   // =====================================================
   // CARGAR RESUMEN

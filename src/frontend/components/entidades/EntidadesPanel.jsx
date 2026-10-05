@@ -465,7 +465,6 @@ export function EntidadesPanel({
       title: `${selectedEntidad.estado === "activo" ? "Bloquear" : "Activar"} ${obtenerNombreEntidad(tipoVista)}`,
       message: `¿Está seguro que desea ${accion} este ${nombreEntidad}?`,
       confirmText: selectedEntidad.estado === "activo" ? "Bloquear" : "Activar",
-      cancelText: "Cancelar",
       type: selectedEntidad.estado === "activo" ? "warning" : "info"
     });
 
@@ -579,7 +578,6 @@ export function EntidadesPanel({
       title: "Eliminar Dirección",
       message: "¿Está seguro que desea eliminar esta dirección?",
       confirmText: "Eliminar",
-      cancelText: "Cancelar",
       type: "danger"
     });
     if (!ok) return;
@@ -885,7 +883,15 @@ export function EntidadesPanel({
       {/* Modal Confirmar Eliminación Entidad */}
       {showConfirmDeleteEntidadModal && selectedEntidad && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+            <button
+              type="button"
+              onClick={() => setShowConfirmDeleteEntidadModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
             <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2 border-gray-100">
               Confirmar Eliminación
             </h3>
@@ -896,6 +902,7 @@ export function EntidadesPanel({
             </p>
             <div className="flex justify-end">
               <button
+                type="button"
                 onClick={handleEliminarEntidad}
                 className="w-full sm:w-auto px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-bold text-sm flex items-center justify-center gap-2 shadow-sm"
               >

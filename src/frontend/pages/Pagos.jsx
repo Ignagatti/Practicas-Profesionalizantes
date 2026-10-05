@@ -1059,7 +1059,6 @@ export default function Pagos() {
       title: "Eliminar Pago",
       message: "¿Está seguro de que desea eliminar este pago? Los montos aplicados se restaurarán automáticamente a las facturas o pedidos correspondientes.",
       confirmText: "Eliminar Pago",
-      cancelText: "Cancelar",
       type: "danger"
     });
 

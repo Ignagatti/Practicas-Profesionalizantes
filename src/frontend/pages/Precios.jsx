@@ -49,6 +49,18 @@ export function Precios() {
     precioUnitario: 0,
   });
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setShowAjusteModal(false);
+        setShowAddModal(false);
+        setShowEditModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // ── Filtrado ──────────────────────────────────────────────
   const filteredInsumos = insumos.filter((insumo) => {
     const matchesSearch =
@@ -128,7 +140,6 @@ export function Precios() {
       title: "Eliminar Insumo",
       message: "¿Está seguro que desea eliminar este insumo?",
       confirmText: "Eliminar",
-      cancelText: "Cancelar",
       type: "danger",
     });
     if (ok) {

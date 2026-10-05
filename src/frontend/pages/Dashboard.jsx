@@ -785,7 +785,22 @@ export function Dashboard({ pagosPendientes: propPagosPendientes, onActualizarPe
       {/* Modal Confirmación de Restauración */}
       {modalRestaurarAbierto && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 relative">
+            <button
+              type="button"
+              onClick={() => {
+                if (!restaurandoBackup) {
+                  setModalRestaurarAbierto(false);
+                  setArchivoBackup(null);
+                }
+              }}
+              disabled={restaurandoBackup}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50"
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
+
             <div className="p-6 text-center">
               <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200">
                 <AlertTriangle size={28} />

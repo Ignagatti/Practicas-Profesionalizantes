@@ -229,6 +229,17 @@ export function Saldos() {
   const [facturasDetalle, setFacturasDetalle] =
     useState([]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && showDetalleModal) {
+        setShowDetalleModal(false);
+        setProveedorDetalle(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDetalleModal]);
+
 
   // =====================================================
   // CARGA INICIAL
@@ -518,7 +529,6 @@ export function Saldos() {
       title: "Recalcular Saldos",
       message: "¿Desea recalcular automáticamente los saldos de todos los proveedores en base a sus facturas?",
       confirmText: "Recalcular Saldos",
-      cancelText: "Cancelar",
       type: "warning"
     });
 

@@ -5,11 +5,8 @@ import Insumos from "./pages/Insumos.jsx";
 import { Dashboard } from "./pages/Dashboard.jsx";
 import { Clientes } from "./pages/Clientes.jsx";
 import { Proveedores } from "./pages/Proveedores.jsx";
-import { Movimientos } from "./pages/Movimientos.jsx";
 import Pagos from "./pages/Pagos.jsx";
 import { Pedidos } from "./pages/Pedidos.jsx";
-import { Precios } from "./pages/Precios.jsx";
-import { Saldos } from "./pages/Saldos.jsx";
 import { ToastProvider } from "./components/ui/ToastContext.jsx";
 import { ConfirmProvider } from "./components/ui/ConfirmContext.jsx";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary.jsx";
@@ -203,11 +200,8 @@ function App() {
       insumos: "Lista de Precios",
       clientes: "Clientes",
       proveedores: "Proveedores",
-      movimientos: "Historial de movimientos",
       pagos: "Gestión de Pagos - Clientes",
       pedidos: "Gestión de Pedidos - Clientes",
-      precios: "Lista de Precios",
-      saldos: "Control de Saldos",
     };
 
     return titulos[seccion] || "Panel de control";
@@ -230,20 +224,11 @@ function App() {
       case "proveedores":
         return <Proveedores />;
 
-      case "movimientos":
-        return <Movimientos />;
-
       case "pagos":
         return <Pagos />;
 
       case "pedidos":
         return <Pedidos />;
-
-      case "precios":
-        return <Precios />;
-
-      case "saldos":
-        return <Saldos />;
 
       default:
         return <Dashboard pagosPendientes={pagosPendientes} onActualizarPendientes={cargarPendientes} />;

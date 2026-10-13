@@ -1,4 +1,3 @@
-import React from 'react';
 import logoAcuaber from './assets/logo-acuaber.png';
 import {
     LayoutGrid,

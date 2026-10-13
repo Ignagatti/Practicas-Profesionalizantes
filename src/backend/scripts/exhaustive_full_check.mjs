@@ -76,13 +76,10 @@ async function runExhaustiveCheck() {
     'src/frontend/pages/Insumos.jsx',
     'src/frontend/pages/Clientes.jsx',
     'src/frontend/pages/Proveedores.jsx',
-    'src/frontend/pages/Movimientos.jsx',
     'src/frontend/pages/Pagos.jsx',
     'src/frontend/pages/Pedidos.jsx',
     'src/frontend/pages/PedidosCliente.jsx',
     'src/frontend/pages/PedidosProveedor.jsx',
-    'src/frontend/pages/Precios.jsx',
-    'src/frontend/pages/Saldos.jsx',
     'src/frontend/App.jsx'
   ];
 

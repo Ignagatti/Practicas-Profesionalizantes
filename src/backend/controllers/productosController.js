@@ -29,6 +29,32 @@ const obtenerProductos = async (req, res) => {
     }
 };
 
+// OBTENER POR ID
+const obtenerProductoPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT p.*, p.Observaciones as observaciones, 
+                   CASE 
+                       WHEN NULLIF(TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, '')), '') IS NOT NULL 
+                       THEN TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, ''))
+                       ELSE c.Razon_Social 
+                   END as cliente 
+            FROM Producto p 
+            LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
+            WHERE p.Id_Producto = $1
+        `;
+        const resultado = await pool.query(query, [id]);
+        if (resultado.rowCount === 0) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+        res.json(resultado.rows[0]);
+    } catch (error) {
+        console.error('Error en obtenerProductoPorId:', error.message);
+        res.status(500).send('Error al buscar el producto');
+    }
+};
+
 // CREAR NUEVO
 const crearProducto = async (req, res) => {
     const { modelo, tela, color_lustre, estado, cantidad, precio, observaciones, fecha_pedido, id_cliente } = req.body;
@@ -208,6 +234,7 @@ const enviarProductosMasivo = async (req, res) => {
 
 module.exports = {
     obtenerProductos,
+    obtenerProductoPorId,
     crearProducto,
     actualizarProducto,
     eliminarProducto,

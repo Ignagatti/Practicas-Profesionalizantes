@@ -20,6 +20,7 @@ dist/
 build/
 dist-electron/
 src/frontend/dist/
+.neon
 .neon/
 
 # Subidas locales y temporales

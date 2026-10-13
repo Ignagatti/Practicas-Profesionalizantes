@@ -7,12 +7,10 @@ dotenv.config();
 dotenv.config({ path: path.join(__dirname, '../../../.env') });
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-const connectionString = process.env.DATABASE_URL;
+// Fallback por defecto a la base de datos de Neon Cloud configurada para la entrega
+const DEFAULT_DATABASE_URL = "postgresql://neondb_owner:npg_qDz2RFItbiA8@ep-steep-smoke-ay5b02jw-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=verify-full";
 
-if (!connectionString) {
-    console.error("❌ ERROR CRÍTICO: No se encontró la variable DATABASE_URL en el archivo .env.");
-    process.exit(1);
-}
+const connectionString = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
 
 const isLocalDb = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 

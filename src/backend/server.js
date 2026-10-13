@@ -137,7 +137,7 @@ const migrate = require("./scripts/migrate");
 
 const server = app.listen(PORT, () => {
     console.log(`El servidor se conectó y está escuchando en el puerto ${PORT}`);
-    
+
     // Verificar conexión a PostgreSQL y ejecutar migraciones
     pool.query("SELECT NOW()")
         .then(async () => {

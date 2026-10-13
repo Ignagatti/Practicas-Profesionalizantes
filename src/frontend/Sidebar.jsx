@@ -10,14 +10,15 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({ seccionActual, setSeccion, isOpen = false, onClose = () => { } }) => {
+    // Módulos principales del sistema alineados a los Casos de Uso (Bloques 1 al 8)
     const menuItems = [
-        { id: 'dashboard', nombre: 'Panel de control', icono: LayoutGrid },
-        { id: 'productos', nombre: 'Productos', icono: Package },
-        { id: 'pedidos', nombre: 'Pedidos', icono: ShoppingCart },
-        { id: 'pagos', nombre: 'Pagos', icono: Wallet },
-        { id: 'insumos', nombre: 'Lista de Precios', icono: List },
-        { id: 'clientes', nombre: 'Clientes', icono: Users },
-        { id: 'proveedores', nombre: 'Proveedores', icono: Users },
+        { id: 'dashboard', nombre: 'Panel de control', icono: LayoutGrid }, // CU1: Panel de Control y Alertas
+        { id: 'productos', nombre: 'Productos', icono: Package },          // CU02: Planilla y Producción
+        { id: 'pedidos', nombre: 'Pedidos', icono: ShoppingCart },          // CU3 (Ventas) y CU4 (Compras)
+        { id: 'pagos', nombre: 'Pagos', icono: Wallet },                    // CU05 (Cobros) y CU32 (Pagos)
+        { id: 'insumos', nombre: 'Lista de Precios', icono: List },         // CU6: Catálogo de Costos
+        { id: 'clientes', nombre: 'Clientes', icono: Users },               // CU7: Clientes y CU42 (Cuenta Corriente)
+        { id: 'proveedores', nombre: 'Proveedores', icono: Users },         // CU8: Proveedores y CU50 (Cuenta Corriente)
     ];
 
     const handleSelect = (id) => {

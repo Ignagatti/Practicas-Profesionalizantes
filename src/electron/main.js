@@ -7,6 +7,11 @@ process.on('uncaughtException', (error) => {
   dialog.showErrorBox('Error al iniciar Acuaber', error.message || String(error));
 });
 
+// En modo empaquetado (asar es solo lectura), guardar uploads en userData
+if (app.isPackaged) {
+  process.env.UPLOADS_DIR = path.join(app.getPath('userData'), 'uploads');
+}
+
 // Cargar backend Node.js de forma segura
 try {
   require(path.join(__dirname, '../backend/server.js'));

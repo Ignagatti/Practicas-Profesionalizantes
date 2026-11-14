@@ -9,6 +9,7 @@ const {
 } = require("../controllers/facturasProveedorController");
 const multer = require("multer");
 const path = require("path");
+const { getUploadsDir } = require("../config/uploads");
 
 const fileFilter = (req, file, cb) => {
     const allowedMimes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
@@ -24,7 +25,7 @@ const fileFilter = (req, file, cb) => {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, "../uploads/"));
+        cb(null, getUploadsDir());
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);

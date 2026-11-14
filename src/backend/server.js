@@ -55,10 +55,10 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization", "Accept", "x-license-key"]
 }));
 
-const path = require("path");
+const { getUploadsDir } = require("./config/uploads");
 
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(getUploadsDir()));
 
 // =====================================================
 // RUTAS

@@ -7,6 +7,70 @@ const {
     areEqualMoney
 } = require("../utils/currencyUtils");
 
+const ID_MEDIO_SALDO_FAVOR = 5;
+
+// =====================================================
+// TRAZABILIDAD DEL SALDO A FAVOR
+// =====================================================
+
+/**
+ * Devuelve el crédito consumido por un pago con saldo a favor a los pagos
+ * de los que salió, y elimina los registros de trazabilidad.
+ */
+async function restaurarSaldoFavorOrigen(client, tipo, idPagoFavor) {
+    const usos = await client.query(
+        `SELECT Id_Pago_Origen, Monto FROM Uso_Saldo_Favor
+         WHERE Tipo = $1 AND Id_Pago_Favor = $2`,
+        [tipo, idPagoFavor]
+    );
+
+    for (const uso of usos.rows) {
+        await client.query(
+            tipo === "cliente"
+                ? `UPDATE PagoPedido SET Monto_Restante = Monto_Restante + $1 WHERE Id_Pago_Pedido = $2`
+                : `UPDATE Pago_Insumo SET Monto_Restante = Monto_Restante + $1 WHERE Id_Pago_Insumo = $2`,
+            [roundMoney(parseMoney(uso.monto)), uso.id_pago_origen]
+        );
+    }
+
+    await client.query(
+        `DELETE FROM Uso_Saldo_Favor WHERE Tipo = $1 AND Id_Pago_Favor = $2`,
+        [tipo, idPagoFavor]
+    );
+}
+
+/**
+ * Obtiene, para un pago dado:
+ *  - origenes: de qué pagos salió el saldo a favor usado (si es un pago con saldo a favor)
+ *  - consumos: en qué pagos con saldo a favor se usó el excedente de este pago
+ */
+async function obtenerTrazabilidadSaldo(tipo, idPago) {
+    const tablaPago = tipo === "cliente" ? "PagoPedido" : "Pago_Insumo";
+    const colId = tipo === "cliente" ? "Id_Pago_Pedido" : "Id_Pago_Insumo";
+    try {
+        const origenes = await db.query(
+            `SELECT u.Id_Pago_Origen AS id_pago, u.Monto AS monto, p.Fecha_Pago AS fecha_pago
+             FROM Uso_Saldo_Favor u
+             LEFT JOIN ${tablaPago} p ON p.${colId} = u.Id_Pago_Origen
+             WHERE u.Tipo = $1 AND u.Id_Pago_Favor = $2
+             ORDER BY u.Id_Uso_Saldo_Favor ASC`,
+            [tipo, idPago]
+        );
+        const consumos = await db.query(
+            `SELECT u.Id_Pago_Favor AS id_pago, u.Monto AS monto, p.Fecha_Pago AS fecha_pago
+             FROM Uso_Saldo_Favor u
+             LEFT JOIN ${tablaPago} p ON p.${colId} = u.Id_Pago_Favor
+             WHERE u.Tipo = $1 AND u.Id_Pago_Origen = $2
+             ORDER BY u.Id_Uso_Saldo_Favor ASC`,
+            [tipo, idPago]
+        );
+        return { origenes: origenes.rows, consumos: consumos.rows };
+    } catch (error) {
+        // Si la tabla aún no existe (migración pendiente) no se rompe el detalle del pago
+        return { origenes: [], consumos: [] };
+    }
+}
+
 // =====================================================
 // OBTENER TODOS LOS PAGOS
 // =====================================================
@@ -130,7 +194,8 @@ const obtenerPagoPorId = async (req, res) => {
 
             return res.json({
                 pago: pago.rows[0],
-                detalles: detalles.rows
+                detalles: detalles.rows,
+                saldo_favor: await obtenerTrazabilidadSaldo("cliente", id)
             });
         }
 
@@ -182,7 +247,8 @@ const obtenerPagoPorId = async (req, res) => {
 
         res.json({
             pago: pago.rows[0],
-            detalles: detalles.rows
+            detalles: detalles.rows,
+            saldo_favor: await obtenerTrazabilidadSaldo("proveedor", id)
         });
 
     } catch (error) {
@@ -238,6 +304,13 @@ const crearPago = async (req, res) => {
         if (montoPago === 0 && montoFavorUsado === 0) {
             return res.status(400).json({
                 mensaje: "Debe ingresar un monto de pago o aplicar saldo a favor."
+            });
+        }
+
+        // Un pago con saldo a favor es exclusivo: no se combina con dinero nuevo
+        if (montoPago > 0 && montoFavorUsado > 0) {
+            return res.status(400).json({
+                mensaje: "Un pago con saldo a favor no puede combinarse con otro medio de pago. Registralos por separado."
             });
         }
         
@@ -388,12 +461,21 @@ const crearPago = async (req, res) => {
             });
         }
 
-        // Si se usa saldo a favor, buscar y bloquear los pagos existentes con saldo restante
+        // Si se usa saldo a favor: se descuenta de los pagos anteriores con saldo restante
+        // y se registra un pago NUEVO con medio "Saldo a favor" (Id 5) en la fecha indicada.
+        // El vínculo pago con saldo -> pagos de origen queda guardado en Uso_Saldo_Favor.
         if (montoFavorUsado > 0) {
-            if (Tipo === "cliente") {
-                // Bloqueo de concurrencia: FOR UPDATE en pagos con saldo a favor del cliente
-                const pagosAFAvor = await client.query(
-                    `
+            if (montoFavorUsado > montoAplicado + 0.009) {
+                throw new Error("El saldo a favor utilizado no puede superar el total aplicado a los comprobantes.");
+            }
+
+            const montoCredito = montoAplicado;
+            const esCliente = Tipo === "cliente";
+
+            // Bloqueo de concurrencia: FOR UPDATE en pagos con saldo a favor de la entidad
+            const pagosAFavor = await client.query(
+                esCliente
+                    ? `
                     SELECT * FROM PagoPedido
                     WHERE Id_Pago_Pedido IN (
                         SELECT DISTINCT dpp.Id_Pago_Pedido
@@ -403,22 +485,8 @@ const crearPago = async (req, res) => {
                     ) AND Monto_Restante > 0
                     ORDER BY Fecha_Pago ASC, Id_Pago_Pedido ASC
                     FOR UPDATE
-                    `,
-                    [targetEntidadId]
-                );
-
-                for (const row of pagosAFAvor.rows) {
-                    sources.push({
-                        id: row.id_pago_pedido,
-                        type: 'old',
-                        disponible: roundMoney(parseMoney(row.monto_restante))
-                    });
-                }
-            } else {
-                // Proveedor
-                // Bloqueo de concurrencia: FOR UPDATE en pagos con saldo a favor del proveedor
-                const pagosAFAvor = await client.query(
                     `
+                    : `
                     SELECT * FROM Pago_Insumo
                     WHERE Id_Pago_Insumo IN (
                         SELECT DISTINCT dpc.Id_Pago_Insumo
@@ -429,16 +497,55 @@ const crearPago = async (req, res) => {
                     ORDER BY Fecha_Pago ASC, Id_Pago_Insumo ASC
                     FOR UPDATE
                     `,
-                    [targetEntidadId]
+                [targetEntidadId]
+            );
+
+            const creditoDisponible = roundMoney(
+                pagosAFavor.rows.reduce((acc, r) => acc + roundMoney(parseMoney(r.monto_restante)), 0)
+            );
+
+            if (montoCredito > creditoDisponible + 0.009) {
+                throw new Error(`El saldo a favor disponible ($${creditoDisponible}) no alcanza para cubrir $${montoCredito}.`);
+            }
+
+            // Crear el pago realizado con saldo a favor
+            const pagoFavorRes = await client.query(
+                esCliente
+                    ? `INSERT INTO PagoPedido (Fecha_Pago, Estado_Pago, Monto, Monto_Restante, Id_Medio_Pago)
+                       VALUES ($1, 'parcial', $2, $2, 5) RETURNING *`
+                    : `INSERT INTO Pago_Insumo (Fecha_Pago, Estado_Pago, Monto, Monto_Restante, Id_Medio_Pago)
+                       VALUES ($1, 'parcial', $2, $2, 5) RETURNING *`,
+                [Fecha_Pago, montoCredito]
+            );
+            pagoNewRow = pagoFavorRes.rows[0];
+            idPagoNew = esCliente
+                ? (pagoNewRow.id_pago_pedido || pagoNewRow.Id_Pago_Pedido)
+                : (pagoNewRow.id_pago_insumo || pagoNewRow.Id_Pago_Insumo);
+
+            sources.push({ id: idPagoNew, type: 'new', disponible: montoCredito });
+
+            // Descontar el crédito de los pagos de origen (FIFO) y registrar la trazabilidad
+            let restante = montoCredito;
+            for (const row of pagosAFavor.rows) {
+                if (restante <= 0.009) break;
+                const idOrigen = esCliente ? row.id_pago_pedido : row.id_pago_insumo;
+                const tomar = roundMoney(Math.min(roundMoney(parseMoney(row.monto_restante)), restante));
+                if (tomar <= 0) continue;
+
+                await client.query(
+                    esCliente
+                        ? `UPDATE PagoPedido SET Monto_Restante = GREATEST(0, Monto_Restante - $1) WHERE Id_Pago_Pedido = $2`
+                        : `UPDATE Pago_Insumo SET Monto_Restante = GREATEST(0, Monto_Restante - $1) WHERE Id_Pago_Insumo = $2`,
+                    [tomar, idOrigen]
                 );
 
-                for (const row of pagosAFAvor.rows) {
-                    sources.push({
-                        id: row.id_pago_insumo,
-                        type: 'old',
-                        disponible: roundMoney(parseMoney(row.monto_restante))
-                    });
-                }
+                await client.query(
+                    `INSERT INTO Uso_Saldo_Favor (Tipo, Id_Pago_Favor, Id_Pago_Origen, Monto)
+                     VALUES ($1, $2, $3, $4)`,
+                    [esCliente ? "cliente" : "proveedor", idPagoNew, idOrigen, tomar]
+                );
+
+                restante = subMoney(restante, tomar);
             }
         }
 
@@ -773,7 +880,11 @@ const eliminarPago = async (req, res) => {
             }
 
             // 5. Ajustar saldo del Cliente si se registró monto
-            if (detalles.rows.length > 0 && montoPagoOriginal > 0) {
+            //    (un pago con saldo a favor no movió el saldo: se devuelve el crédito a sus pagos de origen)
+            const esPagoSaldoFavor = Number(datosPago.id_medio_pago) === 5;
+            if (esPagoSaldoFavor) {
+                await restaurarSaldoFavorOrigen(client, "cliente", id);
+            } else if (detalles.rows.length > 0 && montoPagoOriginal > 0) {
                 const idCliente = detalles.rows[0].id_cliente;
                 await client.query(
                     `SELECT Id_Cliente FROM Cliente WHERE Id_Cliente = $1 FOR UPDATE`,
@@ -870,7 +981,10 @@ const eliminarPago = async (req, res) => {
         }
 
         // Restaurar saldo global del Proveedor (sumar de vuelta el monto pagado eliminado)
-        if (detalles.rows.length > 0 && montoPagoOriginal > 0) {
+        // (un pago con saldo a favor no movió el saldo: se devuelve el crédito a sus pagos de origen)
+        if (Number(datosPago.id_medio_pago) === 5) {
+            await restaurarSaldoFavorOrigen(client, "proveedor", id);
+        } else if (detalles.rows.length > 0 && montoPagoOriginal > 0) {
             const idProveedor = detalles.rows[0].id_proveedor;
             await client.query(
                 `SELECT Id_Proveedor FROM Proveedor WHERE Id_Proveedor = $1 FOR UPDATE`,
@@ -920,6 +1034,29 @@ const editarPago = async (req, res) => {
             );
             if (medioRes.rows.length > 0) {
                 medioPagoId = medioRes.rows[0].id_medio_pago || medioRes.rows[0].Id_Medio_Pago;
+            }
+        }
+
+        // El medio "Saldo a favor" no se puede asignar ni quitar editando:
+        // afecta los créditos de otros pagos (trazabilidad en Uso_Saldo_Favor)
+        if (medioPagoId) {
+            const actual = await db.query(
+                tipo === "cliente"
+                    ? `SELECT Id_Medio_Pago FROM PagoPedido WHERE Id_Pago_Pedido = $1`
+                    : `SELECT Id_Medio_Pago FROM Pago_Insumo WHERE Id_Pago_Insumo = $1`,
+                [id]
+            );
+            if (actual.rows.length > 0) {
+                const medioActual = Number(actual.rows[0].id_medio_pago);
+                const eraSaldo = medioActual === ID_MEDIO_SALDO_FAVOR;
+                const seraSaldo = Number(medioPagoId) === ID_MEDIO_SALDO_FAVOR;
+                if (eraSaldo !== seraSaldo) {
+                    return res.status(400).json({
+                        mensaje: eraSaldo
+                            ? "Un pago realizado con saldo a favor no puede cambiar de método de pago. Eliminalo y registralo nuevamente."
+                            : "No se puede cambiar un pago a 'Saldo a favor'. Registrá un nuevo pago usando el saldo a favor."
+                    });
+                }
             }
         }
 

@@ -412,6 +412,7 @@ function Productos() {
     const pendientes = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'pendiente');
     const enProduccion = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'en_produccion');
     const terminados = productos.filter(p => (p.estado || p.Estado || "").toLowerCase() === 'terminado');
+    const terminadosEnviables = terminados.filter(p => Boolean(p.tiene_pedido || p.id_pedido));
 
     const modelosRegistrados = listaPrecios.filter(lp => lp.categoria === 'Modelo').map(lp => lp.nombre);
     const telasRegistradas = listaPrecios.filter(lp => lp.categoria === 'Tela').map(lp => lp.nombre);
@@ -539,12 +540,17 @@ function Productos() {
                         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
                             {(() => {
                                 const estadoOrig = isEditing && selectedProducto ? (selectedProducto.estado || selectedProducto.Estado || 'pendiente').toLowerCase() : 'pendiente';
-                                const esSoloEstado = isEditing && estadoOrig !== 'pendiente';
+                                const tienePedido = Boolean(selectedProducto?.tiene_pedido || selectedProducto?.id_pedido);
+                                const esSoloEstado = isEditing && (estadoOrig !== 'pendiente' || tienePedido);
                                 return (
                                     <div className="grid grid-cols-2 gap-4">
                                         {esSoloEstado && (
                                             <div className="col-span-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl font-medium">
-                                                ⚠️ El producto está en estado <span className="font-bold uppercase">{estadoOrig.replace('_', ' ')}</span>. Solo se permite modificar su estado de producción.
+                                                {tienePedido && estadoOrig === 'pendiente' ? (
+                                                    <>⚠️ Este producto ya está asociado al <strong>Pedido N° {selectedProducto.id_pedido}</strong>. Su precio y características están fijados; solo se permite modificar su estado.</>
+                                                ) : (
+                                                    <>⚠️ El producto está en estado <span className="font-bold uppercase">{estadoOrig.replace('_', ' ')}</span>. Solo se permite modificar su estado de producción.</>
+                                                )}
                                             </div>
                                         )}
                                         <div className="col-span-2">
@@ -747,7 +753,9 @@ function Productos() {
                                                     <option value="pendiente">Pendiente</option>
                                                     <option value="en_produccion">En Producción</option>
                                                     <option value="terminado">Terminado</option>
-                                                    <option value="enviado">Enviado</option>
+                                                    <option value="enviado" disabled={!tienePedido}>
+                                                        {tienePedido ? "Enviado" : "Enviado (requiere estar en un pedido)"}
+                                                    </option>
                                                     <option value="cancelado">Cancelado</option>
                                                 </select>
                                             </div>
@@ -1049,11 +1057,12 @@ function Productos() {
                                             <th className="p-3 text-center w-12">
                                                 <input 
                                                     type="checkbox" 
-                                                    className="w-4 h-4 rounded border-gray-300 accent-purple-600 cursor-pointer"
-                                                    checked={seleccionadosEnviar.length === terminados.length && terminados.length > 0}
+                                                    className="w-4 h-4 rounded border-gray-300 accent-purple-600 cursor-pointer disabled:cursor-not-allowed"
+                                                    disabled={terminadosEnviables.length === 0}
+                                                    checked={seleccionadosEnviar.length === terminadosEnviables.length && terminadosEnviables.length > 0}
                                                     onChange={(e) => {
                                                         if (e.target.checked) {
-                                                            setSeleccionadosEnviar(terminados.map(p => p.id_producto || p.Id_Producto));
+                                                            setSeleccionadosEnviar(terminadosEnviables.map(p => p.id_producto || p.Id_Producto));
                                                         } else {
                                                             setSeleccionadosEnviar([]);
                                                         }
@@ -1061,6 +1070,7 @@ function Productos() {
                                                 />
                                             </th>
                                             <th className="p-3">CLIENTE</th>
+                                            <th className="p-3">PEDIDO</th>
                                             <th className="p-3">MODELO</th>
                                             <th className="p-3 text-center">CANT.</th>
                                             <th className="p-3">TELA</th>
@@ -1070,27 +1080,43 @@ function Productos() {
                                     <tbody className="divide-y divide-gray-100">
                                         {terminados.length === 0 ? (
                                             <tr>
-                                                <td colSpan="6" className="p-6 text-center text-sm font-medium text-gray-400">No hay productos terminados disponibles para enviar.</td>
+                                                <td colSpan="7" className="p-6 text-center text-sm font-medium text-gray-400">No hay productos terminados disponibles para enviar.</td>
                                             </tr>
                                         ) : (
                                             terminados.map(p => {
                                                 const id = p.id_producto || p.Id_Producto;
+                                                const tienePedido = Boolean(p.tiene_pedido || p.id_pedido);
                                                 const isSelected = seleccionadosEnviar.includes(id);
                                                 return (
                                                     <tr 
                                                         key={id} 
-                                                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${isSelected ? 'bg-purple-50/30' : ''}`}
-                                                        onClick={() => setSeleccionadosEnviar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id])}
+                                                        className={`transition-colors ${!tienePedido ? 'bg-gray-50/70 opacity-60 cursor-not-allowed' : isSelected ? 'bg-purple-50/30 cursor-pointer hover:bg-gray-50' : 'cursor-pointer hover:bg-gray-50'}`}
+                                                        onClick={() => {
+                                                            if (!tienePedido) return;
+                                                            setSeleccionadosEnviar(prev => isSelected ? prev.filter(sid => sid !== id) : [...prev, id]);
+                                                        }}
                                                     >
                                                         <td className="p-3 text-center">
                                                             <input
                                                                 type="checkbox"
-                                                                className="w-4 h-4 accent-purple-600 pointer-events-none"
+                                                                className="w-4 h-4 accent-purple-600 pointer-events-none disabled:opacity-40"
+                                                                disabled={!tienePedido}
                                                                 checked={isSelected}
                                                                 readOnly
                                                             />
                                                         </td>
                                                         <td className="p-3 text-sm text-gray-600">{p.cliente || 'Sin cliente'}</td>
+                                                        <td className="p-3 text-xs">
+                                                            {tienePedido ? (
+                                                                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                                                                    Pedido #{p.id_pedido}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">
+                                                                    Sin pedido (no enviable)
+                                                                </span>
+                                                            )}
+                                                        </td>
                                                         <td className="p-3 text-sm font-semibold text-gray-900">{p.modelo || p.Modelo}</td>
                                                         <td className="p-3 text-sm text-gray-800 text-center font-bold">{p.cantidad || p.Cantidad}</td>
                                                         <td className="p-3 text-sm text-gray-500">{p.tela || p.Tela || '-'}</td>

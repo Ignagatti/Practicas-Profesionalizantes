@@ -16,7 +16,8 @@ const ORDEN_TABLAS_PREFERIDO = [
   "detalle_pago_pedido",
   "factura_proveedor",
   "pago_insumo",
-  "detalle_pago_compra"
+  "detalle_pago_compra",
+  "uso_saldo_favor"
 ];
 
 /**

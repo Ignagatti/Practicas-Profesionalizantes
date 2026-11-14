@@ -512,6 +512,18 @@ const cambiarEstadoProducto = async (req, res) => {
             });
         }
 
+        if (String(Estado).toLowerCase() === 'enviado') {
+            const enPedido = await pool.query(
+                `SELECT 1 FROM Detalle_Pedido WHERE Id_Producto = $1 LIMIT 1`,
+                [idProducto]
+            );
+            if (enPedido.rowCount === 0) {
+                return res.status(400).json({
+                    error: 'No se puede enviar un producto que no está incluido en un pedido.'
+                });
+            }
+        }
+
         const resultado = await pool.query(
             `
             UPDATE Producto

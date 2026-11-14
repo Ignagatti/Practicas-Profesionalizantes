@@ -103,7 +103,10 @@ const construirConsultaMovimientos = ({
                     AS observaciones,
 
                 NULL::integer
-                    AS id_medio_pago
+                    AS id_medio_pago,
+
+                NULL::text
+                    AS tipo_medio_pago
 
             FROM Factura_Proveedor fp
 
@@ -157,9 +160,15 @@ const construirConsultaMovimientos = ({
                     AS observaciones,
 
                 pi.Id_Medio_Pago
-                    AS id_medio_pago
+                    AS id_medio_pago,
+
+                mp.Tipo::text
+                    AS tipo_medio_pago
 
             FROM Pago_Insumo pi
+
+            LEFT JOIN Metodo_Pago mp
+                ON mp.Id_Medio_Pago = pi.Id_Medio_Pago
 
             INNER JOIN Detalle_Pago_Compra dpc
                 ON dpc.Id_Pago_Insumo =
@@ -178,6 +187,7 @@ const construirConsultaMovimientos = ({
                 pi.Fecha_Pago,
                 pi.Estado_Pago,
                 pi.Id_Medio_Pago,
+                mp.Tipo,
                 fp.Id_Proveedor,
                 p.Id_Proveedor,
                 p.Razon_Social,
@@ -196,7 +206,8 @@ const construirConsultaMovimientos = ({
             estado_pago,
             referencia,
             observaciones,
-            id_medio_pago
+            id_medio_pago,
+            tipo_medio_pago
 
         FROM movimientos
 
@@ -531,7 +542,8 @@ const obtenerMovimientosCliente = async (req, res) => {
                     p.Estado_Pago::text AS estado_pago,
                     CONCAT('Pedido N° ', p.Id_Pedido) AS referencia,
                     p.Observaciones AS observaciones,
-                    NULL::integer AS id_medio_pago
+                    NULL::integer AS id_medio_pago,
+                    NULL::text AS tipo_medio_pago
 
                 FROM Pedido p
 
@@ -561,9 +573,13 @@ const obtenerMovimientosCliente = async (req, res) => {
                         ', '
                     ) AS referencia,
                     NULL::text AS observaciones,
-                    pp.Id_Medio_Pago AS id_medio_pago
+                    pp.Id_Medio_Pago AS id_medio_pago,
+                    mp.Tipo::text AS tipo_medio_pago
 
                 FROM PagoPedido pp
+
+                LEFT JOIN Metodo_Pago mp
+                    ON mp.Id_Medio_Pago = pp.Id_Medio_Pago
 
                 INNER JOIN Detalle_Pago_Pedido dpp
                     ON dpp.Id_Pago_Pedido = pp.Id_Pago_Pedido
@@ -581,6 +597,7 @@ const obtenerMovimientosCliente = async (req, res) => {
                     pp.Fecha_Pago,
                     pp.Estado_Pago,
                     pp.Id_Medio_Pago,
+                    mp.Tipo,
                     p.Id_Cliente,
                     c.Id_Cliente,
                     c.Razon_Social,
@@ -599,7 +616,8 @@ const obtenerMovimientosCliente = async (req, res) => {
                 estado_pago,
                 referencia,
                 observaciones,
-                id_medio_pago
+                id_medio_pago,
+                tipo_medio_pago
 
             FROM movimientos
 

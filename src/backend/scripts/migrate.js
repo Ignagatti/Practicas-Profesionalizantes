@@ -47,6 +47,21 @@ async function migrate() {
       await pool.query(`INSERT INTO Metodo_Pago (Id_Medio_Pago, Tipo) VALUES (5, 'saldo_a_favor') ON CONFLICT (Id_Medio_Pago) DO NOTHING;`);
     } catch (errSaldo) {}
 
+    // Trazabilidad del uso de saldo a favor:
+    // vincula el pago realizado con saldo a favor (Id_Pago_Favor) con el/los
+    // pagos anteriores de los que salió ese crédito (Id_Pago_Origen).
+    // Tipo = 'cliente' (PagoPedido) | 'proveedor' (Pago_Insumo)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS Uso_Saldo_Favor (
+        Id_Uso_Saldo_Favor SERIAL PRIMARY KEY,
+        Tipo VARCHAR(20) NOT NULL,
+        Id_Pago_Favor INTEGER NOT NULL,
+        Id_Pago_Origen INTEGER NOT NULL,
+        Monto NUMERIC(12,2) NOT NULL,
+        Creado_En TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+
     // Tabla de Licencias del Sistema
     await pool.query(`
       CREATE TABLE IF NOT EXISTS Licencia (

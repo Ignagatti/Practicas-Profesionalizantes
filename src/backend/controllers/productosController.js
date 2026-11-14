@@ -15,7 +15,9 @@ const obtenerProductos = async (req, res) => {
                        WHEN NULLIF(TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, '')), '') IS NOT NULL 
                        THEN TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, ''))
                        ELSE c.Razon_Social 
-                   END as cliente 
+                   END as cliente,
+                   (SELECT dp.Id_Pedido FROM Detalle_Pedido dp WHERE dp.Id_Producto = p.Id_Producto LIMIT 1) AS id_pedido,
+                   EXISTS (SELECT 1 FROM Detalle_Pedido dp WHERE dp.Id_Producto = p.Id_Producto) AS tiene_pedido
             FROM Producto p 
             LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
             ${filtroActivo}
@@ -39,7 +41,9 @@ const obtenerProductoPorId = async (req, res) => {
                        WHEN NULLIF(TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, '')), '') IS NOT NULL 
                        THEN TRIM(COALESCE(c.Nombre, '') || ' ' || COALESCE(c.Apellido, ''))
                        ELSE c.Razon_Social 
-                   END as cliente 
+                   END as cliente,
+                   (SELECT dp.Id_Pedido FROM Detalle_Pedido dp WHERE dp.Id_Producto = p.Id_Producto LIMIT 1) AS id_pedido,
+                   EXISTS (SELECT 1 FROM Detalle_Pedido dp WHERE dp.Id_Producto = p.Id_Producto) AS tiene_pedido
             FROM Producto p 
             LEFT JOIN Cliente c ON p.Id_Cliente = c.Id_Cliente 
             WHERE p.Id_Producto = $1
@@ -89,18 +93,32 @@ const actualizarProducto = async (req, res) => {
 
         const actual = prodActual.rows[0];
         const estadoActual = (actual.estado || actual.Estado || 'pendiente').toLowerCase();
+        const nuevoEstado = estado ? String(estado).toLowerCase() : estadoActual;
 
-        let modeloFinal = modelo;
-        let telaFinal = tela;
-        let lustreFinal = color_lustre;
-        let cantidadFinal = cantidad;
-        let precioFinal = precio;
-        let obsFinal = observaciones;
-        let fechaFinal = fecha_pedido;
-        let idClienteFinal = id_cliente;
+        const enPedidoRes = await pool.query(
+            'SELECT Id_Pedido FROM Detalle_Pedido WHERE Id_Producto = $1 LIMIT 1',
+            [id]
+        );
+        const tienePedido = enPedidoRes.rowCount > 0;
 
-        // Si el estado actual NO es 'pendiente', solo se permite cambiar el estado (los demás campos se preservan)
-        if (estadoActual !== 'pendiente') {
+        if (nuevoEstado === 'enviado' && !tienePedido) {
+            return res.status(400).json({
+                error: 'No se puede enviar un producto que no está incluido en un pedido.'
+            });
+        }
+
+        let modeloFinal = modelo !== undefined ? modelo : (actual.modelo || actual.Modelo);
+        let telaFinal = tela !== undefined ? tela : (actual.tela || actual.Tela);
+        let lustreFinal = color_lustre !== undefined ? color_lustre : (actual.color_lustre || actual.Color_Lustre);
+        let cantidadFinal = cantidad !== undefined ? cantidad : (actual.cantidad || actual.Cantidad);
+        let precioFinal = precio !== undefined ? precio : (actual.precio || actual.Precio);
+        let obsFinal = observaciones !== undefined ? observaciones : (actual.observaciones || actual.Observaciones);
+        let fechaFinal = fecha_pedido !== undefined ? fecha_pedido : (actual.fecha_pedido || actual.Fecha_Pedido);
+        let idClienteFinal = id_cliente !== undefined ? id_cliente : (actual.id_cliente || actual.Id_Cliente);
+
+        // Si el estado actual NO es 'pendiente' o ya forma parte de un pedido,
+        // solo se permite cambiar el estado (el precio y demás datos del pedido quedan fijos)
+        if (estadoActual !== 'pendiente' || tienePedido) {
             modeloFinal = actual.modelo || actual.Modelo;
             telaFinal = actual.tela || actual.Tela;
             lustreFinal = actual.color_lustre || actual.Color_Lustre;
@@ -110,11 +128,11 @@ const actualizarProducto = async (req, res) => {
             fechaFinal = actual.fecha_pedido || actual.Fecha_Pedido;
             idClienteFinal = actual.id_cliente || actual.Id_Cliente;
         } else {
-            if (Number(cantidad) <= 0) {
+            if (Number(cantidadFinal) <= 0) {
                 return res.status(400).json({ error: 'La cantidad debe ser mayor a cero.' });
             }
-            const precioNum = Number(precio);
-            if (precio !== undefined && (isNaN(precioNum) || precioNum < 0)) {
+            const precioNum = Number(precioFinal);
+            if (precioFinal !== undefined && (isNaN(precioNum) || precioNum < 0)) {
                 return res.status(400).json({ error: 'El precio del producto debe ser un número válido mayor o igual a cero.' });
             }
             precioFinal = isNaN(precioNum) ? 0 : precioNum;
@@ -210,10 +228,36 @@ const enviarProductosMasivo = async (req, res) => {
     }
 
     try {
+        // Verificar que todos los productos seleccionados estén asociados a un pedido
+        const sinPedido = await pool.query(
+            `
+            SELECT p.Id_Producto, p.Modelo
+            FROM Producto p
+            WHERE p.Id_Producto = ANY($1)
+              AND NOT EXISTS (
+                  SELECT 1 FROM Detalle_Pedido dp WHERE dp.Id_Producto = p.Id_Producto
+              )
+            `,
+            [idsOrdenados]
+        );
+
+        if (sinPedido.rowCount > 0) {
+            const listaSinPedido = sinPedido.rows
+                .map(r => `PROD-${String(r.id_producto || r.Id_Producto).padStart(3, '0')} (${r.modelo || r.Modelo})`)
+                .join(', ');
+            return res.status(400).json({
+                error: `No se puede enviar un producto que no está en un pedido: ${listaSinPedido}.`
+            });
+        }
+
         const query = `
             UPDATE Producto 
             SET Estado = 'enviado' 
-            WHERE Id_Producto = ANY($1) AND Estado = 'terminado'
+            WHERE Id_Producto = ANY($1)
+              AND Estado = 'terminado'
+              AND EXISTS (
+                  SELECT 1 FROM Detalle_Pedido dp WHERE dp.Id_Producto = Producto.Id_Producto
+              )
             RETURNING *
         `;
         const resultado = await pool.query(query, [idsOrdenados]);

@@ -1756,6 +1756,11 @@ function MovimientosContent({ entidad, tipoVista }) {
               <tbody className="divide-y divide-gray-200 bg-white text-sm">
                 {movimientos.map((mov, idx) => {
                   const esPago = mov.tipo_movimiento === "pago";
+                  const esSaldoAFavor =
+                    esPago &&
+                    (mov.tipo_medio_pago === "saldo_a_favor" ||
+                      mov.id_medio_pago === 5 ||
+                      String(mov.tipo_medio_pago || "").toLowerCase().includes("saldo"));
                   const codigoMovimiento =
                     mov.tipo_movimiento === "pedido"
                       ? `VENT-${String(mov.id_movimiento).padStart(3, "0")}`
@@ -1769,16 +1774,22 @@ function MovimientosContent({ entidad, tipoVista }) {
                         {formatearFecha(mov.fecha_movimiento)}
                       </td>
                       <td className="p-3 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
-                            esPago
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {esPago ? <CreditCard size={12} /> : <FileText size={12} />}
-                          {mov.tipo_movimiento}
-                        </span>
+                        {esSaldoAFavor ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase bg-teal-100 text-teal-800 border border-teal-200">
+                            <DollarSign size={12} /> Saldo a favor
+                          </span>
+                        ) : (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
+                              esPago
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {esPago ? <CreditCard size={12} /> : <FileText size={12} />}
+                            {esPago && mov.tipo_medio_pago ? `Pago (${mov.tipo_medio_pago})` : mov.tipo_movimiento}
+                          </span>
+                        )}
                       </td>
                       <td className="p-3 font-bold text-gray-800 whitespace-nowrap">
                         {mov.referencia || "—"}
@@ -1904,11 +1915,19 @@ function MovimientoDetalleModal({ movimiento, tipoVista, cerrar }) {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   };
 
+  const esSaldoAFavor =
+    movimiento.tipo_movimiento === "pago" &&
+    (movimiento.tipo_medio_pago === "saldo_a_favor" ||
+      movimiento.id_medio_pago === 5 ||
+      String(movimiento.tipo_medio_pago || "").toLowerCase().includes("saldo"));
+
   const tipoLabel =
     movimiento.tipo_movimiento === "pedido"
       ? "Detalle de Venta"
       : movimiento.tipo_movimiento === "factura"
       ? "Detalle de Compra"
+      : esSaldoAFavor
+      ? "Detalle de Pago con Saldo a Favor"
       : "Detalle de Pago";
 
   return (
@@ -2074,10 +2093,21 @@ function MovimientoDetalleModal({ movimiento, tipoVista, cerrar }) {
               {movimiento.tipo_movimiento === "pago" && (() => {
                 const pagoInfo = datos.pago || datos;
                 const detalles = datos.detalles || [];
+                const saldoFavorInfo = datos.saldo_favor || { origenes: [], consumos: [] };
                 const esCompleto = (pagoInfo.Estado_Pago || pagoInfo.estado_pago) === "pagado";
+                const esPagoSaldoAFavor =
+                  (pagoInfo.tipo_medio_pago || pagoInfo.medio_pago || movimiento.tipo_medio_pago) === "saldo_a_favor" ||
+                  (pagoInfo.Id_Medio_Pago || pagoInfo.id_medio_pago || movimiento.id_medio_pago) === 5 ||
+                  String(pagoInfo.tipo_medio_pago || pagoInfo.medio_pago || "").toLowerCase().includes("saldo");
 
                 return (
                   <div className="space-y-4">
+                    {esPagoSaldoAFavor && (
+                      <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-xs text-teal-900 font-semibold flex items-center gap-2">
+                        <DollarSign size={16} className="text-teal-600 shrink-0" />
+                        <span>Este pago fue realizado utilizando saldo a favor acumulado en la cuenta.</span>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                         <span className="block text-[11px] font-bold text-gray-500 uppercase">Fecha Pago</span>
@@ -2085,7 +2115,9 @@ function MovimientoDetalleModal({ movimiento, tipoVista, cerrar }) {
                       </div>
                       <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                         <span className="block text-[11px] font-bold text-gray-500 uppercase">Medio de Pago</span>
-                        <span className="text-sm font-semibold text-gray-800">{pagoInfo.tipo_medio_pago || pagoInfo.medio_pago || "—"}</span>
+                        <span className={`text-sm font-semibold capitalize ${esPagoSaldoAFavor ? "text-teal-700 font-bold" : "text-gray-800"}`}>
+                          {esPagoSaldoAFavor ? "Saldo a favor" : (pagoInfo.tipo_medio_pago || pagoInfo.medio_pago || "—")}
+                        </span>
                       </div>
                       <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                         <span className="block text-[11px] font-bold text-gray-500 uppercase">Estado</span>
@@ -2094,6 +2126,36 @@ function MovimientoDetalleModal({ movimiento, tipoVista, cerrar }) {
                         </span>
                       </div>
                     </div>
+
+                    {saldoFavorInfo.origenes?.length > 0 && (
+                      <div className="p-3 bg-teal-50/70 border border-teal-200 rounded-xl space-y-1.5 text-xs">
+                        <span className="font-bold text-teal-900 uppercase block">Origen del saldo a favor utilizado:</span>
+                        {saldoFavorInfo.origenes.map((orig, oIdx) => (
+                          <div key={oIdx} className="flex justify-between items-center bg-white px-2.5 py-1 rounded border border-teal-100 text-teal-900">
+                            <span className="font-semibold">
+                              PAG-{String(orig.id_pago).padStart(3, "0")}
+                              {orig.fecha_pago ? ` (${formatearFecha(orig.fecha_pago)})` : ""}
+                            </span>
+                            <span className="font-bold">${formatearDinero(orig.monto)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {saldoFavorInfo.consumos?.length > 0 && (
+                      <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1.5 text-xs">
+                        <span className="font-bold text-blue-900 uppercase block">Pagos realizados con el excedente de este pago:</span>
+                        {saldoFavorInfo.consumos.map((cons, cIdx) => (
+                          <div key={cIdx} className="flex justify-between items-center bg-white px-2.5 py-1 rounded border border-blue-100 text-blue-900">
+                            <span className="font-semibold">
+                              PAG-{String(cons.id_pago).padStart(3, "0")}
+                              {cons.fecha_pago ? ` (${formatearFecha(cons.fecha_pago)})` : ""}
+                            </span>
+                            <span className="font-bold">${formatearDinero(cons.monto)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {detalles.length > 0 && (
                       <div className="border border-gray-200 rounded-xl overflow-hidden">

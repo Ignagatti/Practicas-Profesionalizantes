@@ -1401,7 +1401,12 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
                     >
                       <option value="">Seleccionar...</option>
 
-                      {clientes.map((cliente) => {
+                      {clientes
+                        .filter(
+                          (cliente) =>
+                            String(cliente.estado || cliente.Estado || "activo").toLowerCase() !== "bloqueado"
+                        )
+                        .map((cliente) => {
                         const nombre = (cliente.nombre || cliente.Nombre || "").trim();
                         const apellido = (cliente.apellido || cliente.Apellido || "").trim();
                         const contacto = `${nombre} ${apellido}`.trim();

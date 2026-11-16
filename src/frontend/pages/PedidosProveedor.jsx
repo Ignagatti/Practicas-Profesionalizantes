@@ -1241,7 +1241,12 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                     >
                       <option value="">Seleccionar...</option>
 
-                      {proveedores.map((proveedor) => (
+                      {proveedores
+                        .filter(
+                          (proveedor) =>
+                            String(proveedor.estado || proveedor.Estado || "activo").toLowerCase() !== "bloqueado"
+                        )
+                        .map((proveedor) => (
                         <option
                           key={proveedor.id_proveedor}
                           value={proveedor.id_proveedor}

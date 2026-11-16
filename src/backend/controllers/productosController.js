@@ -72,6 +72,17 @@ const crearProducto = async (req, res) => {
     }
 
     try {
+        if (id_cliente) {
+            const cliCheck = await pool.query('SELECT Estado FROM Cliente WHERE Id_Cliente = $1', [id_cliente]);
+            if (cliCheck.rowCount === 0) {
+                return res.status(404).json({ error: 'El cliente seleccionado no existe.' });
+            }
+            const estadoCli = String(cliCheck.rows[0].estado || cliCheck.rows[0].Estado || 'activo').toLowerCase();
+            if (estadoCli === 'bloqueado') {
+                return res.status(400).json({ error: 'No se pueden crear productos para un cliente bloqueado.' });
+            }
+        }
+
         const query = 'INSERT INTO Producto (Modelo, Tela, Color_Lustre, Estado, Cantidad, Precio, Observaciones, Fecha_Pedido, Id_Cliente, Activo) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true) RETURNING *';
         const valores = [modelo, tela, color_lustre, estado || 'pendiente', cantidad || 1, isNaN(precioNum) ? 0 : precioNum, observaciones || '', fecha_pedido || new Date(), id_cliente || null];
         const resultado = await pool.query(query, valores);

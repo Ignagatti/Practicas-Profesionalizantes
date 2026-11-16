@@ -567,7 +567,14 @@ function Productos() {
                                                 }}
                                             >
                                                 <option value="">Seleccionar...</option>
-                                                {clientes.map(c => {
+                                                {clientes
+                                                  .filter(c => {
+                                                    const idC = String(c.id_cliente || c.Id_Cliente);
+                                                    const esActualEnEdicion = isEditing && String(formData.id_cliente) === idC;
+                                                    const bloqueado = (c.estado || c.Estado || 'activo').toLowerCase() === 'bloqueado';
+                                                    return !bloqueado || esActualEnEdicion;
+                                                  })
+                                                  .map(c => {
                                                      const nombre = (c.nombre || c.Nombre || "").trim();
                                                      const apellido = (c.apellido || c.Apellido || "").trim();
                                                      const contacto = `${nombre} ${apellido}`.trim();

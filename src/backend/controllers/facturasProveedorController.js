@@ -115,6 +115,13 @@ const crearFactura = async (req, res) => {
             throw new Error("El proveedor no existe.");
         }
 
+        if (String(proveedor.rows[0].estado || proveedor.rows[0].Estado || "activo").toLowerCase() === "bloqueado") {
+            await client.query("ROLLBACK");
+            return res.status(400).json({
+                mensaje: "No se pueden registrar comprobantes para un proveedor bloqueado."
+            });
+        }
+
         // Crear la factura
         const factura = await client.query(
             `

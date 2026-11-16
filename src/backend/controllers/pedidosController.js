@@ -327,7 +327,7 @@ const crearPedido = async (req, res) => {
         // Bloqueo y verificación de Cliente
         const clienteExiste = await client.query(
             `
-            SELECT Id_Cliente, Saldo
+            SELECT Id_Cliente, Saldo, Estado
             FROM Cliente
             WHERE Id_Cliente = $1
             FOR UPDATE
@@ -339,6 +339,13 @@ const crearPedido = async (req, res) => {
             await client.query('ROLLBACK');
             return res.status(404).json({
                 error: 'Cliente no encontrado'
+            });
+        }
+
+        if (String(clienteExiste.rows[0].estado || clienteExiste.rows[0].Estado || 'activo').toLowerCase() === 'bloqueado') {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                error: 'No se pueden crear pedidos para un cliente bloqueado'
             });
         }
 

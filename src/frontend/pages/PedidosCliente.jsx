@@ -981,17 +981,36 @@ export function PedidosCliente({ tipoVista, setTipoVista }) {
     setMensajeExitoModal("");
   };
 
-  const descargarFactura = (pedido) => {
+  const descargarFactura = async (pedido) => {
     if (!pedido?.pdf_factura_url) return;
 
-    const link = document.createElement("a");
-    link.href = pedido.pdf_factura_url;
-    link.download =
-      pedido.pdf_factura_nombre ||
-      `factura_VENT-${String(pedido.id_pedido).padStart(3, "0")}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const baseOrigin = API_URL.replace(/\/api\/?$/, "");
+      const url = pedido.pdf_factura_url.startsWith("http")
+        ? pedido.pdf_factura_url
+        : `${baseOrigin}${pedido.pdf_factura_url}`;
+
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || errData.mensaje || "No se pudo descargar la factura.");
+      }
+
+      const blob = await resp.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download =
+        pedido.pdf_factura_nombre ||
+        `factura_VENT-${String(pedido.id_pedido).padStart(3, "0")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Error al descargar factura:", err);
+      setMensajeErrorModal(err.message || "Error al descargar el PDF de la factura.");
+    }
   };
 
   const descargarPdfPedido = (pedido) => {

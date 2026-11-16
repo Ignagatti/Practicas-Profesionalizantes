@@ -1717,6 +1717,9 @@ export function PedidosProveedor({ tipoVista, setTipoVista }) {
                               const url = `http://localhost:4000${viewingFactura.archivo_pdf}`;
                               try {
                                 const resp = await fetch(url);
+                                if (!resp.ok) {
+                                  throw new Error("El archivo PDF no se encontró en el servidor.");
+                                }
                                 const blob = await resp.blob();
                                 const link = document.createElement("a");
                                 link.href = window.URL.createObjectURL(blob);

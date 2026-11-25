@@ -76,7 +76,7 @@ Adentro del `.env` tiene que estar la conexión a la base de datos:
 ```env
 PORT=4000
 NODE_ENV=development
-DATABASE_URL="postgresql://neondb_owner:npg_qDz2RFItbiA8@ep-steep-smoke-ay5b02jw-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=verify-full"
+DATABASE_URL="postgresql://neondb_owner:tu_password@ep-ejemplo.us-east-2.aws.neon.tech/neondb?sslmode=verify-full"
 VITE_API_URL="http://localhost:4000/api"
 ```
 

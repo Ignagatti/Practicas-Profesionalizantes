@@ -19,7 +19,6 @@
       "output": "dist-electron"
     },
     "files": [
-      ".env",
       "dist/**/*",
       "src/backend/**/*",
       "src/electron/**/*",

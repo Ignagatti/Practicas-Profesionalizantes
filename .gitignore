@@ -31,3 +31,6 @@ src/backend/uploads/*
 # Agent skills & lockfiles
 .agents/
 skills-lock.json
+
+# Respaldos de la base de datos
+database/backup_*.sql

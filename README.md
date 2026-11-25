@@ -1,151 +1,133 @@
-# Sistema de Gestión Acuaber — Fábrica de Sillas y Sillones
-### Proyecto Final de Prácticas Profesionalizantes
-**Estudiante:** Ignacio Gatti  
-**Localidad:** Esperanza, Santa Fe, Argentina  
+# AcuApp
 
----
+### Sistema de Gestión Administrativa para Fábrica de Sillas y Sillones
 
-## 📌 ¿De qué trata este proyecto?
+**Proyecto final · Tecnicatura Superior en Desarrollo de Software**  
+**ITEC El Molino · Esperanza, Santa Fe, Argentina · 2026**
 
-Este sistema es el trabajo final que desarrollé para mis **Prácticas Profesionalizantes**. Es una aplicación completa de escritorio y web pensada para resolver el día a día de la fábrica de muebles **Acuaber** (ubicada en Esperanza, Santa Fe).
+Desarrollamos **AcuApp** como proyecto final de nuestra carrera, tomando como referencia los procesos administrativos de **Acuaber**, una fábrica de sillas y sillones. Nuestro propósito fue integrar en una sola aplicación la información de producción, pedidos, clientes, proveedores y operaciones económicas, facilitando la gestión diaria y el seguimiento de cada proceso.
 
-La idea principal fue digitalizar y ordenar todos los procesos de la empresa en un solo lugar:
-* Seguir la fabricación de sillas y sillones en el taller paso a paso.
-* Manejar el catálogo de materias primas y actualizar los precios de insumos en lote cuando hay aumentos.
-* Cargar los pedidos de los clientes, calculando automáticamente el 21% de IVA (si lleva factura) y adjuntando comprobantes en PDF.
-* Registrar las compras y facturas de proveedores.
-* Administrar las cobranzas y pagos con cuentas corrientes, aplicando saldo a favor y un algoritmo FIFO para saldar deudas de las facturas más viejas a las más nuevas.
-* Generar copias de seguridad de toda la base de datos en archivos `.sql` y poder restaurarlas cuando sea necesario.
+La solución combina una **interfaz en React**, una **API REST con Node.js y Express**, una **base de datos PostgreSQL** y una **aplicación de escritorio mediante Electron**.
 
----
+![Panel de control de AcuApp, obtenido de la documentación final del proyecto](docs/images/01-dashboard.png)
 
-## 🚀 ¿Cómo probar o ejecutar el sistema?
+## Funcionalidades
 
-Podés probar el sistema de dos formas distintas: **usando el ejecutable listo para usar de Windows** (la forma más rápida, sin instalar nada de programación) o **levantando el proyecto en modo desarrollo** con el código fuente.
+| Área | Qué permite realizar |
+| --- | --- |
+| **Panel de control** | Consultar indicadores de producción y facturación, gráficos, avisos de pagos pendientes y herramientas de respaldo y restauración. |
+| **Productos y producción** | Registrar y consultar productos, filtrar por estado, editar registros, generar planillas y seguir los estados pendiente, en producción, terminado y enviado. |
+| **Insumos y precios** | Administrar insumos y actualizar valores individualmente o mediante ajustes porcentuales. |
+| **Clientes** | Registrar y editar clientes y direcciones, consultar sus pedidos, movimientos, pagos y saldos; bloquear o reactivar registros. |
+| **Proveedores** | Gestionar proveedores y consultar sus facturas, pagos, movimientos y saldos. |
+| **Pedidos de clientes** | Crear y editar pedidos, asociar productos disponibles, gestionar información de facturación y generar documentos PDF. |
+| **Facturas y remitos** | Registrar comprobantes de proveedores, asociar archivos y consultar su estado de pago. |
+| **Pagos y cuentas corrientes** | Registrar pagos de clientes y proveedores, aplicar pagos totales o parciales y consultar saldos pendientes y a favor. |
 
----
+### Reglas de negocio relevantes
 
-### Opción 1: Probar el ejecutable de Windows (Forma rápida)
+- El estado de los productos refleja su avance en el circuito de producción y envío.
+- Los pedidos se vinculan con clientes y productos disponibles; los estados de producción y de pago se gestionan por separado.
+- Los pagos se aplican a pedidos o facturas y actualizan los movimientos y saldos correspondientes.
+- Para preservar la trazabilidad, los clientes y proveedores que poseen movimientos asociados pueden bloquearse en lugar de eliminarse definitivamente.
 
-Ya dejé compilada la aplicación dentro de la carpeta `dist-electron/`. Tenés dos opciones:
+## Capturas del sistema
 
-1. **Versión Portable (la más recomendada para probar):**
-   * Vas a la carpeta `dist-electron/` y abrís el archivo **`Acuaber-Portable.exe`**.
-   * Le hacés doble clic y listo. No tenés que instalar nada ni pide permisos de administrador; abre la aplicación directo a pantalla completa.
+Las siguientes imágenes provienen del **Manual de Usuario definitivo (2026)**. Se seleccionaron pantallas de demostración y se reemplazaron los nombres identificables por datos genéricos cuando correspondía.
 
-2. **Instalador normal para Windows:**
-   * Abrís **`dist-electron/Acuaber-Instalador.exe`**.
-   * Te abre el típico instalador de Windows paso a paso y te deja el acceso directo en el Escritorio y en el Menú Inicio.
+| Productos y seguimiento de producción | Lista de precios e insumos |
+| :---: | :---: |
+| ![Productos: listado, estados y acciones de producción](docs/images/02-productos.png) | ![Insumos: administración y filtros de precios](docs/images/03-insumos.png) |
 
-> 🔑 **Dato clave para entrar:**  
-> La primera vez que abras el sistema te va a pedir una clave de activación. Usá la clave de fábrica:  
-> **`ACUABER-FABRICA-2026`**  
-> (Titular: *Acuaber Fábrica Central*). La ponés una sola vez, se guarda sola y ya te habilita todas las pantallas.
+| Registro de clientes | Creación de pedidos |
+| :---: | :---: |
+| ![Formulario de alta de clientes](docs/images/04-cliente-formulario.png) | ![Formulario de creación de pedidos](docs/images/05-pedido-formulario.png) |
 
----
+**Registro de pagos:**
 
-### Opción 2: Correr el proyecto en modo desarrollo (con el código fuente)
+<p align="center"><img src="docs/images/06-pago-formulario.png" alt="Formulario de registro de pagos de AcuApp" width="540" /></p>
 
-Si querés revisar el código, hacer pruebas o ver cómo está programado:
+## Tecnologías y arquitectura
 
-#### 1. Qué necesitás tener instalado
-* **Node.js** (versión 20 o superior): [Descargar acá](https://nodejs.org/)
-* **Git**
-* Conexión a internet (para conectar con la base de datos en Neon Cloud)
+| Componente | Tecnologías |
+| --- | --- |
+| **Interfaz** | JavaScript, React, Vite, Tailwind CSS |
+| **Backend y servicios** | Node.js, Express, API REST |
+| **Persistencia** | PostgreSQL y consultas SQL |
+| **Aplicación de escritorio** | Electron, Electron Builder |
+| **Gráficos** | Recharts |
+| **Desarrollo colaborativo** | Git y GitHub |
 
-#### 2. Clonar el repositorio
-Abrís la terminal o PowerShell y ponés:
-```bash
-git clone https://github.com/Ignagatti/Practicas-Profesionalizantes.git
-cd Practicas-Profesionalizantes
-```
+La interfaz consume los servicios del backend, que concentran la lógica de negocio y las operaciones sobre la base de datos. Electron permite utilizar la aplicación como programa de escritorio.
 
-#### 3. Instalar las dependencias
-Instalás todas las librerías del backend y frontend con:
-```bash
-npm install
-```
-
-#### 4. Configurar las variables de entorno (`.env`)
-En la raíz del proyecto ya dejé un archivo de ejemplo llamado `.env.example`. Creá una copia llamada `.env`:
-```bash
-cp .env.example .env
-```
-
-Adentro del `.env` tiene que estar la conexión a la base de datos:
-```env
-PORT=4000
-NODE_ENV=development
-DATABASE_URL="postgresql://neondb_owner:tu_password@ep-ejemplo.us-east-2.aws.neon.tech/neondb?sslmode=verify-full"
-VITE_API_URL="http://localhost:4000/api"
-```
-
-*(La base de datos ya está creada y funcionando en la nube con **Neon Cloud PostgreSQL**, así que no hace falta que instales PostgreSQL en tu máquina para probarlo).*
-
-#### 5. Arrancar la aplicación
-Para iniciar el backend y el frontend juntos con un solo comando:
-```bash
-npm run dev
-```
-
-Una vez que arrancó:
-* Se te abre la pantalla en tu navegador en: [http://localhost:5173](http://localhost:5173)
-* La API del servidor queda escuchando en: [http://localhost:4000/api](http://localhost:4000/api)
-
----
-
-## 🛠️ ¿Cómo compilar de nuevo los instaladores?
-
-Si hacés algún cambio en el código y querés volver a generar el archivo `.exe` para pasárselo a alguien:
-
-```bash
-npm run build:exe
-```
-Ese comando compila el frontend con Vite y empaqueta todo con `electron-builder`. Cuando termina, te deja los nuevos `.exe` listos en la carpeta `dist-electron/`.
-
----
-
-## 💻 ¿Qué tecnologías usé?
-
-* **Aplicación de Escritorio:** Electron 41 con Electron Builder (para armar los ejecutables de Windows).
-* **Frontend:** React 19, Vite (para compilar rápido), Tailwind CSS v4 para el diseño y Lucide React para los iconos.
-* **Métricas y Gráficos:** Recharts (para mostrar los gráficos interactivos de ventas vs. compras en el Dashboard).
-* **Backend:** Node.js con Express 5.
-* **Subida de Archivos:** Multer (guarda los comprobantes de proveedores en disco y las facturas de clientes en formato binario `BYTEA` en la base).
-* **Base de Datos:** PostgreSQL en la nube (Neon Cloud) usando el driver nativo `pg` con transacciones seguras (ACID) y bloqueos `FOR UPDATE` para no duplicar pagos.
-* **Seguridad:** Helmet para cabeceras HTTP, CORS configurado para Electron y Vite, y un sistema propio de licencias con caché en memoria.
-
----
-
-## 📁 ¿Cómo está organizado el proyecto?
-
-```
+```text
 Practicas-Profesionalizantes/
-├── .env.example         # Plantilla con las variables necesarias
-├── package.json         # Dependencias y scripts de ejecución
-├── assets/              # Logo institucional e icono de la app
-├── database/            # Script SQL original con las tablas y enums
-├── dist-electron/       # Los archivos .exe ya compilados (Portable e Instalador)
-└── src/
-    ├── backend/         # La API hecha en Node.js + Express
-    │   ├── server.js    # Punto de arranque y middlewares
-    │   ├── controllers/ # Lógica de cada módulo (pedidos, pagos, etc.)
-    │   ├── routes/      # Rutas de la API y subida de archivos
-    │   ├── uploads/     # Carpeta donde se guardan los PDFs de proveedores
-    │   └── utils/       # Funciones matemáticas para no errarle a los decimales
-    ├── electron/        # Archivos que crean la ventana de escritorio
-    └── frontend/        # Toda la interfaz hecha en React
-        ├── App.jsx      # Componente principal y control de licencia
-        ├── Sidebar.jsx  # El menú de navegación de la izquierda
-        ├── pages/       # Las pantallas (Dashboard, Productos, Pedidos, etc.)
-        └── components/  # Modales, alertas y botones reutilizables
+├── assets/                 # Recursos gráficos
+├── database/               # Scripts SQL del proyecto
+├── src/
+│   ├── backend/
+│   │   ├── config/          # Configuración del servidor y base de datos
+│   │   ├── controllers/     # Lógica de negocio
+│   │   ├── routes/          # Endpoints REST
+│   │   └── server.js        # Servidor Express
+│   ├── electron/            # Integración con Electron
+│   └── frontend/            # Aplicación React
+├── docs/images/             # Capturas preparadas para esta documentación
+├── package.json
+└── README.md
 ```
+
+## Ejecución en entorno de desarrollo
+
+### Requisitos
+
+- **Node.js 20 o superior**, npm y Git.
+- Una base PostgreSQL **de prueba** con sus credenciales configuradas localmente.
+- La configuración de acceso y licencia correspondiente para utilizar las funciones protegidas.
+
+### Puesta en marcha
+
+1. Clonar el proyecto:
+
+   ```bash
+   git clone https://github.com/Ignagatti/Practicas-Profesionalizantes.git
+   cd Practicas-Profesionalizantes
+   ```
+
+2. Instalar dependencias:
+
+   ```bash
+   npm install
+   ```
+
+3. Configurar un archivo **`.env` local y no versionado** con las variables necesarias para la conexión de desarrollo. Utilizar exclusivamente credenciales de una base de prueba; no incorporar contraseñas ni claves reales al repositorio. Consultar la plantilla `.env.example` **solo cuando haya sido saneada**.
+
+4. Iniciar frontend y backend:
+
+   ```bash
+   npm run dev
+   ```
+
+Este comando inicia los servicios para trabajar en desarrollo. **No proporciona por sí solo una base de datos ni una licencia de demostración.** Los instaladores de escritorio no se distribuyen desde este README.
+
+## Equipo y contribuciones
+
+Este sistema fue desarrollado de manera **colaborativa** por estudiantes de la Tecnicatura Superior en Desarrollo de Software del ITEC El Molino. Durante el proyecto compartimos tareas de desarrollo, integración, relevamiento, pruebas y documentación.
+
+| Integrante | Principales aportes |
+| --- | --- |
+| **[Micaela Cammisi](https://github.com/MCammisiMicaela)** | Desarrollo e integración de funcionalidades de **clientes y pedidos** (frontend/backend), ajustes relacionados con proveedores y datos, mejoras de interfaz y pruebas funcionales manuales. [Integración de clientes](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/18e7dfdb42276aee638ee0df2f8a86efa882fba5) · [Pedidos](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/88e45ea8b0dd4130e738778718385aba20744f07). |
+| **[Ivana Bertram](https://github.com/ivanabertram)** | Principalmente **relevamiento de requerimientos y documentación funcional y de usuario**; también aportes de código al frontend de clientes, proveedores y precios, y a funcionalidades relacionadas con facturas, pagos y movimientos. [Frontend](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/0d042fe413a317f9bd6e4340acea3194a7a1204e) · [Facturas, pagos y saldos](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/3b03f75053b9cddb09391289182c3ffe909bee8d). |
+| **[Ignacio Gatti](https://github.com/Ignagatti)** | Desarrollo e integración de módulos, configuración técnica y de la base de datos, implementación y ajustes de funcionalidades, interfaz, mantenimiento y empaquetado con Electron. [Reglas de negocio](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/4c327911589b91fe69d2310cb10cff27a625357a) · [Ajustes de escritorio](https://github.com/Ignagatti/Practicas-Profesionalizantes/commit/b8a157da94410e6e2d94f6d7c4667b5b86b70d58). |
+
+Las contribuciones indicadas sintetizan responsabilidades y cambios registrados durante el trabajo en equipo; **no implican autoría exclusiva de los módulos**. Los commits y el historial del repositorio permiten consultar su evolución.
+
+## Documentación
+
+El equipo elaboró el **Manual de Usuario de AcuApp (2026)** como parte de la entrega final. Allí se explican las operaciones habituales de cada módulo, las validaciones visibles para el usuario y recomendaciones para el uso administrativo del sistema.
+
+Por tratarse de una aplicación que puede manejar información comercial, la documentación pública utiliza capturas preparadas para demostración y no incluye credenciales, licencias de acceso ni bases de datos privadas.
 
 ---
 
-## 👤 Autor
-
-* **Estudiante:** Ignacio Gatti
-* **Proyecto:** Prácticas Profesionalizantes
-* **Empresa destino:** Acuaber Fábrica de Sillas y Sillones
-* **Esperanza, Santa Fe, Argentina**
+**AcuApp · Proyecto académico colaborativo · ITEC El Molino · 2026**
